@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -11,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowRight, Save, Clock, RotateCcw, Trash2 } from 'lucide-react';
 import type { Poll } from '@/types/poll';
@@ -380,6 +380,55 @@ export const EditPollPage: React.FC = () => {
                       </FormItem>
                     )}
                   />
+
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="allow_user_statements"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="hebrew-text text-base">
+                              אפשר למשתמשים להציע הצהרות
+                            </FormLabel>
+                            <div className="text-sm text-muted-foreground hebrew-text">
+                              משתמשים יוכלו להוסיף הצהרות חדשות לסקר
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="auto_approve_statements"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="hebrew-text text-base">
+                              אישור אוטומטי להצהרות משתמשים
+                            </FormLabel>
+                            <div className="text-sm text-muted-foreground hebrew-text">
+                              הצהרות חדשות יאושרו אוטומטית ללא בדיקה ידנית
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={!form.watch("allow_user_statements")}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <div className="grid grid-cols-1 gap-4">
                     <FormField
