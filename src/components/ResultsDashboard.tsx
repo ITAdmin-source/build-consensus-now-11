@@ -3,16 +3,14 @@ import React from 'react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { CountdownTimer } from './CountdownTimer';
-import { GroupsVisualization } from './GroupsVisualization';
 import { 
   Star, 
   Trophy, 
-  TrendingUp, 
   Users, 
   Target,
-  BarChart3
+  BarChart3,
+  Vote
 } from 'lucide-react';
 
 interface ResultsDashboardProps {
@@ -30,12 +28,18 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   groups,
   groupStats
 }) => {
-  const progressPercentage = (poll.current_consensus_points / poll.min_consensus_points_to_win) * 100;
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
   
-  // Sort statements by score
-  const sortedStatements = [...statements].sort((a, b) => b.score - a.score);
-  const topStatements = sortedStatements.slice(0, 5);
+  // Sort statements: consensus points first, then by score
+  const sortedStatements = [...statements].sort((a, b) => {
+    if (a.is_consensus_point && !b.is_consensus_point) return -1;
+    if (!a.is_consensus_point && b.is_consensus_point) return 1;
+    return b.score - a.score;
+  });
+
+  const getGroupStatsForStatement = (statementId: string) => {
+    return groupStats.filter(stat => stat.statement_id === statementId);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 hebrew-text">
@@ -68,176 +72,180 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
           </Card>
         )}
 
-        {/* Key Metrics */}
-        <div className="grid md:grid-cols-5 gap-4">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Target className="h-8 w-8 mx-auto mb-2 text-consensus-500" />
-              <div className="text-2xl font-bold text-consensus-600">
-                {poll.current_consensus_points}
-              </div>
-              <div className="text-sm text-muted-foreground">נקודות חיבור</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Users className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-              <div className="text-2xl font-bold text-blue-600">
-                {poll.total_votes}
-              </div>
-              <div className="text-sm text-muted-foreground">הצבעות</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6 text-center">
-              <BarChart3 className="h-8 w-8 mx-auto mb-2 text-purple-500" />
-              <div className="text-2xl font-bold text-purple-600">
-                {poll.total_statements}
-              </div>
-              <div className="text-sm text-muted-foreground">הצהרות</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Users className="h-8 w-8 mx-auto mb-2 text-orange-500" />
-              <div className="text-2xl font-bold text-orange-600">
-                {groups.length}
-              </div>
-              <div className="text-sm text-muted-foreground">קבוצות דעות</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6 text-center">
-              <TrendingUp className="h-8 w-8 mx-auto mb-2 text-green-500" />
-              <div className="text-2xl font-bold text-green-600">
-                {Math.round(progressPercentage)}%
-              </div>
-              <div className="text-sm text-muted-foreground">התקדמות</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Progress Bar */}
+        {/* Poll Statistics */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              התקדמות לעבר המטרה
-            </CardTitle>
+            <CardTitle className="text-center">סטטיסטיקות הסקר</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>{poll.current_consensus_points} נקודות חיבור</span>
-                <span>מטרה: {poll.min_consensus_points_to_win}</span>
+            <div className="grid grid-cols-5 gap-4">
+              <div className="text-center">
+                <Vote className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                <div className="text-2xl font-bold text-blue-600">
+                  {poll.total_votes}
+                </div>
+                <div className="text-sm text-muted-foreground">הצבעות</div>
               </div>
-              <Progress 
-                value={progressPercentage} 
-                className="h-4 consensus-gradient"
-              />
+              
+              <div className="text-center">
+                <Users className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                <div className="text-2xl font-bold text-purple-600">
+                  {groups.reduce((sum, group) => sum + group.member_count, 0)}
+                </div>
+                <div className="text-sm text-muted-foreground">משתתפים</div>
+              </div>
+              
+              <div className="text-center">
+                <BarChart3 className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+                <div className="text-2xl font-bold text-orange-600">
+                  {poll.total_statements}
+                </div>
+                <div className="text-sm text-muted-foreground">הצהרות</div>
+              </div>
+              
+              <div className="text-center">
+                <Star className="h-8 w-8 mx-auto mb-2 text-consensus-500" />
+                <div className="text-2xl font-bold text-consensus-600">
+                  {poll.current_consensus_points}
+                </div>
+                <div className="text-sm text-muted-foreground">נקודות חיבור</div>
+              </div>
+              
+              <div className="text-center">
+                <Target className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                <div className="text-2xl font-bold text-green-600">
+                  {groups.length}
+                </div>
+                <div className="text-sm text-muted-foreground">קבוצות דעות</div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Groups Visualization */}
-        <GroupsVisualization 
-          groups={groups}
-          groupStats={groupStats}
-          statements={statements}
-        />
+        {/* Groups Legend */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-wrap justify-center gap-4">
+              {groups.map((group) => (
+                <div key={group.group_id} className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-4 rounded-full"
+                    style={{ backgroundColor: group.color }}
+                  />
+                  <span className="text-sm font-medium">{group.name}</span>
+                  <Badge variant="outline" className="text-xs">
+                    {group.member_count}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Consensus Points */}
+        {/* Statement & Group Analysis */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-consensus-500" />
-              נקודות החיבור שנמצאו
+              <BarChart3 className="h-5 w-5" />
+              ניתוח הצהרות וקבוצות
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {consensusPoints.length === 0 && (
-                <p className="text-muted-foreground text-center py-8">
-                  עדיין לא נמצאו נקודות חיבור. המשיכו להצביע!
-                </p>
-              )}
-              {consensusPoints.map((point) => (
-                <div key={point.statement_id} className="consensus-point">
-                  <div className="flex items-start gap-3">
-                    <Star className="h-5 w-5 text-consensus-500 mt-1 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="font-medium leading-relaxed">
-                        {point.statement.content}
-                      </p>
-                      <div className="flex justify-between items-center mt-2 text-sm text-muted-foreground">
-                        <span>תמיכה: {Math.round(point.statement.support_pct)}%</span>
-                        <span>נקודות: {point.statement.score}</span>
-                        <Badge variant="outline" className="text-xs">
-                          קונצנזוס בכל הקבוצות
+            <div className="space-y-6">
+              {sortedStatements.map((statement) => {
+                const statementStats = getGroupStatsForStatement(statement.statement_id);
+                
+                return (
+                  <div 
+                    key={statement.statement_id} 
+                    className={`border rounded-lg p-6 ${
+                      statement.is_consensus_point 
+                        ? 'bg-consensus-50 border-consensus-300' 
+                        : 'bg-white'
+                    }`}
+                  >
+                    <div className="mb-4">
+                      <div className="flex items-start gap-3 mb-3">
+                        {statement.is_consensus_point && (
+                          <Star className="h-5 w-5 text-consensus-500 mt-1 flex-shrink-0" />
+                        )}
+                        <p className="font-medium leading-relaxed flex-1">
+                          {statement.content}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        {statement.is_consensus_point && (
+                          <Badge className="bg-consensus-500">
+                            נקודת חיבור
+                          </Badge>
+                        )}
+                        <Badge variant="outline">
+                          נקודות: {statement.score}
+                        </Badge>
+                        <Badge variant="outline">
+                          {statement.total_votes} הצבעות
                         </Badge>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top Statements */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              הצהרות מובילות
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {topStatements.map((statement, index) => (
-                <div key={statement.statement_id} className="border rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <Badge variant="secondary" className="text-sm">
-                      #{index + 1}
-                    </Badge>
-                    <div className="flex-1">
-                      <p className="font-medium leading-relaxed mb-3">
-                        {statement.content}
-                      </p>
-                      <div className="grid grid-cols-4 gap-4 text-sm">
-                        <div className="text-center">
-                          <div className="font-semibold text-voting-support">
-                            {Math.round(statement.support_pct)}%
+                    
+                    <div className="space-y-4">
+                      {statementStats.map((stat) => {
+                        const group = groups.find(g => g.group_id === stat.group_id);
+                        if (!group) return null;
+                        
+                        return (
+                          <div key={stat.group_id} className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: group.color }}
+                                />
+                                <span className="text-sm font-medium">{group.name}</span>
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {stat.total_votes} הצבעות
+                              </span>
+                            </div>
+                            
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-xs">
+                                <span className="text-voting-support">תמיכה {Math.round(stat.support_pct)}%</span>
+                                <span className="text-voting-oppose">התנגדות {Math.round(stat.oppose_pct)}%</span>
+                                <span className="text-voting-unsure">לא בטוח {Math.round(stat.unsure_pct)}%</span>
+                              </div>
+                              <div className="relative h-3 w-full bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                  className="absolute left-0 top-0 h-full bg-voting-support transition-all"
+                                  style={{ 
+                                    left: `${100 - stat.support_pct}%`,
+                                    width: `${stat.support_pct}%` 
+                                  }}
+                                />
+                                <div 
+                                  className="absolute top-0 h-full bg-voting-oppose transition-all"
+                                  style={{ 
+                                    left: `${100 - stat.support_pct - stat.oppose_pct}%`,
+                                    width: `${stat.oppose_pct}%` 
+                                  }}
+                                />
+                                <div 
+                                  className="absolute top-0 h-full bg-voting-unsure transition-all"
+                                  style={{ 
+                                    left: `0%`,
+                                    width: `${stat.unsure_pct}%` 
+                                  }}
+                                />
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-muted-foreground">תמיכה</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-semibold text-voting-oppose">
-                            {Math.round(statement.oppose_pct)}%
-                          </div>
-                          <div className="text-muted-foreground">התנגדות</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-semibold text-voting-unsure">
-                            {Math.round(statement.unsure_pct)}%
-                          </div>
-                          <div className="text-muted-foreground">לא בטוח</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-semibold text-blue-600">
-                            {statement.score}
-                          </div>
-                          <div className="text-muted-foreground">נקודות</div>
-                        </div>
-                      </div>
+                        );
+                      })}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
