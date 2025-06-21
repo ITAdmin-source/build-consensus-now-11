@@ -29,12 +29,7 @@ export const VotingPage: React.FC<VotingPageProps> = ({
 }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <NavigationHeader
-        poll={poll}
-        currentPage="voting"
-        onNavigateHome={onBackToHome}
-        onNavigateToResults={onViewResults}
-      />
+      <NavigationHeader currentPage="voting" />
       
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <PollHeader
@@ -50,7 +45,7 @@ export const VotingPage: React.FC<VotingPageProps> = ({
           currentStatementIndex={currentStatementIndex}
         />
         
-        <VotingInterface
+        VotingInterface
           poll={poll}
           statement={statements[currentStatementIndex]}
           onVote={onVote}
