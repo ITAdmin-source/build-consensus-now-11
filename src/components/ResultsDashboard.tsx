@@ -173,13 +173,6 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                         <TableCell className="text-center font-medium">
                           {statement.score}
                         </TableCell>
-                        <TableCell className="text-center">
-                          {statement.is_consensus_point && (
-                            <Badge className="bg-consensus-500 text-xs">
-                              נקודת חיבור
-                            </Badge>
-                          )}
-                        </TableCell>
                         {groups.map((group) => {
                           const stat = getGroupStatsForStatement(statement.statement_id, group.group_id);
                           
