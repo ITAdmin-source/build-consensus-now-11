@@ -28,12 +28,11 @@ const Index = () => {
   const handleVote = (statementId: string, vote: string) => {
     setUserVotes(prev => ({ ...prev, [statementId]: vote }));
     
-    // Move to next statement or show results
+    // Move to next statement if not the last one
     if (currentStatementIndex < pollStatements.length - 1) {
       setCurrentStatementIndex(prev => prev + 1);
-    } else {
-      setCurrentView('results');
     }
+    // Don't auto-transition on last vote - let VotingInterface handle it
   };
 
   const handleBackToHome = () => {
@@ -55,6 +54,7 @@ const Index = () => {
           onVote={handleVote}
           userVoteCount={Object.keys(userVotes).length}
           totalStatements={pollStatements.length}
+          onViewResults={handleViewResults}
         />
         <div className="fixed bottom-4 left-4 space-x-2">
           <Button onClick={handleBackToHome} variant="outline">

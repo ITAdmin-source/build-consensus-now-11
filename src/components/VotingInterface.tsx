@@ -11,7 +11,9 @@ import {
   ThumbsDown, 
   HelpCircle,
   Target,
-  Trophy
+  Trophy,
+  CheckCircle,
+  BarChart3
 } from 'lucide-react';
 
 interface VotingInterfaceProps {
@@ -26,6 +28,7 @@ interface VotingInterfaceProps {
   onVote: (statementId: string, vote: 'support' | 'oppose' | 'unsure') => void;
   userVoteCount: number;
   totalStatements: number;
+  onViewResults: () => void;
 }
 
 export const VotingInterface: React.FC<VotingInterfaceProps> = ({
@@ -33,10 +36,12 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   statement,
   onVote,
   userVoteCount,
-  totalStatements
+  totalStatements,
+  onViewResults
 }) => {
   const [isVoting, setIsVoting] = useState(false);
   const [selectedVote, setSelectedVote] = useState<'support' | 'oppose' | 'unsure' | null>(null);
+  const [showThankYou, setShowThankYou] = useState(false);
 
   const handleVote = async (vote: 'support' | 'oppose' | 'unsure') => {
     setSelectedVote(vote);
@@ -47,11 +52,68 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
       onVote(statement.statement_id, vote);
       setIsVoting(false);
       setSelectedVote(null);
+      
+      // Check if this was the last statement
+      if (userVoteCount + 1 >= totalStatements) {
+        setShowThankYou(true);
+      }
     }, 800);
   };
 
   const progressPercentage = (poll.current_consensus_points / poll.min_consensus_points_to_win) * 100;
   const userProgress = (userVoteCount / totalStatements) * 100;
+
+  // Show thank you screen when voting is completed
+  if (showThankYou) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+        <div className="max-w-2xl mx-auto space-y-6 pt-16">
+          <Card className="text-center">
+            <CardContent className="p-12">
+              <CheckCircle className="h-20 w-20 mx-auto mb-6 text-green-500" />
+              <h2 className="text-3xl font-bold text-green-800 mb-4 hebrew-text">
+                תודה רבה!
+              </h2>
+              <p className="text-lg text-gray-600 mb-6 hebrew-text leading-relaxed">
+                השלמת את ההצבעה בהצלחה על כל {totalStatements} ההצהרות.
+                <br />
+                התרומה שלך עוזרת לבנות קונצנזוס בחברה הישראלית.
+              </p>
+              
+              <div className="space-y-4">
+                <Button 
+                  onClick={onViewResults}
+                  className="w-full py-4 text-lg font-semibold bg-blue-600 hover:bg-blue-700"
+                >
+                  <BarChart3 className="h-5 w-5 ml-2" />
+                  צפה בתוצאות הסקר
+                </Button>
+                
+                <div className="text-sm text-gray-500 hebrew-text">
+                  הסקר ממשיך לרוץ עד: <CountdownTimer endTime={poll.end_time} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Win Condition */}
+          {progressPercentage >= 100 && (
+            <Card className="bg-gradient-to-r from-green-100 to-blue-100 border-green-300">
+              <CardContent className="p-6 text-center">
+                <Trophy className="h-12 w-12 mx-auto mb-4 text-green-600" />
+                <h3 className="text-2xl font-bold text-green-800 mb-2">
+                  ניצחון קבוצתי!
+                </h3>
+                <p className="text-green-700">
+                  הצלחתם למצוא מספיק נקודות חיבור. כולם זוכים יחד!
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
