@@ -3,7 +3,6 @@ import React from 'react';
 import { Group, GroupStatementStats, Statement } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Users, Palette } from 'lucide-react';
 
 interface GroupsVisualizationProps {
@@ -107,43 +106,30 @@ export const GroupsVisualization: React.FC<GroupsVisualizationProps> = ({
                             </span>
                           </div>
                           
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            <div className="space-y-1">
-                              <div className="flex justify-between">
-                                <span>תמיכה</span>
-                                <span className="font-medium text-voting-support">
-                                  {Math.round(stat.support_pct)}%
-                                </span>
-                              </div>
-                              <Progress 
-                                value={stat.support_pct} 
-                                className="h-2 bg-gray-200"
-                              />
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-voting-support">תמיכה {Math.round(stat.support_pct)}%</span>
+                              <span className="text-voting-oppose">התנגדות {Math.round(stat.oppose_pct)}%</span>
+                              <span className="text-voting-unsure">לא בטוח {Math.round(stat.unsure_pct)}%</span>
                             </div>
-                            
-                            <div className="space-y-1">
-                              <div className="flex justify-between">
-                                <span>התנגדות</span>
-                                <span className="font-medium text-voting-oppose">
-                                  {Math.round(stat.oppose_pct)}%
-                                </span>
-                              </div>
-                              <Progress 
-                                value={stat.oppose_pct} 
-                                className="h-2 bg-gray-200"
+                            <div className="relative h-3 w-full bg-gray-200 rounded-full overflow-hidden">
+                              <div 
+                                className="absolute left-0 top-0 h-full bg-voting-support transition-all"
+                                style={{ width: `${stat.support_pct}%` }}
                               />
-                            </div>
-                            
-                            <div className="space-y-1">
-                              <div className="flex justify-between">
-                                <span>לא בטוח</span>
-                                <span className="font-medium text-voting-unsure">
-                                  {Math.round(stat.unsure_pct)}%
-                                </span>
-                              </div>
-                              <Progress 
-                                value={stat.unsure_pct} 
-                                className="h-2 bg-gray-200"
+                              <div 
+                                className="absolute top-0 h-full bg-voting-oppose transition-all"
+                                style={{ 
+                                  left: `${stat.support_pct}%`,
+                                  width: `${stat.oppose_pct}%` 
+                                }}
+                              />
+                              <div 
+                                className="absolute top-0 h-full bg-voting-unsure transition-all"
+                                style={{ 
+                                  left: `${stat.support_pct + stat.oppose_pct}%`,
+                                  width: `${stat.unsure_pct}%` 
+                                }}
                               />
                             </div>
                           </div>
