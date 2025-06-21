@@ -47,3 +47,24 @@ export interface ConsensusPoint {
   detected_at: string;
   statement: Statement;
 }
+
+export interface Group {
+  group_id: string;
+  poll_id: string;
+  name: string;
+  description: string;
+  color: string;
+  member_count: number;
+  algorithm: string;
+  created_at: string;
+}
+
+export interface GroupStatementStats {
+  group_id: string;
+  statement_id: string;
+  poll_id: string;
+  support_pct: number;
+  oppose_pct: number;
+  unsure_pct: number;
+  total_votes: number;
+}

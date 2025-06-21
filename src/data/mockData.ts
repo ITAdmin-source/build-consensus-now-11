@@ -1,5 +1,5 @@
 
-import { Poll, Statement, ConsensusPoint } from '@/types/poll';
+import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 
 export const mockPolls: Poll[] = [
   {
@@ -135,5 +135,97 @@ export const mockConsensusPoints: ConsensusPoint[] = [
     poll_id: '2',
     detected_at: new Date().toISOString(),
     statement: mockStatements[3]
+  }
+];
+
+export const mockGroups: Group[] = [
+  {
+    group_id: '1',
+    poll_id: '1',
+    name: 'חסידי הטכנולוגיה',
+    description: 'קבוצה התומכת בשילוב נרחב של טכנולוגיה בחינוך',
+    color: '#3B82F6',
+    member_count: 47,
+    algorithm: 'k-means',
+    created_at: new Date().toISOString()
+  },
+  {
+    group_id: '2',
+    poll_id: '1',
+    name: 'הפדגוגים המסורתיים',
+    description: 'קבוצה המעדיפה שיטות חינוך מסורתיות עם טכנולוגיה מינימלית',
+    color: '#10B981',
+    member_count: 52,
+    algorithm: 'k-means',
+    created_at: new Date().toISOString()
+  },
+  {
+    group_id: '3',
+    poll_id: '1',
+    name: 'המתונים',
+    description: 'קבוצה המחפשת איזון בין טכנולוגיה לחינוך מסורתי',
+    color: '#F59E0B',
+    member_count: 38,
+    algorithm: 'k-means',
+    created_at: new Date().toISOString()
+  }
+];
+
+export const mockGroupStatementStats: GroupStatementStats[] = [
+  // Statement 1 stats by group
+  {
+    group_id: '1',
+    statement_id: '1',
+    poll_id: '1',
+    support_pct: 95,
+    oppose_pct: 3,
+    unsure_pct: 2,
+    total_votes: 47
+  },
+  {
+    group_id: '2',
+    statement_id: '1',
+    poll_id: '1',
+    support_pct: 65,
+    oppose_pct: 25,
+    unsure_pct: 10,
+    total_votes: 52
+  },
+  {
+    group_id: '3',
+    statement_id: '1',
+    poll_id: '1',
+    support_pct: 78,
+    oppose_pct: 12,
+    unsure_pct: 10,
+    total_votes: 38
+  },
+  // Statement 2 stats by group
+  {
+    group_id: '1',
+    statement_id: '2',
+    poll_id: '1',
+    support_pct: 87,
+    oppose_pct: 8,
+    unsure_pct: 5,
+    total_votes: 47
+  },
+  {
+    group_id: '2',
+    statement_id: '2',
+    poll_id: '1',
+    support_pct: 92,
+    oppose_pct: 4,
+    unsure_pct: 4,
+    total_votes: 52
+  },
+  {
+    group_id: '3',
+    statement_id: '2',
+    poll_id: '1',
+    support_pct: 89,
+    oppose_pct: 6,
+    unsure_pct: 5,
+    total_votes: 38
   }
 ];

@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { Poll, Statement, ConsensusPoint } from '@/types/poll';
+import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CountdownTimer } from './CountdownTimer';
+import { GroupsVisualization } from './GroupsVisualization';
 import { 
   Star, 
   Trophy, 
@@ -18,12 +19,16 @@ interface ResultsDashboardProps {
   poll: Poll;
   statements: Statement[];
   consensusPoints: ConsensusPoint[];
+  groups: Group[];
+  groupStats: GroupStatementStats[];
 }
 
 export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   poll,
   statements,
-  consensusPoints
+  consensusPoints,
+  groups,
+  groupStats
 }) => {
   const progressPercentage = (poll.current_consensus_points / poll.min_consensus_points_to_win) * 100;
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
@@ -64,7 +69,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
         )}
 
         {/* Key Metrics */}
-        <div className="grid md:grid-cols-4 gap-4">
+        <div className="grid md:grid-cols-5 gap-4">
           <Card>
             <CardContent className="p-6 text-center">
               <Target className="h-8 w-8 mx-auto mb-2 text-consensus-500" />
@@ -92,6 +97,16 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                 {poll.total_statements}
               </div>
               <div className="text-sm text-muted-foreground">הצהרות</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Users className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+              <div className="text-2xl font-bold text-orange-600">
+                {groups.length}
+              </div>
+              <div className="text-sm text-muted-foreground">קבוצות דעות</div>
             </CardContent>
           </Card>
           
@@ -128,6 +143,13 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
           </CardContent>
         </Card>
 
+        {/* Groups Visualization */}
+        <GroupsVisualization 
+          groups={groups}
+          groupStats={groupStats}
+          statements={statements}
+        />
+
         {/* Consensus Points */}
         <Card>
           <CardHeader>
@@ -154,6 +176,9 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                       <div className="flex justify-between items-center mt-2 text-sm text-muted-foreground">
                         <span>תמיכה: {Math.round(point.statement.support_pct)}%</span>
                         <span>נקודות: {point.statement.score}</span>
+                        <Badge variant="outline" className="text-xs">
+                          קונצנזוס בכל הקבוצות
+                        </Badge>
                       </div>
                     </div>
                   </div>

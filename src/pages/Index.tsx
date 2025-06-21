@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { PollCard } from '@/components/PollCard';
 import { VotingInterface } from '@/components/VotingInterface';
 import { ResultsDashboard } from '@/components/ResultsDashboard';
-import { mockPolls, mockStatements, mockConsensusPoints } from '@/data/mockData';
+import { mockPolls, mockStatements, mockConsensusPoints, mockGroups, mockGroupStatementStats } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,6 +17,8 @@ const Index = () => {
   const selectedPoll = selectedPollId ? mockPolls.find(p => p.poll_id === selectedPollId) : null;
   const pollStatements = selectedPollId ? mockStatements.filter(s => s.poll_id === selectedPollId) : [];
   const pollConsensusPoints = selectedPollId ? mockConsensusPoints.filter(cp => cp.poll_id === selectedPollId) : [];
+  const pollGroups = selectedPollId ? mockGroups.filter(g => g.poll_id === selectedPollId) : [];
+  const pollGroupStats = selectedPollId ? mockGroupStatementStats.filter(gs => gs.poll_id === selectedPollId) : [];
 
   const handleJoinPoll = (pollId: string) => {
     setSelectedPollId(pollId);
@@ -75,6 +76,8 @@ const Index = () => {
           poll={selectedPoll}
           statements={pollStatements}
           consensusPoints={pollConsensusPoints}
+          groups={pollGroups}
+          groupStats={pollGroupStats}
         />
         <div className="fixed bottom-4 left-4 space-x-2">
           <Button onClick={handleBackToHome} variant="outline">
