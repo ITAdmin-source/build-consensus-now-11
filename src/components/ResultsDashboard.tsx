@@ -4,6 +4,7 @@ import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/t
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CountdownTimer } from './CountdownTimer';
 import { 
   Star, 
@@ -38,14 +39,14 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
     return b.score - a.score;
   });
 
-  const getGroupStatsForStatement = (statementId: string) => {
-    return groupStats.filter(stat => stat.statement_id === statementId);
+  const getGroupStatsForStatement = (statementId: string, groupId: string) => {
+    return groupStats.find(stat => stat.statement_id === statementId && stat.group_id === groupId);
   };
 
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 hebrew-text">
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="text-center space-y-4">
             <h1 className="text-4xl font-bold text-gradient">
@@ -121,140 +122,122 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
             </CardContent>
           </Card>
 
-          {/* Groups Legend */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-wrap justify-center gap-4">
-                {groups.map((group) => (
-                  <div key={group.group_id} className="flex items-center gap-2">
-                    <div 
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: group.color }}
-                    />
-                    <span className="text-sm font-medium">{group.name}</span>
-                    <Badge variant="outline" className="text-xs">
-                      {group.member_count}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Statement & Group Analysis */}
+          {/* Statements Table */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                ניתוח הצהרות וקבוצות
+                ניתוח הצהרות לפי קבוצות
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {sortedStatements.map((statement) => {
-                  const statementStats = getGroupStatsForStatement(statement.statement_id);
-                  
-                  return (
-                    <div 
-                      key={statement.statement_id} 
-                      className={`border rounded-lg p-6 ${
-                        statement.is_consensus_point 
-                          ? 'bg-consensus-50 border-consensus-300' 
-                          : 'bg-white'
-                      }`}
-                    >
-                      <div className="mb-4">
-                        <div className="flex items-start gap-3 mb-3">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[300px]">הצהרה</TableHead>
+                      <TableHead className="w-20 text-center">נקודות</TableHead>
+                      <TableHead className="w-24 text-center">סטטוס</TableHead>
+                      {groups.map((group) => (
+                        <TableHead key={group.group_id} className="w-32 text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="flex items-center gap-1">
+                              <div 
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: group.color }}
+                              />
+                              <span className="text-xs font-medium">{group.name}</span>
+                            </div>
+                            <Badge variant="outline" className="text-xs px-1">
+                              {group.member_count}
+                            </Badge>
+                          </div>
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedStatements.map((statement) => (
+                      <TableRow 
+                        key={statement.statement_id}
+                        className={statement.is_consensus_point ? 'bg-consensus-50' : ''}
+                      >
+                        <TableCell>
+                          <div className="flex items-start gap-2">
+                            {statement.is_consensus_point && (
+                              <Star className="h-4 w-4 text-consensus-500 mt-1 flex-shrink-0" />
+                            )}
+                            <p className="leading-relaxed">{statement.content}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center font-medium">
+                          {statement.score}
+                        </TableCell>
+                        <TableCell className="text-center">
                           {statement.is_consensus_point && (
-                            <Star className="h-5 w-5 text-consensus-500 mt-1 flex-shrink-0" />
-                          )}
-                          <p className="font-medium leading-relaxed flex-1">
-                            {statement.content}
-                          </p>
-                        </div>
-                        
-                        <div className="flex items-center gap-3">
-                          {statement.is_consensus_point && (
-                            <Badge className="bg-consensus-500">
+                            <Badge className="bg-consensus-500 text-xs">
                               נקודת חיבור
                             </Badge>
                           )}
-                          <Badge variant="outline">
-                            נקודות: {statement.score}
-                          </Badge>
-                          <Badge variant="outline">
-                            {statement.total_votes} הצבעות
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      {/* Progress Bars - Horizontal on Desktop, Vertical on Mobile */}
-                      <div className="space-y-4">
-                        <div className={`grid gap-4 ${
-                          groups.length <= 2 ? 'md:grid-cols-2' :
-                          groups.length <= 3 ? 'md:grid-cols-3' :
-                          groups.length <= 4 ? 'md:grid-cols-4' :
-                          'md:grid-cols-5'
-                        } grid-cols-1`}>
-                          {statementStats.map((stat) => {
-                            const group = groups.find(g => g.group_id === stat.group_id);
-                            if (!group) return null;
-                            
+                        </TableCell>
+                        {groups.map((group) => {
+                          const stat = getGroupStatsForStatement(statement.statement_id, group.group_id);
+                          
+                          if (!stat) {
                             return (
-                              <div key={stat.group_id} className="space-y-2">
-                                <div className="flex items-center justify-center gap-2 mb-2">
-                                  <div 
-                                    className="w-3 h-3 rounded-full"
-                                    style={{ backgroundColor: group.color }}
-                                  />
-                                  <span className="text-sm font-medium text-center">{group.name}</span>
-                                </div>
-                                
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="relative h-4 w-full bg-gray-200 rounded-full overflow-hidden cursor-pointer">
-                                      <div 
-                                        className="absolute left-0 top-0 h-full bg-voting-support transition-all"
-                                        style={{ 
-                                          left: `${100 - stat.support_pct}%`,
-                                          width: `${stat.support_pct}%` 
-                                        }}
-                                      />
-                                      <div 
-                                        className="absolute top-0 h-full bg-voting-oppose transition-all"
-                                        style={{ 
-                                          left: `${100 - stat.support_pct - stat.oppose_pct}%`,
-                                          width: `${stat.oppose_pct}%` 
-                                        }}
-                                      />
-                                      <div 
-                                        className="absolute top-0 h-full bg-voting-unsure transition-all"
-                                        style={{ 
-                                          left: `0%`,
-                                          width: `${stat.unsure_pct}%` 
-                                        }}
-                                      />
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <div className="text-sm space-y-1">
-                                      <div className="text-voting-support">תמיכה: {Math.round(stat.support_pct)}%</div>
-                                      <div className="text-voting-oppose">התנגדות: {Math.round(stat.oppose_pct)}%</div>
-                                      <div className="text-voting-unsure">לא בטוח: {Math.round(stat.unsure_pct)}%</div>
-                                      <div className="border-t pt-1 text-muted-foreground">
-                                        סה"כ הצבעות: {stat.total_votes}
-                                      </div>
-                                    </div>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
+                              <TableCell key={group.group_id} className="text-center">
+                                <div className="text-xs text-muted-foreground">אין נתונים</div>
+                              </TableCell>
                             );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                          }
+                          
+                          return (
+                            <TableCell key={group.group_id} className="px-2">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="relative h-6 w-full bg-gray-200 rounded-full overflow-hidden cursor-pointer">
+                                    <div 
+                                      className="absolute left-0 top-0 h-full bg-voting-support transition-all"
+                                      style={{ 
+                                        left: `${100 - stat.support_pct}%`,
+                                        width: `${stat.support_pct}%` 
+                                      }}
+                                    />
+                                    <div 
+                                      className="absolute top-0 h-full bg-voting-oppose transition-all"
+                                      style={{ 
+                                        left: `${100 - stat.support_pct - stat.oppose_pct}%`,
+                                        width: `${stat.oppose_pct}%` 
+                                      }}
+                                    />
+                                    <div 
+                                      className="absolute top-0 h-full bg-voting-unsure transition-all"
+                                      style={{ 
+                                        left: `0%`,
+                                        width: `${stat.unsure_pct}%` 
+                                      }}
+                                    />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <div className="text-sm space-y-1">
+                                    <div className="font-medium">{group.name}</div>
+                                    <div className="text-voting-support">תמיכה: {Math.round(stat.support_pct)}%</div>
+                                    <div className="text-voting-oppose">התנגדות: {Math.round(stat.oppose_pct)}%</div>
+                                    <div className="text-voting-unsure">לא בטוח: {Math.round(stat.unsure_pct)}%</div>
+                                    <div className="border-t pt-1 text-muted-foreground">
+                                      סה"כ הצבעות: {stat.total_votes}
+                                    </div>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>
