@@ -137,7 +137,6 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                     <TableRow>
                       <TableHead className="min-w-[300px]">הצהרה</TableHead>
                       <TableHead className="w-20 text-center">נקודות</TableHead>
-                      <TableHead className="w-24 text-center">סטטוס</TableHead>
                       {groups.map((group) => (
                         <TableHead key={group.group_id} className="w-32 text-center">
                           <div className="flex flex-col items-center gap-1">
