@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { AdminProtectedRoute } from "@/components/AdminProtectedRoute";
+import { EditPollPage } from "@/components/admin/EditPollPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
@@ -28,6 +29,14 @@ const App = () => (
               element={
                 <AdminProtectedRoute>
                   <AdminDashboard />
+                </AdminProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/edit-poll/:pollId" 
+              element={
+                <AdminProtectedRoute>
+                  <EditPollPage />
                 </AdminProtectedRoute>
               } 
             />

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   Users, 
   BarChart3, 
@@ -18,9 +18,12 @@ import {
   Target,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Edit,
+  Eye
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { NewPollForm } from '@/components/admin/NewPollForm';
 
 // Mock data for demonstration
 const mockPolls = [
@@ -68,6 +71,7 @@ const AdminDashboard = () => {
   const { admin, logout } = useAdmin();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
+  const [showNewPollDialog, setShowNewPollDialog] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -89,6 +93,19 @@ const AdminDashboard = () => {
     toast({
       title: 'הצהרה נדחתה',
       description: 'ההצהרה הוסרה מהמתנה',
+    });
+  };
+
+  const handleEditPoll = (pollId: string) => {
+    navigate(`/admin/edit-poll/${pollId}`);
+  };
+
+  const handleNewPollSuccess = () => {
+    setShowNewPollDialog(false);
+    setActiveTab('polls');
+    toast({
+      title: 'סקר נוצר בהצלחה',
+      description: 'הסקר החדש זמין בכרטיסיית ניהול הסקרים',
     });
   };
 
@@ -224,10 +241,23 @@ const AdminDashboard = () => {
           <TabsContent value="polls" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">ניהול סקרים</h2>
-              <Button>
-                <Plus className="h-4 w-4 ml-1" />
-                סקר חדש
-              </Button>
+              <Dialog open={showNewPollDialog} onOpenChange={setShowNewPollDialog}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 ml-1" />
+                    סקר חדש
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="hebrew-text">יצירת סקר חדש</DialogTitle>
+                  </DialogHeader>
+                  <NewPollForm 
+                    onSuccess={handleNewPollSuccess}
+                    onCancel={() => setShowNewPollDialog(false)}
+                  />
+                </DialogContent>
+              </Dialog>
             </div>
 
             <div className="grid gap-6">
@@ -258,8 +288,18 @@ const AdminDashboard = () => {
                     </div>
                     
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">עריכה</Button>
-                      <Button variant="outline" size="sm">תוצאות</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditPoll(poll.id)}
+                      >
+                        <Edit className="h-4 w-4 ml-1" />
+                        עריכה
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4 ml-1" />
+                        תוצאות
+                      </Button>
                       <Button variant="outline" size="sm">
                         <Clock className="h-4 w-4 ml-1" />
                         הארך זמן
