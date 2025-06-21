@@ -4,12 +4,11 @@ import { Poll, Statement } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { UserStatementForm } from '@/components/UserStatementForm';
 import { 
   ThumbsUp, 
   ThumbsDown, 
   HelpCircle,
-  Clock,
   Users
 } from 'lucide-react';
 
@@ -20,6 +19,7 @@ interface VotingInterfaceProps {
   userVoteCount: number;
   totalStatements: number;
   onViewResults: () => void;
+  onSubmitStatement?: (content: string, contentType: string) => void;
 }
 
 export const VotingInterface: React.FC<VotingInterfaceProps> = ({
@@ -28,10 +28,17 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   onVote,
   userVoteCount,
   totalStatements,
-  onViewResults
+  onViewResults,
+  onSubmitStatement
 }) => {
   const handleVote = (vote: string) => {
     onVote(statement.statement_id, vote);
+  };
+
+  const handleSubmitStatement = (content: string, contentType: string) => {
+    if (onSubmitStatement) {
+      onSubmitStatement(content, contentType);
+    }
   };
 
   const isLastStatement = userVoteCount === totalStatements - 1;
@@ -106,6 +113,14 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
           )}
         </CardContent>
       </Card>
+
+      {/* User Statement Form - Only show if user statements are allowed */}
+      {poll.allow_user_statements && onSubmitStatement && (
+        <UserStatementForm 
+          poll={poll}
+          onSubmitStatement={handleSubmitStatement}
+        />
+      )}
     </div>
   );
 };

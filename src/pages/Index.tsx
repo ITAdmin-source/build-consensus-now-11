@@ -50,6 +50,14 @@ const Index = () => {
     }
   };
 
+  const handleSubmitStatement = (content: string, contentType: string) => {
+    // In a real implementation, this would call an API
+    console.log('Submitting statement:', { content, contentType, pollId: selectedPollId });
+    
+    // Show success message (in real implementation, you'd show a toast)
+    alert('ההצהרה נשלחה בהצלחה!');
+  };
+
   const handleBackToHome = () => {
     setCurrentView('home');
     setSelectedPollId(null);
@@ -95,6 +103,7 @@ const Index = () => {
             userVoteCount={Object.keys(userVotes).length}
             totalStatements={pollStatements.length}
             onViewResults={handleViewResults}
+            onSubmitStatement={handleSubmitStatement}
           />
         </div>
       </div>
