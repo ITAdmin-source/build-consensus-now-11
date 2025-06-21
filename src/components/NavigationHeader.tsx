@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CountdownTimer } from './CountdownTimer';
 import { Poll } from '@/types/poll';
 import { 
   ArrowRight, 
@@ -39,15 +37,6 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
               נקודות חיבור
             </Button>
           </div>
-          
-          {poll && (
-            <div className="flex items-center gap-4">
-              <CountdownTimer endTime={poll.end_time} className="text-sm" />
-              <Badge variant="secondary" className="hebrew-text">
-                {poll.category}
-              </Badge>
-            </div>
-          )}
         </div>
 
         {/* Breadcrumb Navigation */}
