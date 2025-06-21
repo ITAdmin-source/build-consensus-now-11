@@ -5,11 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { UserStatementForm } from '@/components/UserStatementForm';
+import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import { 
   ThumbsUp, 
   ThumbsDown, 
   HelpCircle,
-  Users
+  Users,
+  LogIn
 } from 'lucide-react';
 
 interface VotingInterfaceProps {
@@ -31,7 +34,12 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   onViewResults,
   onSubmitStatement
 }) => {
+  const { user } = useAuth();
+
   const handleVote = (vote: string) => {
+    if (!user) {
+      return; // Will be handled by parent component
+    }
     onVote(statement.statement_id, vote);
   };
 
@@ -43,6 +51,29 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
 
   const isLastStatement = userVoteCount === totalStatements - 1;
   const allStatementsVoted = userVoteCount === totalStatements;
+
+  // Show authentication prompt if user is not logged in
+  if (!user) {
+    return (
+      <Card className="poll-card">
+        <CardContent className="text-center py-12">
+          <LogIn className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-xl font-bold mb-2 hebrew-text">
+            נדרשת התחברות
+          </h3>
+          <p className="text-muted-foreground mb-6 hebrew-text">
+            כדי להשתתף בסקר ולהצביע על הצהרות, יש להתחבר למערכת
+          </p>
+          <Link to="/auth">
+            <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+              <LogIn className="h-4 w-4 ml-2" />
+              התחבר למערכת
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
