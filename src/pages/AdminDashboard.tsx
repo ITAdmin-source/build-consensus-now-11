@@ -20,10 +20,12 @@ import {
   XCircle,
   AlertCircle,
   Edit,
-  Eye
+  Eye,
+  Cog
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NewPollForm } from '@/components/admin/NewPollForm';
+import { SystemConfig } from '@/components/admin/SystemConfig';
 
 // Mock data for demonstration
 const mockPolls = [
@@ -152,11 +154,12 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview" className="hebrew-text">סקירה כללית</TabsTrigger>
             <TabsTrigger value="polls" className="hebrew-text">ניהול סקרים</TabsTrigger>
             <TabsTrigger value="statements" className="hebrew-text">אישור הצהרות</TabsTrigger>
             <TabsTrigger value="analytics" className="hebrew-text">אנליטיקה</TabsTrigger>
+            <TabsTrigger value="system" className="hebrew-text">הגדרות מערכת</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -390,6 +393,15 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* System Configuration Tab */}
+          <TabsContent value="system" className="space-y-6">
+            <div className="flex items-center gap-2 mb-6">
+              <Cog className="h-6 w-6" />
+              <h2 className="text-2xl font-bold">הגדרות מערכת</h2>
+            </div>
+            <SystemConfig />
           </TabsContent>
         </Tabs>
       </div>
