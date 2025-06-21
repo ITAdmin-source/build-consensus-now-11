@@ -1,11 +1,9 @@
-
 import React from 'react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CountdownTimer } from './CountdownTimer';
 import { 
   Star, 
   Trophy, 
@@ -47,19 +45,6 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
     <TooltipProvider>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 hebrew-text">
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold text-gradient">
-              תוצאות: {poll.title}
-            </h1>
-            <div className="flex justify-center items-center gap-6">
-              <CountdownTimer endTime={poll.end_time} />
-              <Badge variant="outline" className="text-lg px-4 py-2">
-                {poll.category}
-              </Badge>
-            </div>
-          </div>
-
           {/* Victory Banner */}
           {isWinning && (
             <Card className="bg-gradient-to-r from-green-100 to-blue-100 border-green-300">
