@@ -115,19 +115,22 @@ export const GroupsVisualization: React.FC<GroupsVisualizationProps> = ({
                             <div className="relative h-3 w-full bg-gray-200 rounded-full overflow-hidden">
                               <div 
                                 className="absolute left-0 top-0 h-full bg-voting-support transition-all"
-                                style={{ width: `${stat.support_pct}%` }}
+                                style={{ 
+                                  left: `${100 - stat.support_pct}%`,
+                                  width: `${stat.support_pct}%` 
+                                }}
                               />
                               <div 
                                 className="absolute top-0 h-full bg-voting-oppose transition-all"
                                 style={{ 
-                                  left: `${stat.support_pct}%`,
+                                  left: `${100 - stat.support_pct - stat.oppose_pct}%`,
                                   width: `${stat.oppose_pct}%` 
                                 }}
                               />
                               <div 
                                 className="absolute top-0 h-full bg-voting-unsure transition-all"
                                 style={{ 
-                                  left: `${stat.support_pct + stat.oppose_pct}%`,
+                                  left: `0%`,
                                   width: `${stat.unsure_pct}%` 
                                 }}
                               />
