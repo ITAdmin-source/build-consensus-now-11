@@ -45,7 +45,7 @@ export const VotingPage: React.FC<VotingPageProps> = ({
           currentStatementIndex={currentStatementIndex}
         />
         
-        VotingInterface
+        <VotingInterface
           poll={poll}
           statement={statements[currentStatementIndex]}
           onVote={onVote}
