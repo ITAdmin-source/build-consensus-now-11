@@ -136,7 +136,7 @@
   }
 
   .consensus-point {
-    @apply bg-gradient-to-r from-consensus-100 to-consensus-200 border border-consensus-300 rounded-lg p-4 animate-pulse-slow;
+    @apply bg-gradient-to-r from-consensus-50 to-consensus-100 border border-consensus-500 rounded-lg p-4 animate-pulse-slow;
   }
 
   .timer-urgent {
