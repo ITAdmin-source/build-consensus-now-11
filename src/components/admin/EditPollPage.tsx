@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,7 +13,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, Save, Clock, RotateCcw, Trash2 } from 'lucide-react';
+import { ArrowRight, Save, Settings, FileText, BarChart3, Download } from 'lucide-react';
+import { StatementsManagement } from './StatementsManagement';
+import { AdvancedSettings } from './AdvancedSettings';
+import { PollAnalytics } from './PollAnalytics';
+import { ExportImport } from './ExportImport';
 import type { Poll } from '@/types/poll';
 
 const editPollSchema = z.object({
@@ -43,7 +48,6 @@ const categories = [
   { value: 'transport', label: 'תחבורה' }
 ];
 
-// Mock poll data
 const mockPoll: Poll = {
   poll_id: '1',
   title: 'עתיד החינוך בישראל',
@@ -69,6 +73,7 @@ export const EditPollPage: React.FC = () => {
   const { toast } = useToast();
   const [poll, setPoll] = useState<Poll | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('basic');
 
   const form = useForm<EditPollFormData>({
     resolver: zodResolver(editPollSchema),
@@ -89,24 +94,20 @@ export const EditPollPage: React.FC = () => {
   });
 
   useEffect(() => {
-    // Mock API call to fetch poll data
     const fetchPoll = async () => {
       setIsLoading(true);
       try {
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // In real app, would fetch from API using pollId
         const pollData = mockPoll;
         setPoll(pollData);
         
-        // Set form values
         form.reset({
           title: pollData.title,
           topic: pollData.topic,
           description: pollData.description,
           category: pollData.category,
-          end_time: pollData.end_time.slice(0, 16), // Format for datetime-local input
+          end_time: pollData.end_time.slice(0, 16),
           min_consensus_points_to_win: pollData.min_consensus_points_to_win,
           allow_user_statements: pollData.allow_user_statements,
           auto_approve_statements: pollData.auto_approve_statements,
@@ -133,8 +134,6 @@ export const EditPollPage: React.FC = () => {
   const onSubmit = async (data: EditPollFormData) => {
     try {
       console.log('Updating poll:', data);
-      
-      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
@@ -146,27 +145,6 @@ export const EditPollPage: React.FC = () => {
         title: 'שגיאה בעדכון הסקר',
         description: 'אנא נסה שוב מאוחר יותר',
         variant: 'destructive'
-      });
-    }
-  };
-
-  const handleExtendTime = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 7);
-    const newEndTime = tomorrow.toISOString().slice(0, 16);
-    
-    form.setValue('end_time', newEndTime);
-    toast({
-      title: 'זמן הסקר הוארך',
-      description: 'הסקר יסתיים בעוד שבוע מהיום',
-    });
-  };
-
-  const handleResetPoll = () => {
-    if (confirm('האם אתה בטוח שברצונך לאפס את הסקר? פעולה זו תמחק את כל ההצבעות!')) {
-      toast({
-        title: 'הסקר אופס',
-        description: 'כל ההצבעות נמחקו והסקר חוזר למצב התחלתי',
       });
     }
   };
@@ -210,7 +188,7 @@ export const EditPollPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold hebrew-text">עריכת סקר</h1>
-            <p className="text-muted-foreground hebrew-text">עריכה ועדכון הגדרות הסקר</p>
+            <p className="text-muted-foreground hebrew-text">ניהול ועריכה מתקדמת של הסקר</p>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant={poll.status === 'active' ? 'default' : 'secondary'}>
@@ -223,315 +201,244 @@ export const EditPollPage: React.FC = () => {
         </div>
       </div>
 
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle className="hebrew-text">פרטי הסקר</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Basic Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold hebrew-text">מידע בסיסי</h3>
-                  
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="hebrew-text">כותרת הסקר</FormLabel>
-                        <FormControl>
-                          <Input 
-                            className="hebrew-text text-right"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+      <Card className="max-w-6xl mx-auto">
+        <CardContent className="p-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-5 hebrew-text">
+              <TabsTrigger value="basic" className="hebrew-text">
+                <Settings className="h-4 w-4 ml-1" />
+                הגדרות בסיסיות
+              </TabsTrigger>
+              <TabsTrigger value="statements" className="hebrew-text">
+                <FileText className="h-4 w-4 ml-1" />
+                ניהול הצהרות
+              </TabsTrigger>
+              <TabsTrigger value="advanced" className="hebrew-text">
+                <Settings className="h-4 w-4 ml-1" />
+                הגדרות מתקדמות
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="hebrew-text">
+                <BarChart3 className="h-4 w-4 ml-1" />
+                אנליטיקה
+              </TabsTrigger>
+              <TabsTrigger value="export" className="hebrew-text">
+                <Download className="h-4 w-4 ml-1" />
+                ייצוא/ייבוא
+              </TabsTrigger>
+            </TabsList>
 
-                  <FormField
-                    control={form.control}
-                    name="topic"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="hebrew-text">נושא</FormLabel>
-                        <FormControl>
-                          <Input 
-                            className="hebrew-text text-right"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            <TabsContent value="basic" className="space-y-6 mt-6">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold hebrew-text">מידע בסיסי</h3>
+                      
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="hebrew-text">כותרת הסקר</FormLabel>
+                            <FormControl>
+                              <Input className="hebrew-text text-right" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="hebrew-text">קטגוריה</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="hebrew-text">
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category.value} value={category.value} className="hebrew-text">
-                                {category.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="topic"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="hebrew-text">נושא</FormLabel>
+                            <FormControl>
+                              <Input className="hebrew-text text-right" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="hebrew-text">סטטוס</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="hebrew-text">
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="draft" className="hebrew-text">טיוטה</SelectItem>
-                            <SelectItem value="active" className="hebrew-text">פעיל</SelectItem>
-                            <SelectItem value="closed" className="hebrew-text">סגור</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="category"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="hebrew-text">קטגוריה</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="hebrew-text">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {categories.map((category) => (
+                                  <SelectItem key={category.value} value={category.value} className="hebrew-text">
+                                    {category.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="hebrew-text">תיאור הסקר</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            className="hebrew-text text-right min-h-[100px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                      <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="hebrew-text">סטטוס</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="hebrew-text">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="draft" className="hebrew-text">טיוטה</SelectItem>
+                                <SelectItem value="active" className="hebrew-text">פעיל</SelectItem>
+                                <SelectItem value="closed" className="hebrew-text">סגור</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                {/* Settings */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold hebrew-text">הגדרות סקר</h3>
-                  
-                  <FormField
-                    control={form.control}
-                    name="end_time"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="hebrew-text">זמן סיום</FormLabel>
-                        <div className="flex gap-2">
-                          <FormControl>
-                            <Input 
-                              type="datetime-local"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <Button type="button" size="sm" variant="outline" onClick={handleExtendTime}>
-                            <Clock className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="hebrew-text">תיאור הסקר</FormLabel>
+                            <FormControl>
+                              <Textarea className="hebrew-text text-right min-h-[100px]" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-                  <FormField
-                    control={form.control}
-                    name="min_consensus_points_to_win"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="hebrew-text">נקודות חיבור לניצחון</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number"
-                            min="1"
-                            max="20"
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold hebrew-text">הגדרות סקר</h3>
+                      
+                      <FormField
+                        control={form.control}
+                        name="end_time"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="hebrew-text">זמן סיום</FormLabel>
+                            <FormControl>
+                              <Input type="datetime-local" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="allow_user_statements"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="hebrew-text text-base">
-                              אפשר למשתמשים להציע הצהרות
-                            </FormLabel>
-                            <div className="text-sm text-muted-foreground hebrew-text">
-                              משתמשים יוכלו להוסיף הצהרות חדשות לסקר
-                            </div>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="min_consensus_points_to_win"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="hebrew-text">נקודות חיבור לניצחון</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number"
+                                min="1"
+                                max="20"
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="auto_approve_statements"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="hebrew-text text-base">
-                              אישור אוטומטי להצהרות משתמשים
-                            </FormLabel>
-                            <div className="text-sm text-muted-foreground hebrew-text">
-                              הצהרות חדשות יאושרו אוטומטית ללא בדיקה ידנית
-                            </div>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                              disabled={!form.watch("allow_user_statements")}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                      <div className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="allow_user_statements"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="hebrew-text text-base">
+                                  אפשר למשתמשים להציע הצהרות
+                                </FormLabel>
+                                <div className="text-sm text-muted-foreground hebrew-text">
+                                  משתמשים יוכלו להוסיף הצהרות חדשות לסקר
+                                </div>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="auto_approve_statements"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="hebrew-text text-base">
+                                  אישור אוטומטי להצהרות משתמשים
+                                </FormLabel>
+                                <div className="text-sm text-muted-foreground hebrew-text">
+                                  הצהרות חדשות יאושרו אוטומטית ללא בדיקה ידנית
+                                </div>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  disabled={!form.watch("allow_user_statements")}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="min_support_pct"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="hebrew-text">אחוז תמיכה מינימלי (%)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              min="0"
-                              max="100"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="max_opposition_pct"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="hebrew-text">אחוז התנגדות מקסימלי (%)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              min="0"
-                              max="100"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="min_votes_per_group"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="hebrew-text">מינימום הצבעות לקבוצה</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              min="1"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <div className="flex justify-end pt-6 border-t">
+                    <Button type="submit" disabled={form.formState.isSubmitting}>
+                      <Save className="h-4 w-4 ml-1" />
+                      {form.formState.isSubmitting ? 'שומר...' : 'שמור שינויים'}
+                    </Button>
                   </div>
-                </div>
-              </div>
+                </form>
+              </Form>
+            </TabsContent>
 
-              <div className="flex justify-between pt-6 border-t">
-                <div className="flex gap-2">
-                  <Button type="submit" disabled={form.formState.isSubmitting}>
-                    <Save className="h-4 w-4 ml-1" />
-                    {form.formState.isSubmitting ? 'שומר...' : 'שמור שינויים'}
-                  </Button>
-                  
-                  <Button type="button" variant="outline" onClick={handleExtendTime}>
-                    <Clock className="h-4 w-4 ml-1" />
-                    הארך זמן
-                  </Button>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button type="button" variant="outline" onClick={handleResetPoll}>
-                    <RotateCcw className="h-4 w-4 ml-1" />
-                    אפס סקר
-                  </Button>
-                  
-                  <Button 
-                    type="button" 
-                    variant="destructive" 
-                    onClick={() => {
-                      if (confirm('האם אתה בטוח שברצונך למחוק את הסקר?')) {
-                        toast({
-                          title: 'הסקר נמחק',
-                          description: 'הסקר הוסר מהמערכת',
-                        });
-                        navigate('/admin/dashboard');
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 ml-1" />
-                    מחק סקר
-                  </Button>
-                </div>
-              </div>
-            </form>
-          </Form>
+            <TabsContent value="statements" className="mt-6">
+              <StatementsManagement pollId={pollId || ''} />
+            </TabsContent>
+
+            <TabsContent value="advanced" className="mt-6">
+              <AdvancedSettings pollId={pollId || ''} />
+            </TabsContent>
+
+            <TabsContent value="analytics" className="mt-6">
+              <PollAnalytics pollId={pollId || ''} />
+            </TabsContent>
+
+            <TabsContent value="export" className="mt-6">
+              <ExportImport pollId={pollId || ''} />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
