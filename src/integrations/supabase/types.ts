@@ -94,6 +94,369 @@ export type Database = {
           },
         ]
       }
+      polis_admin_profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      polis_admin_roles: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          role: Database["public"]["Enums"]["polis_admin_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          role: Database["public"]["Enums"]["polis_admin_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          role?: Database["public"]["Enums"]["polis_admin_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      polis_consensus_points: {
+        Row: {
+          detected_at: string | null
+          poll_id: string
+          statement_id: string
+        }
+        Insert: {
+          detected_at?: string | null
+          poll_id: string
+          statement_id: string
+        }
+        Update: {
+          detected_at?: string | null
+          poll_id?: string
+          statement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_consensus_points_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polis_polls"
+            referencedColumns: ["poll_id"]
+          },
+          {
+            foreignKeyName: "polis_consensus_points_statement_id_fkey"
+            columns: ["statement_id"]
+            isOneToOne: false
+            referencedRelation: "polis_statements"
+            referencedColumns: ["statement_id"]
+          },
+        ]
+      }
+      polis_group_statement_stats: {
+        Row: {
+          group_id: string
+          oppose_pct: number | null
+          poll_id: string | null
+          statement_id: string
+          support_pct: number | null
+          total_votes: number | null
+        }
+        Insert: {
+          group_id: string
+          oppose_pct?: number | null
+          poll_id?: string | null
+          statement_id: string
+          support_pct?: number | null
+          total_votes?: number | null
+        }
+        Update: {
+          group_id?: string
+          oppose_pct?: number | null
+          poll_id?: string | null
+          statement_id?: string
+          support_pct?: number | null
+          total_votes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_group_statement_stats_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "polis_groups"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "polis_group_statement_stats_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polis_polls"
+            referencedColumns: ["poll_id"]
+          },
+          {
+            foreignKeyName: "polis_group_statement_stats_statement_id_fkey"
+            columns: ["statement_id"]
+            isOneToOne: false
+            referencedRelation: "polis_statements"
+            referencedColumns: ["statement_id"]
+          },
+        ]
+      }
+      polis_groups: {
+        Row: {
+          algorithm: string | null
+          created_at: string | null
+          group_id: string
+          poll_id: string | null
+        }
+        Insert: {
+          algorithm?: string | null
+          created_at?: string | null
+          group_id?: string
+          poll_id?: string | null
+        }
+        Update: {
+          algorithm?: string | null
+          created_at?: string | null
+          group_id?: string
+          poll_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_groups_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polis_polls"
+            referencedColumns: ["poll_id"]
+          },
+        ]
+      }
+      polis_poll_admins: {
+        Row: {
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_poll_admins_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polis_polls"
+            referencedColumns: ["poll_id"]
+          },
+        ]
+      }
+      polis_poll_categories: {
+        Row: {
+          category_id: string
+          name: string
+        }
+        Insert: {
+          category_id?: string
+          name: string
+        }
+        Update: {
+          category_id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      polis_polls: {
+        Row: {
+          allow_user_statements: boolean | null
+          auto_approve_statements: boolean | null
+          category_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_time: string | null
+          max_opposition_pct: number | null
+          min_consensus_points_to_win: number | null
+          min_support_pct: number | null
+          min_votes_per_group: number | null
+          poll_id: string
+          status: Database["public"]["Enums"]["polis_poll_status"] | null
+          title: string
+          topic: string | null
+        }
+        Insert: {
+          allow_user_statements?: boolean | null
+          auto_approve_statements?: boolean | null
+          category_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          max_opposition_pct?: number | null
+          min_consensus_points_to_win?: number | null
+          min_support_pct?: number | null
+          min_votes_per_group?: number | null
+          poll_id?: string
+          status?: Database["public"]["Enums"]["polis_poll_status"] | null
+          title: string
+          topic?: string | null
+        }
+        Update: {
+          allow_user_statements?: boolean | null
+          auto_approve_statements?: boolean | null
+          category_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          max_opposition_pct?: number | null
+          min_consensus_points_to_win?: number | null
+          min_support_pct?: number | null
+          min_votes_per_group?: number | null
+          poll_id?: string
+          status?: Database["public"]["Enums"]["polis_poll_status"] | null
+          title?: string
+          topic?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_polls_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "polis_poll_categories"
+            referencedColumns: ["category_id"]
+          },
+        ]
+      }
+      polis_statements: {
+        Row: {
+          content: string
+          content_type: Database["public"]["Enums"]["polis_content_type"] | null
+          created_at: string | null
+          created_by_user_id: string | null
+          is_approved: boolean | null
+          is_user_suggested: boolean | null
+          poll_id: string | null
+          statement_id: string
+        }
+        Insert: {
+          content: string
+          content_type?:
+            | Database["public"]["Enums"]["polis_content_type"]
+            | null
+          created_at?: string | null
+          created_by_user_id?: string | null
+          is_approved?: boolean | null
+          is_user_suggested?: boolean | null
+          poll_id?: string | null
+          statement_id?: string
+        }
+        Update: {
+          content?: string
+          content_type?:
+            | Database["public"]["Enums"]["polis_content_type"]
+            | null
+          created_at?: string | null
+          created_by_user_id?: string | null
+          is_approved?: boolean | null
+          is_user_suggested?: boolean | null
+          poll_id?: string | null
+          statement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_statements_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polis_polls"
+            referencedColumns: ["poll_id"]
+          },
+        ]
+      }
+      polis_user_group_membership: {
+        Row: {
+          group_id: string | null
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          group_id?: string | null
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string | null
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_user_group_membership_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "polis_groups"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "polis_user_group_membership_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polis_polls"
+            referencedColumns: ["poll_id"]
+          },
+        ]
+      }
+      polis_votes: {
+        Row: {
+          statement_id: string | null
+          user_id: string | null
+          vote_id: string
+          vote_value: Database["public"]["Enums"]["polis_vote_value"]
+          voted_at: string | null
+        }
+        Insert: {
+          statement_id?: string | null
+          user_id?: string | null
+          vote_id?: string
+          vote_value: Database["public"]["Enums"]["polis_vote_value"]
+          voted_at?: string | null
+        }
+        Update: {
+          statement_id?: string | null
+          user_id?: string | null
+          vote_id?: string
+          vote_value?: Database["public"]["Enums"]["polis_vote_value"]
+          voted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_votes_statement_id_fkey"
+            columns: ["statement_id"]
+            isOneToOne: false
+            referencedRelation: "polis_statements"
+            referencedColumns: ["statement_id"]
+          },
+        ]
+      }
       surveys: {
         Row: {
           allow_user_submissions: boolean
@@ -370,6 +733,9 @@ export type Database = {
     }
     Enums: {
       polis_admin_role: "poll_admin" | "super_admin"
+      polis_content_type: "text" | "image" | "audio" | "video"
+      polis_poll_status: "draft" | "active" | "closed"
+      polis_vote_value: "support" | "oppose" | "unsure"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -486,6 +852,9 @@ export const Constants = {
   public: {
     Enums: {
       polis_admin_role: ["poll_admin", "super_admin"],
+      polis_content_type: ["text", "image", "audio", "video"],
+      polis_poll_status: ["draft", "active", "closed"],
+      polis_vote_value: ["support", "oppose", "unsure"],
     },
   },
 } as const
