@@ -44,7 +44,7 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
             </p>
           </div>
 
-          {/* Consensus Progress */}
+          {/* Consensus Progress
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -59,7 +59,7 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
             <p className="text-xs text-muted-foreground hebrew-text">
               {isWinning ? 'ניצחון קבוצתי!' : 'נקודות חיבור שנמצאו'}
             </p>
-          </div>
+          </div> */}
         </div>
       </CardContent>
     </Card>
