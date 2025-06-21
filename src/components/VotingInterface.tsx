@@ -7,7 +7,6 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { CountdownTimer } from './CountdownTimer';
 import { 
-  Star, 
   ThumbsUp, 
   ThumbsDown, 
   HelpCircle,
@@ -101,42 +100,12 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
         {/* Statement Card */}
         <Card className="max-w-2xl mx-auto">
           <CardHeader className="text-center pb-4">
-            {statement.is_consensus_point && (
-              <Badge className="mx-auto mb-4 bg-consensus-500 text-white flex items-center gap-1 w-fit">
-                <Star className="h-4 w-4 fill-current" />
-                נקודת חיבור
-              </Badge>
-            )}
             <div className="text-2xl font-semibold hebrew-text leading-relaxed p-6">
               {statement.content}
             </div>
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* Current Results */}
-            {statement.total_votes > 0 && (
-              <div className="grid grid-cols-3 gap-4 text-center text-sm">
-                <div className="space-y-1">
-                  <div className="text-voting-support font-semibold">
-                    {Math.round(statement.support_pct)}%
-                  </div>
-                  <div className="text-muted-foreground">תומכים</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-voting-unsure font-semibold">
-                    {Math.round(statement.unsure_pct)}%
-                  </div>
-                  <div className="text-muted-foreground">לא בטוחים</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-voting-oppose font-semibold">
-                    {Math.round(statement.oppose_pct)}%
-                  </div>
-                  <div className="text-muted-foreground">מתנגדים</div>
-                </div>
-              </div>
-            )}
-
             {/* Voting Buttons */}
             <div className="grid grid-cols-3 gap-4">
               <Button
