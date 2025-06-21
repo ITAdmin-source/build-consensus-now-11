@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Users, Target, Trophy, ChevronDown, ChevronUp } from 'lucide-react';
 
 export const HowItWorks: React.FC = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   return (
     <Card className="max-w-4xl mx-auto">
