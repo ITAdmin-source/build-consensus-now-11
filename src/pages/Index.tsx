@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PollCard } from '@/components/PollCard';
 import { VotingInterface } from '@/components/VotingInterface';
@@ -6,6 +5,7 @@ import { ResultsDashboard } from '@/components/ResultsDashboard';
 import { NavigationHeader } from '@/components/NavigationHeader';
 import { HowItWorks } from '@/components/HowItWorks';
 import { VotingProgress } from '@/components/VotingProgress';
+import { PollHeader } from '@/components/PollHeader';
 import { mockPolls, mockStatements, mockConsensusPoints, mockGroups, mockGroupStatementStats } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -75,6 +75,12 @@ const Index = () => {
         />
         
         <div className="container mx-auto px-4 py-6 max-w-4xl">
+          <PollHeader
+            poll={selectedPoll}
+            currentPage="voting"
+            onNavigateToResults={handleViewResults}
+          />
+          
           <VotingProgress
             poll={selectedPoll}
             userVoteCount={Object.keys(userVotes).length}
@@ -105,14 +111,22 @@ const Index = () => {
           onNavigateToVoting={pollStatements.length > 0 ? handleNavigateToVoting : undefined}
         />
         
-        <div className="py-6">
-          <ResultsDashboard
+        <div className="container mx-auto px-4 py-6 max-w-7xl">
+          <PollHeader
             poll={selectedPoll}
-            statements={pollStatements}
-            consensusPoints={pollConsensusPoints}
-            groups={pollGroups}
-            groupStats={pollGroupStats}
+            currentPage="results"
+            onNavigateToVoting={pollStatements.length > 0 ? handleNavigateToVoting : undefined}
           />
+          
+          <div className="py-6">
+            <ResultsDashboard
+              poll={selectedPoll}
+              statements={pollStatements}
+              consensusPoints={pollConsensusPoints}
+              groups={pollGroups}
+              groupStats={pollGroupStats}
+            />
+          </div>
         </div>
       </div>
     );

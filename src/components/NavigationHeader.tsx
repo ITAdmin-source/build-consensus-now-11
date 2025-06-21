@@ -2,14 +2,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { CountdownTimer } from './CountdownTimer';
 import { Poll } from '@/types/poll';
 import { 
   ArrowRight, 
-  Home, 
-  Target,
-  Clock
+  Home
 } from 'lucide-react';
 
 interface NavigationHeaderProps {
@@ -27,9 +24,6 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
   onNavigateToVoting,
   onNavigateToResults
 }) => {
-  const consensusProgress = poll ? (poll.current_consensus_points / poll.min_consensus_points_to_win) * 100 : 0;
-  const isWinning = poll ? poll.current_consensus_points >= poll.min_consensus_points_to_win : false;
-
   return (
     <div className="bg-white border-b shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
@@ -49,7 +43,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
           {poll && (
             <div className="flex items-center gap-4">
               <CountdownTimer endTime={poll.end_time} className="text-sm" />
-              <Badge variant={isWinning ? "default" : "secondary"} className="hebrew-text">
+              <Badge variant="secondary" className="hebrew-text">
                 {poll.category}
               </Badge>
             </div>
@@ -57,7 +51,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
         </div>
 
         {/* Breadcrumb Navigation */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Button
             variant="ghost"
             size="sm"
@@ -99,54 +93,6 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
             </>
           )}
         </div>
-
-        {/* Poll Context Bar */}
-        {poll && currentPage !== 'home' && (
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <Target className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium hebrew-text">
-                    {poll.current_consensus_points}/{poll.min_consensus_points_to_win} נקודות חיבור
-                  </span>
-                  {isWinning && (
-                    <Badge variant="default" className="text-xs">
-                      ניצחון!
-                    </Badge>
-                  )}
-                </div>
-                <Progress 
-                  value={consensusProgress} 
-                  className="h-2 consensus-gradient" 
-                />
-              </div>
-              
-              <div className="flex gap-2">
-                {currentPage === 'voting' && onNavigateToResults && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onNavigateToResults}
-                    className="hebrew-text"
-                  >
-                    צפה בתוצאות
-                  </Button>
-                )}
-                {currentPage === 'results' && onNavigateToVoting && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onNavigateToVoting}
-                    className="hebrew-text"
-                  >
-                    המשך הצבעה
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
