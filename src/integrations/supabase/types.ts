@@ -395,18 +395,24 @@ export type Database = {
       polis_user_group_membership: {
         Row: {
           group_id: string | null
+          id: string
           poll_id: string
-          user_id: string
+          session_id: string | null
+          user_id: string | null
         }
         Insert: {
           group_id?: string | null
+          id?: string
           poll_id: string
-          user_id: string
+          session_id?: string | null
+          user_id?: string | null
         }
         Update: {
           group_id?: string | null
+          id?: string
           poll_id?: string
-          user_id?: string
+          session_id?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -427,6 +433,7 @@ export type Database = {
       }
       polis_votes: {
         Row: {
+          session_id: string | null
           statement_id: string | null
           user_id: string | null
           vote_id: string
@@ -434,6 +441,7 @@ export type Database = {
           voted_at: string | null
         }
         Insert: {
+          session_id?: string | null
           statement_id?: string | null
           user_id?: string | null
           vote_id?: string
@@ -441,6 +449,7 @@ export type Database = {
           voted_at?: string | null
         }
         Update: {
+          session_id?: string | null
           statement_id?: string | null
           user_id?: string | null
           vote_id?: string

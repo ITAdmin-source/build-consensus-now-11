@@ -37,9 +37,6 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   const { user } = useAuth();
 
   const handleVote = (vote: string) => {
-    if (!user) {
-      return; // Will be handled by parent component
-    }
     onVote(statement.statement_id, vote);
   };
 
@@ -51,29 +48,6 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
 
   const isLastStatement = userVoteCount === totalStatements - 1;
   const allStatementsVoted = userVoteCount === totalStatements;
-
-  // Show authentication prompt if user is not logged in
-  if (!user) {
-    return (
-      <Card className="poll-card">
-        <CardContent className="text-center py-12">
-          <LogIn className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-xl font-bold mb-2 hebrew-text">
-            נדרשת התחברות
-          </h3>
-          <p className="text-muted-foreground mb-6 hebrew-text">
-            כדי להשתתף בסקר ולהצביע על הצהרות, יש להתחבר למערכת
-          </p>
-          <Link to="/auth">
-            <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
-              <LogIn className="h-4 w-4 ml-2" />
-              התחבר למערכת
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -95,7 +69,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
         </CardHeader>
         
         <CardContent>
-          {/* Voting Buttons */}
+          {/* Voting Buttons - Now available to all users */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Button
               onClick={() => handleVote('support')}
@@ -125,6 +99,22 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
             </Button>
           </div>
 
+          {/* Authentication prompt for user statement submission */}
+          {!user && poll.allow_user_statements && (
+            <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6">
+              <LogIn className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+              <p className="text-blue-800 mb-3 hebrew-text">
+                להוספת הצהרות חדשות נדרשת התחברות
+              </p>
+              <Link to="/auth">
+                <Button variant="outline" size="sm">
+                  <LogIn className="h-4 w-4 ml-2" />
+                  התחבר למערכת
+                </Button>
+              </Link>
+            </div>
+          )}
+
           {/* Completion Message */}
           {allStatementsVoted && (
             <div className="text-center p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
@@ -145,8 +135,8 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
         </CardContent>
       </Card>
 
-      {/* User Statement Form - Only show if user statements are allowed */}
-      {poll.allow_user_statements && onSubmitStatement && (
+      {/* User Statement Form - Only show if user statements are allowed and user is authenticated */}
+      {poll.allow_user_statements && user && onSubmitStatement && (
         <UserStatementForm 
           poll={poll}
           onSubmitStatement={handleSubmitStatement}

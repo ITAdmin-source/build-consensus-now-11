@@ -1,5 +1,6 @@
 
 import { supabase } from './client';
+import { SessionManager } from '@/utils/sessionManager';
 
 export const submitVote = async (
   statementId: string,
@@ -7,17 +8,28 @@ export const submitVote = async (
 ) => {
   const { data: { user } } = await supabase.auth.getUser();
   
-  if (!user) {
-    throw new Error('User must be authenticated to vote');
-  }
+  // Get session ID for anonymous users or as fallback
+  const sessionId = SessionManager.getSessionId();
+  
+  // Determine if we should use user_id or session_id
+  const voteData = user 
+    ? { user_id: user.id, statement_id: statementId, vote_value: voteValue }
+    : { session_id: sessionId, statement_id: statementId, vote_value: voteValue };
 
-  // Check if user has already voted on this statement
-  const { data: existingVote } = await supabase
-    .from('polis_votes')
-    .select('vote_id')
-    .eq('user_id', user.id)
-    .eq('statement_id', statementId)
-    .single();
+  // Check if user/session has already voted on this statement
+  const existingVoteQuery = user
+    ? supabase
+        .from('polis_votes')
+        .select('vote_id')
+        .eq('user_id', user.id)
+        .eq('statement_id', statementId)
+    : supabase
+        .from('polis_votes')
+        .select('vote_id')
+        .eq('session_id', sessionId)
+        .eq('statement_id', statementId);
+
+  const { data: existingVote } = await existingVoteQuery.single();
 
   if (existingVote) {
     // Update existing vote
@@ -34,11 +46,7 @@ export const submitVote = async (
     // Insert new vote
     const { error } = await supabase
       .from('polis_votes')
-      .insert({
-        user_id: user.id,
-        statement_id: statementId,
-        vote_value: voteValue
-      });
+      .insert(voteData);
 
     if (error) {
       console.error('Error submitting vote:', error);
@@ -49,20 +57,30 @@ export const submitVote = async (
 
 export const fetchUserVotes = async (pollId: string) => {
   const { data: { user } } = await supabase.auth.getUser();
+  const sessionId = SessionManager.getSessionId();
   
-  if (!user) {
-    return {};
-  }
+  // Query votes based on whether user is authenticated or not
+  const votesQuery = user
+    ? supabase
+        .from('polis_votes')
+        .select(`
+          statement_id,
+          vote_value,
+          polis_statements!inner(poll_id)
+        `)
+        .eq('user_id', user.id)
+        .eq('polis_statements.poll_id', pollId)
+    : supabase
+        .from('polis_votes')
+        .select(`
+          statement_id,
+          vote_value,
+          polis_statements!inner(poll_id)
+        `)
+        .eq('session_id', sessionId)
+        .eq('polis_statements.poll_id', pollId);
 
-  const { data, error } = await supabase
-    .from('polis_votes')
-    .select(`
-      statement_id,
-      vote_value,
-      polis_statements!inner(poll_id)
-    `)
-    .eq('user_id', user.id)
-    .eq('polis_statements.poll_id', pollId);
+  const { data, error } = await votesQuery;
 
   if (error) {
     console.error('Error fetching user votes:', error);

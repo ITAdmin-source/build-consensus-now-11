@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HomePage } from '@/components/HomePage';
 import { VotingPage } from '@/components/VotingPage';
@@ -79,22 +78,13 @@ const Index = () => {
   };
 
   const handleJoinPoll = (pollId: string) => {
-    if (!user) {
-      toast.error('יש להתחבר כדי להשתתף בסקר');
-      return;
-    }
-    
+    // Anyone can join a poll now - no authentication required
     setSelectedPollId(pollId);
     setCurrentView('voting');
     setCurrentStatementIndex(0);
   };
 
   const handleVote = async (statementId: string, vote: string) => {
-    if (!user) {
-      toast.error('יש להתחבר כדי להצביע');
-      return;
-    }
-
     try {
       await submitVote(statementId, vote as 'support' | 'oppose' | 'unsure');
       setUserVotes(prev => ({ ...prev, [statementId]: vote }));
