@@ -631,6 +631,14 @@ export type Database = {
         Args: { poll_id_param: string; cluster_profiles_param: Json }
         Returns: undefined
       }
+      current_user_has_role: {
+        Args: { _role: Database["public"]["Enums"]["polis_admin_role"] }
+        Returns: boolean
+      }
+      current_user_is_super_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       get_global_admin_stats: {
         Args: Record<PropertyKey, never>
         Returns: Json

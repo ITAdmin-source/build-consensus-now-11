@@ -19,6 +19,7 @@ export const useAdminRole = () => {
       }
 
       try {
+        // Use the new security definer function approach
         const { data, error } = await supabase
           .from('polis_admin_roles')
           .select('role')
@@ -26,10 +27,17 @@ export const useAdminRole = () => {
           .single();
 
         if (error) {
-          console.log('No admin role found for user:', error);
-          setAdminRole(null);
+          if (error.code === 'PGRST116') {
+            // No rows returned - user has no admin role
+            console.log('No admin role found for user');
+            setAdminRole(null);
+          } else {
+            console.error('Error checking admin role:', error);
+            setAdminRole(null);
+          }
         } else {
           setAdminRole(data?.role as AdminRole);
+          console.log('Admin role found:', data?.role);
         }
       } catch (err) {
         console.error('Error checking admin role:', err);

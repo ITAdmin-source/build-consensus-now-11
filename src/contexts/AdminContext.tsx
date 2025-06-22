@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useAdminRole, AdminRole } from '@/hooks/useAdminRole';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AdminUser {
   id: string;
@@ -29,16 +30,46 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [admin, setAdmin] = useState<AdminUser | null>(null);
 
   useEffect(() => {
-    if (user && adminRole) {
-      setAdmin({
-        id: user.id,
-        email: user.email || '',
-        name: user.user_metadata?.full_name || user.email || 'מנהל',
-        role: adminRole
-      });
-    } else {
-      setAdmin(null);
-    }
+    const createAdminProfileIfNeeded = async () => {
+      if (user && adminRole) {
+        // Ensure admin profile exists
+        try {
+          const { data: profile, error } = await supabase
+            .from('polis_admin_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+          if (error && error.code === 'PGRST116') {
+            // Profile doesn't exist, create it
+            const { error: insertError } = await supabase
+              .from('polis_admin_profiles')
+              .insert({
+                id: user.id,
+                email: user.email,
+                full_name: user.user_metadata?.full_name || user.email || 'מנהל'
+              });
+
+            if (insertError) {
+              console.error('Error creating admin profile:', insertError);
+            }
+          }
+        } catch (err) {
+          console.error('Error checking/creating admin profile:', err);
+        }
+
+        setAdmin({
+          id: user.id,
+          email: user.email || '',
+          name: user.user_metadata?.full_name || user.email || 'מנהל',
+          role: adminRole
+        });
+      } else {
+        setAdmin(null);
+      }
+    };
+
+    createAdminProfileIfNeeded();
   }, [user, adminRole]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -51,9 +82,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
 
       // Wait a bit for the auth state to update and role check to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // The useAdminRole hook will automatically check the user's role
       return true;
     } catch (error) {
       console.error('Admin login error:', error);
