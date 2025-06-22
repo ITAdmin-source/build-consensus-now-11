@@ -150,6 +150,7 @@ const Auth = () => {
                             type="email"
                             placeholder="הזן כתובת אימייל"
                             className="text-right"
+                            dir="rtl"
                           />
                         </FormControl>
                         <FormMessage />
@@ -169,6 +170,7 @@ const Auth = () => {
                             type="password"
                             placeholder="הזן סיסמה"
                             className="text-right"
+                            dir="rtl"
                           />
                         </FormControl>
                         <FormMessage />
@@ -195,6 +197,7 @@ const Auth = () => {
                             {...field} 
                             placeholder="הזן שם מלא"
                             className="text-right"
+                            dir="rtl"
                           />
                         </FormControl>
                         <FormMessage />
@@ -214,6 +217,7 @@ const Auth = () => {
                             type="email"
                             placeholder="הזן כתובת אימייל"
                             className="text-right"
+                            dir="rtl"
                           />
                         </FormControl>
                         <FormMessage />
@@ -233,6 +237,7 @@ const Auth = () => {
                             type="password"
                             placeholder="הזן סיסמה (לפחות 6 תווים)"
                             className="text-right"
+                            dir="rtl"
                           />
                         </FormControl>
                         <FormMessage />
