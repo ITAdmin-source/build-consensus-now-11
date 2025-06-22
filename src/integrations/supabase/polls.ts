@@ -43,14 +43,23 @@ export const fetchActivePolls = async () => {
     console.error('Error fetching statements:', statementsError);
   }
 
-  // Get votes counts for all polls
+  // Get votes counts for all polls - simpler approach
   const { data: votesData, error: votesError } = await supabase
     .from('polis_votes')
-    .select('statement_id, polis_statements!inner(poll_id)')
-    .in('polis_statements.poll_id', pollsData.map(poll => poll.poll_id));
+    .select('vote_id, statement_id');
 
   if (votesError) {
     console.error('Error fetching votes:', votesError);
+  }
+
+  // Get statement to poll mapping
+  const { data: statementPollMapping, error: mappingError } = await supabase
+    .from('polis_statements')
+    .select('statement_id, poll_id')
+    .in('poll_id', pollsData.map(poll => poll.poll_id));
+
+  if (mappingError) {
+    console.error('Error fetching statement-poll mapping:', mappingError);
   }
 
   // Count occurrences for each poll
@@ -64,8 +73,14 @@ export const fetchActivePolls = async () => {
     return acc;
   }, {} as Record<string, number>) || {};
 
-  const votesCounts = votesData?.reduce((acc, item) => {
-    const pollId = item.polis_statements?.poll_id;
+  // Map votes to polls via statements
+  const statementToPoll = statementPollMapping?.reduce((acc, item) => {
+    acc[item.statement_id] = item.poll_id;
+    return acc;
+  }, {} as Record<string, string>) || {};
+
+  const votesCounts = votesData?.reduce((acc, vote) => {
+    const pollId = statementToPoll[vote.statement_id];
     if (pollId) {
       acc[pollId] = (acc[pollId] || 0) + 1;
     }

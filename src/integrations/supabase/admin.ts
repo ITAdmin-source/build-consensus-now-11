@@ -70,15 +70,40 @@ export const fetchPendingStatements = async () => {
   const { data, error } = await supabase
     .from('polis_statements')
     .select(`
-      *,
-      polis_polls(title)
+      statement_id,
+      content,
+      created_at,
+      poll_id
     `)
     .eq('is_approved', false)
     .eq('is_user_suggested', true)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+
+  // Get poll titles separately to avoid relationship conflicts
+  if (!data || data.length === 0) return [];
+
+  const pollIds = [...new Set(data.map(stmt => stmt.poll_id))];
+  const { data: pollsData, error: pollsError } = await supabase
+    .from('polis_polls')
+    .select('poll_id, title')
+    .in('poll_id', pollIds);
+
+  if (pollsError) throw pollsError;
+
+  const pollsMap = pollsData?.reduce((acc, poll) => {
+    acc[poll.poll_id] = poll.title;
+    return acc;
+  }, {} as Record<string, string>) || {};
+
+  // Combine the data
+  return data.map(statement => ({
+    ...statement,
+    polis_polls: {
+      title: pollsMap[statement.poll_id] || 'Unknown Poll'
+    }
+  }));
 };
 
 export const approveStatement = async (statementId: string) => {
@@ -104,50 +129,67 @@ export const rejectStatement = async (statementId: string) => {
 };
 
 export const fetchAdminStats = async () => {
-  // Get polls count
-  const { data: pollsData, error: pollsError } = await supabase
-    .from('polis_polls')
-    .select('poll_id, status')
-    .eq('status', 'active');
+  try {
+    // Get polls count
+    const { data: pollsData, error: pollsError } = await supabase
+      .from('polis_polls')
+      .select('poll_id, status')
+      .eq('status', 'active');
 
-  if (pollsError) throw pollsError;
+    if (pollsError) throw pollsError;
 
-  // Get total participants (unique session_ids across all votes)
-  const { data: participantsData, error: participantsError } = await supabase
-    .from('polis_votes')
-    .select('session_id')
-    .not('session_id', 'is', null);
+    // Get total participants (unique session_ids from votes)
+    const { data: participantsData, error: participantsError } = await supabase
+      .from('polis_votes')
+      .select('session_id')
+      .not('session_id', 'is', null);
 
-  if (participantsError) throw participantsError;
+    if (participantsError) {
+      console.warn('Could not fetch participants data:', participantsError);
+    }
 
-  const uniqueParticipants = new Set(participantsData?.map(v => v.session_id) || []).size;
+    const uniqueParticipants = new Set(participantsData?.map(v => v.session_id) || []).size;
 
-  // Get votes from today
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const { data: todayVotesData, error: todayVotesError } = await supabase
-    .from('polis_votes')
-    .select('vote_id')
-    .gte('voted_at', today.toISOString());
+    // Get votes from today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const { data: todayVotesData, error: todayVotesError } = await supabase
+      .from('polis_votes')
+      .select('vote_id')
+      .gte('voted_at', today.toISOString());
 
-  if (todayVotesError) throw todayVotesError;
+    if (todayVotesError) {
+      console.warn('Could not fetch today votes data:', todayVotesError);
+    }
 
-  // Get pending statements count
-  const { data: pendingData, error: pendingError } = await supabase
-    .from('polis_statements')
-    .select('statement_id')
-    .eq('is_approved', false)
-    .eq('is_user_suggested', true);
+    // Get pending statements count
+    const { data: pendingData, error: pendingError } = await supabase
+      .from('polis_statements')
+      .select('statement_id')
+      .eq('is_approved', false)
+      .eq('is_user_suggested', true);
 
-  if (pendingError) throw pendingError;
+    if (pendingError) {
+      console.warn('Could not fetch pending statements data:', pendingError);
+    }
 
-  return {
-    activePolls: pollsData?.length || 0,
-    totalParticipants: uniqueParticipants,
-    votesToday: todayVotesData?.length || 0,
-    pendingStatements: pendingData?.length || 0
-  };
+    return {
+      activePolls: pollsData?.length || 0,
+      totalParticipants: uniqueParticipants,
+      votesToday: todayVotesData?.length || 0,
+      pendingStatements: pendingData?.length || 0
+    };
+  } catch (error) {
+    console.error('Error in fetchAdminStats:', error);
+    // Return default values if there's an error
+    return {
+      activePolls: 0,
+      totalParticipants: 0,
+      votesToday: 0,
+      pendingStatements: 0
+    };
+  }
 };
 
 export const extendPollTime = async (pollId: string, newEndTime: string) => {
