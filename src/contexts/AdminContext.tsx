@@ -1,69 +1,84 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { useAdminRole, AdminRole } from '@/hooks/useAdminRole';
 
 interface AdminUser {
   id: string;
-  username: string;
+  email: string;
   name: string;
+  role: AdminRole;
 }
 
 interface AdminContextType {
   admin: AdminUser | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
+  adminRole: AdminRole;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+  isPollAdmin: boolean;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-// Mock admin credentials (in production, this would be handled by backend)
-const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: 'admin123',
-  user: {
-    id: '1',
-    username: 'admin',
-    name: 'מנהל המערכת'
-  }
-};
-
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, signIn, signOut, loading: authLoading } = useAuth();
+  const { adminRole, isLoading: roleLoading, isAdmin, isSuperAdmin, isPollAdmin } = useAdminRole();
   const [admin, setAdmin] = useState<AdminUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if admin is already logged in
-    const savedAdmin = localStorage.getItem('admin_user');
-    if (savedAdmin) {
-      setAdmin(JSON.parse(savedAdmin));
+    if (user && adminRole) {
+      setAdmin({
+        id: user.id,
+        email: user.email || '',
+        name: user.user_metadata?.full_name || user.email || 'מנהל',
+        role: adminRole
+      });
+    } else {
+      setAdmin(null);
     }
-    setIsLoading(false);
-  }, []);
+  }, [user, adminRole]);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-      setAdmin(ADMIN_CREDENTIALS.user);
-      localStorage.setItem('admin_user', JSON.stringify(ADMIN_CREDENTIALS.user));
-      setIsLoading(false);
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        console.error('Admin login error:', error);
+        return false;
+      }
+
+      // Wait a bit for the auth state to update and role check to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // The useAdminRole hook will automatically check the user's role
       return true;
+    } catch (error) {
+      console.error('Admin login error:', error);
+      return false;
     }
-    
-    setIsLoading(false);
-    return false;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await signOut();
     setAdmin(null);
-    localStorage.removeItem('admin_user');
   };
+
+  const isLoading = authLoading || roleLoading;
 
   return (
-    <AdminContext.Provider value={{ admin, login, logout, isLoading }}>
+    <AdminContext.Provider value={{
+      admin,
+      login,
+      logout,
+      isLoading,
+      adminRole,
+      isAdmin,
+      isSuperAdmin,
+      isPollAdmin
+    }}>
       {children}
     </AdminContext.Provider>
   );

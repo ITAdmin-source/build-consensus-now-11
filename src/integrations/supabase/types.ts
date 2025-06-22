@@ -623,6 +623,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_initial_super_admin: {
+        Args: { admin_email: string }
+        Returns: undefined
+      }
       calculate_consensus_points: {
         Args: { poll_id_param: string; cluster_profiles_param: Json }
         Returns: undefined

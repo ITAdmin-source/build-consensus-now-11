@@ -8,20 +8,20 @@ interface AdminProtectedRouteProps {
 }
 
 export const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) => {
-  const { admin, isLoading } = useAdmin();
+  const { admin, isLoading, isAdmin } = useAdmin();
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground hebrew-text">טוען...</p>
+          <p className="text-muted-foreground hebrew-text">בודק הרשאות...</p>
         </div>
       </div>
     );
   }
 
-  if (!admin) {
+  if (!admin || !isAdmin) {
     return <Navigate to="/admin/login" replace />;
   }
 

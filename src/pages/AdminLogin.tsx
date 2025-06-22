@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Home, Shield } from 'lucide-react';
 
 const loginSchema = z.object({
-  username: z.string().min(1, 'נדרש שם משתמש'),
+  email: z.string().email('כתובת אימייל לא תקינה'),
   password: z.string().min(1, 'נדרשת סיסמה'),
 });
 
@@ -21,30 +21,49 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 const AdminLogin = () => {
   const navigate = useNavigate();
-  const { login, isLoading } = useAdmin();
+  const { login, isLoading, admin, isAdmin } = useAdmin();
   const { toast } = useToast();
   
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
     },
   });
 
+  // Redirect if already logged in as admin
+  useEffect(() => {
+    if (admin && isAdmin && !isLoading) {
+      navigate('/admin/dashboard');
+    }
+  }, [admin, isAdmin, isLoading, navigate]);
+
   const onSubmit = async (data: LoginFormData) => {
-    const success = await login(data.username, data.password);
+    const success = await login(data.email, data.password);
     
     if (success) {
-      toast({
-        title: 'התחברות הצליחה',
-        description: 'ברוך הבא למערכת הניהול',
-      });
-      navigate('/admin/dashboard');
+      // Wait a bit for the role check to complete
+      setTimeout(() => {
+        // Check if user has admin role after login
+        if (isAdmin) {
+          toast({
+            title: 'התחברות הצליחה',
+            description: 'ברוך הבא למערכת הניהול',
+          });
+          navigate('/admin/dashboard');
+        } else {
+          toast({
+            title: 'אין הרשאות ניהול',
+            description: 'המשתמש אינו מורשה לגשת למערכת הניהול',
+            variant: 'destructive',
+          });
+        }
+      }, 1500);
     } else {
       toast({
         title: 'שגיאת התחברות',
-        description: 'שם משתמש או סיסמה שגויים',
+        description: 'כתובת אימייל או סיסמה שגויים',
         variant: 'destructive',
       });
     }
@@ -78,14 +97,15 @@ const AdminLogin = () => {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="username"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="hebrew-text">שם משתמש</FormLabel>
+                      <FormLabel className="hebrew-text">כתובת אימייל</FormLabel>
                       <FormControl>
                         <Input 
                           {...field} 
-                          placeholder="הזן שם משתמש"
+                          type="email"
+                          placeholder="הזן כתובת אימייל"
                           className="text-right"
                           disabled={isLoading}
                         />
@@ -125,11 +145,11 @@ const AdminLogin = () => {
               </form>
             </Form>
 
-            {/* Demo Credentials Info */}
+            {/* Instructions for Admin Access */}
             <div className="mt-6 p-3 bg-muted rounded-lg text-sm text-muted-foreground text-center hebrew-text">
-              <p className="font-medium mb-1">פרטי התחברות לדמו:</p>
-              <p>שם משתמש: admin</p>
-              <p>סיסמה: admin123</p>
+              <p className="font-medium mb-1">גישה למנהלים בלבד</p>
+              <p>השתמש בכתובת האימייל והסיסמה שלך</p>
+              <p>רק משתמשים עם הרשאות ניהול יוכלו להיכנס</p>
             </div>
           </CardContent>
         </Card>
