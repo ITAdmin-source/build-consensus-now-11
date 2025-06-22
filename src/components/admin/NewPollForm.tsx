@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowRight, Save } from 'lucide-react';
+import { createPoll } from '@/integrations/supabase/admin';
 
 const pollSchema = z.object({
   title: z.string().min(1, 'כותרת נדרשת').max(100, 'כותרת ארוכה מדי'),
@@ -29,14 +30,14 @@ const pollSchema = z.object({
 type PollFormData = z.infer<typeof pollSchema>;
 
 const categories = [
-  { value: 'politics', label: 'פוליטיקה' },
-  { value: 'education', label: 'חינוך' },
-  { value: 'environment', label: 'איכות סביבה' },
-  { value: 'economy', label: 'כלכלה' },
-  { value: 'society', label: 'חברה' },
-  { value: 'technology', label: 'טכנולוגיה' },
-  { value: 'health', label: 'בריאות' },
-  { value: 'transport', label: 'תחבורה' }
+  { value: 'פוליטיקה', label: 'פוליטיקה' },
+  { value: 'חינוך', label: 'חינוך' },
+  { value: 'איכות סביבה', label: 'איכות סביבה' },
+  { value: 'כלכלה', label: 'כלכלה' },
+  { value: 'חברה', label: 'חברה' },
+  { value: 'טכנולוגיה', label: 'טכנולוגיה' },
+  { value: 'בריאות', label: 'בריאות' },
+  { value: 'תחבורה', label: 'תחבורה' }
 ];
 
 interface NewPollFormProps {
@@ -66,11 +67,7 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
 
   const onSubmit = async (data: PollFormData) => {
     try {
-      // Mock API call - in real app would call backend
-      console.log('Creating new poll:', data);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await createPoll(data);
       
       toast({
         title: 'סקר נוצר בהצלחה',
@@ -80,6 +77,7 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
       form.reset();
       onSuccess?.();
     } catch (error) {
+      console.error('Error creating poll:', error);
       toast({
         title: 'שגיאה ביצירת הסקר',
         description: 'אנא נסה שוב מאוחר יותר',

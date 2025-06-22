@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
@@ -26,47 +27,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { NewPollForm } from '@/components/admin/NewPollForm';
 import { SystemConfig } from '@/components/admin/SystemConfig';
-
-// Mock data for demonstration
-const mockPolls = [
-  {
-    id: '1',
-    title: 'עתיד החינוך בישראל',
-    status: 'active',
-    votes: 1247,
-    participants: 89,
-    consensus_points: 3,
-    target: 5,
-    end_time: '2024-12-31T23:59:59'
-  },
-  {
-    id: '2', 
-    title: 'מדיניות תחבורה ציבורית',
-    status: 'closed',
-    votes: 856,
-    participants: 67,
-    consensus_points: 7,
-    target: 6,
-    end_time: '2024-06-15T23:59:59'
-  }
-];
-
-const mockPendingStatements = [
-  {
-    id: '1',
-    content: 'יש להשקיע יותר בטכנולוגיה חינוכית',
-    poll_title: 'עתיד החינוך בישראל',
-    submitted_by: 'משתמש_123',
-    submitted_at: '2024-06-20T14:30:00'
-  },
-  {
-    id: '2',
-    content: 'תחבורה ציבורית חינמית תפחית עומס תנועה',
-    poll_title: 'מדיניות תחבורה ציבורית', 
-    submitted_by: 'משתמש_456',
-    submitted_at: '2024-06-20T16:45:00'
-  }
-];
+import { fetchActivePolls } from '@/integrations/supabase/polls';
+import { fetchAdminStats, fetchPendingStatements, approveStatement, rejectStatement, extendPollTime } from '@/integrations/supabase/admin';
+import type { Poll } from '@/types/poll';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -74,6 +37,43 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
   const [showNewPollDialog, setShowNewPollDialog] = useState(false);
+  const [polls, setPolls] = useState<Poll[]>([]);
+  const [pendingStatements, setPendingStatements] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    activePolls: 0,
+    totalParticipants: 0,
+    votesToday: 0,
+    pendingStatements: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [pollsData, statsData, pendingData] = await Promise.all([
+        fetchActivePolls(),
+        fetchAdminStats(),
+        fetchPendingStatements()
+      ]);
+      
+      setPolls(pollsData);
+      setStats(statsData);
+      setPendingStatements(pendingData);
+    } catch (error) {
+      console.error('Error loading admin data:', error);
+      toast({
+        title: 'שגיאה בטעינת נתונים',
+        description: 'אנא נסה לרענן את העמוד',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -84,18 +84,38 @@ const AdminDashboard = () => {
     navigate('/');
   };
 
-  const handleApproveStatement = (statementId: string) => {
-    toast({
-      title: 'הצהרה אושרה',
-      description: 'ההצהרה נוספה לסקר בהצלחה',
-    });
+  const handleApproveStatement = async (statementId: string) => {
+    try {
+      await approveStatement(statementId);
+      setPendingStatements(prev => prev.filter(stmt => stmt.statement_id !== statementId));
+      toast({
+        title: 'הצהרה אושרה',
+        description: 'ההצהרה נוספה לסקר בהצלחה',
+      });
+    } catch (error) {
+      toast({
+        title: 'שגיאה באישור ההצהרה',
+        description: 'אנא נסה שוב',
+        variant: 'destructive'
+      });
+    }
   };
 
-  const handleRejectStatement = (statementId: string) => {
-    toast({
-      title: 'הצהרה נדחתה',
-      description: 'ההצהרה הוסרה מהמתנה',
-    });
+  const handleRejectStatement = async (statementId: string) => {
+    try {
+      await rejectStatement(statementId);
+      setPendingStatements(prev => prev.filter(stmt => stmt.statement_id !== statementId));
+      toast({
+        title: 'הצהרה נדחתה',
+        description: 'ההצהרה הוסרה מהמתנה',
+      });
+    } catch (error) {
+      toast({
+        title: 'שגיאה בדחיית ההצהרה',
+        description: 'אנא נסה שוב',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleEditPoll = (pollId: string) => {
@@ -105,11 +125,43 @@ const AdminDashboard = () => {
   const handleNewPollSuccess = () => {
     setShowNewPollDialog(false);
     setActiveTab('polls');
+    loadData(); // Refresh data
     toast({
       title: 'סקר נוצר בהצלחה',
       description: 'הסקר החדש זמין בכרטיסיית ניהול הסקרים',
     });
   };
+
+  const handleExtendTime = async (pollId: string) => {
+    const newEndTime = new Date();
+    newEndTime.setDate(newEndTime.getDate() + 7); // Extend by 7 days
+    
+    try {
+      await extendPollTime(pollId, newEndTime.toISOString());
+      loadData(); // Refresh data
+      toast({
+        title: 'זמן הסקר הוארך',
+        description: 'הסקר הוארך בשבוע נוסף',
+      });
+    } catch (error) {
+      toast({
+        title: 'שגיאה בהארכת הזמן',
+        description: 'אנא נסה שוב',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 hebrew-text flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-lg">טוען נתונים...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 hebrew-text">
@@ -170,7 +222,7 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">סקרים פעילים</p>
-                      <p className="text-2xl font-bold">12</p>
+                      <p className="text-2xl font-bold">{stats.activePolls}</p>
                     </div>
                     <BarChart3 className="h-8 w-8 text-blue-500" />
                   </div>
@@ -182,7 +234,7 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">משתתפים פעילים</p>
-                      <p className="text-2xl font-bold">1,247</p>
+                      <p className="text-2xl font-bold">{stats.totalParticipants}</p>
                     </div>
                     <Users className="h-8 w-8 text-green-500" />
                   </div>
@@ -194,7 +246,7 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">הצבעות היום</p>
-                      <p className="text-2xl font-bold">389</p>
+                      <p className="text-2xl font-bold">{stats.votesToday}</p>
                     </div>
                     <Vote className="h-8 w-8 text-purple-500" />
                   </div>
@@ -206,7 +258,7 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">הצהרות ממתינות</p>
-                      <p className="text-2xl font-bold">{mockPendingStatements.length}</p>
+                      <p className="text-2xl font-bold">{stats.pendingStatements}</p>
                     </div>
                     <AlertCircle className="h-8 w-8 text-orange-500" />
                   </div>
@@ -264,29 +316,29 @@ const AdminDashboard = () => {
             </div>
 
             <div className="grid gap-6">
-              {mockPolls.map((poll) => (
-                <Card key={poll.id}>
+              {polls.map((poll) => (
+                <Card key={poll.poll_id}>
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold mb-2">{poll.title}</h3>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            {poll.participants} משתתפים
+                            <Target className="h-4 w-4" />
+                            {poll.current_consensus_points}/{poll.min_consensus_points_to_win} נק' חיבור
                           </div>
                           <div className="flex items-center gap-1">
                             <Vote className="h-4 w-4" />
-                            {poll.votes} הצבעות
+                            {poll.total_votes} הצבעות
                           </div>
                           <div className="flex items-center gap-1">
-                            <Target className="h-4 w-4" />
-                            {poll.consensus_points}/{poll.target} נק' חיבור
+                            <Users className="h-4 w-4" />
+                            {poll.total_statements} הצהרות
                           </div>
                         </div>
                       </div>
                       <Badge variant={poll.status === 'active' ? 'default' : 'secondary'}>
-                        {poll.status === 'active' ? 'פעיל' : 'סגור'}
+                        {poll.status === 'active' ? 'פעיל' : poll.status === 'closed' ? 'סגור' : 'טיוטה'}
                       </Badge>
                     </div>
                     
@@ -294,16 +346,24 @@ const AdminDashboard = () => {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleEditPoll(poll.id)}
+                        onClick={() => handleEditPoll(poll.poll_id)}
                       >
                         <Edit className="h-4 w-4 ml-1" />
                         עריכה
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => navigate(`/results/${poll.poll_id}`)}
+                      >
                         <Eye className="h-4 w-4 ml-1" />
                         תוצאות
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleExtendTime(poll.poll_id)}
+                      >
                         <Clock className="h-4 w-4 ml-1" />
                         הארך זמן
                       </Button>
@@ -319,26 +379,25 @@ const AdminDashboard = () => {
             <h2 className="text-2xl font-bold">אישור הצהרות</h2>
             
             <div className="grid gap-4">
-              {mockPendingStatements.map((statement) => (
-                <Card key={statement.id}>
+              {pendingStatements.map((statement) => (
+                <Card key={statement.statement_id}>
                   <CardContent className="p-6">
                     <div className="space-y-4">
                       <div>
                         <Badge variant="outline" className="mb-2">
-                          {statement.poll_title}
+                          {statement.polis_polls?.title || 'סקר לא זמין'}
                         </Badge>
                         <p className="text-lg">{statement.content}</p>
                       </div>
                       
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>נשלח על ידי: {statement.submitted_by}</span>
-                        <span>ב-{new Date(statement.submitted_at).toLocaleString('he-IL')}</span>
+                        <span>נשלח ב-{new Date(statement.created_at).toLocaleString('he-IL')}</span>
                       </div>
                       
                       <div className="flex gap-2">
                         <Button 
                           size="sm" 
-                          onClick={() => handleApproveStatement(statement.id)}
+                          onClick={() => handleApproveStatement(statement.statement_id)}
                           className="bg-green-600 hover:bg-green-700"
                         >
                           <CheckCircle className="h-4 w-4 ml-1" />
@@ -347,7 +406,7 @@ const AdminDashboard = () => {
                         <Button 
                           variant="destructive" 
                           size="sm"
-                          onClick={() => handleRejectStatement(statement.id)}
+                          onClick={() => handleRejectStatement(statement.statement_id)}
                         >
                           <XCircle className="h-4 w-4 ml-1" />
                           דחה
@@ -357,6 +416,16 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
               ))}
+              
+              {pendingStatements.length === 0 && (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                    <p className="text-lg font-medium">אין הצהרות ממתינות לאישור</p>
+                    <p className="text-muted-foreground">כל ההצהרות שהוגשו כבר אושרו או נדחו</p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
