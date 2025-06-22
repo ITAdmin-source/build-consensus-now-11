@@ -67,7 +67,21 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
 
   const onSubmit = async (data: PollFormData) => {
     try {
-      await createPoll(data);
+      // Since the form is validated by Zod, we know all required fields are present
+      // We can safely cast to the expected type
+      await createPoll({
+        title: data.title,
+        topic: data.topic,
+        description: data.description,
+        category: data.category,
+        end_time: data.end_time,
+        min_consensus_points_to_win: data.min_consensus_points_to_win,
+        allow_user_statements: data.allow_user_statements,
+        auto_approve_statements: data.auto_approve_statements,
+        min_support_pct: data.min_support_pct,
+        max_opposition_pct: data.max_opposition_pct,
+        min_votes_per_group: data.min_votes_per_group
+      });
       
       toast({
         title: 'סקר נוצר בהצלחה',
