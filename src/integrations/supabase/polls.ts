@@ -3,24 +3,77 @@ import { supabase } from './client';
 import { Poll } from '@/types/poll';
 
 export const fetchActivePolls = async () => {
-  const { data, error } = await supabase
+  // First, get the basic poll data with categories
+  const { data: pollsData, error: pollsError } = await supabase
     .from('polis_polls')
     .select(`
       *,
-      polis_poll_categories(name),
-      polis_consensus_points(statement_id),
-      polis_statements(statement_id)
+      polis_poll_categories(name)
     `)
     .eq('status', 'active')
     .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching polls:', error);
-    throw error;
+  if (pollsError) {
+    console.error('Error fetching polls:', pollsError);
+    throw pollsError;
   }
 
+  if (!pollsData || pollsData.length === 0) {
+    return [];
+  }
+
+  // Get consensus points counts for all polls
+  const { data: consensusData, error: consensusError } = await supabase
+    .from('polis_consensus_points')
+    .select('poll_id')
+    .in('poll_id', pollsData.map(poll => poll.poll_id));
+
+  if (consensusError) {
+    console.error('Error fetching consensus points:', consensusError);
+  }
+
+  // Get statements counts for all polls
+  const { data: statementsData, error: statementsError } = await supabase
+    .from('polis_statements')
+    .select('poll_id')
+    .in('poll_id', pollsData.map(poll => poll.poll_id))
+    .eq('is_approved', true);
+
+  if (statementsError) {
+    console.error('Error fetching statements:', statementsError);
+  }
+
+  // Get votes counts for all polls
+  const { data: votesData, error: votesError } = await supabase
+    .from('polis_votes')
+    .select('statement_id, polis_statements!inner(poll_id)')
+    .in('polis_statements.poll_id', pollsData.map(poll => poll.poll_id));
+
+  if (votesError) {
+    console.error('Error fetching votes:', votesError);
+  }
+
+  // Count occurrences for each poll
+  const consensusCounts = consensusData?.reduce((acc, item) => {
+    acc[item.poll_id] = (acc[item.poll_id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>) || {};
+
+  const statementsCounts = statementsData?.reduce((acc, item) => {
+    acc[item.poll_id] = (acc[item.poll_id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>) || {};
+
+  const votesCounts = votesData?.reduce((acc, item) => {
+    const pollId = item.polis_statements?.poll_id;
+    if (pollId) {
+      acc[pollId] = (acc[pollId] || 0) + 1;
+    }
+    return acc;
+  }, {} as Record<string, number>) || {};
+
   // Transform the data to match our Poll interface
-  return data?.map((poll): Poll => ({
+  return pollsData.map((poll): Poll => ({
     poll_id: poll.poll_id,
     title: poll.title,
     topic: poll.topic || '',
@@ -34,10 +87,10 @@ export const fetchActivePolls = async () => {
     min_support_pct: poll.min_support_pct || 50,
     max_opposition_pct: poll.max_opposition_pct || 50,
     min_votes_per_group: poll.min_votes_per_group || 1,
-    current_consensus_points: poll.polis_consensus_points?.length || 0,
-    total_statements: poll.polis_statements?.length || 0,
-    total_votes: 0 // Will be calculated separately
-  })) || [];
+    current_consensus_points: consensusCounts[poll.poll_id] || 0,
+    total_statements: statementsCounts[poll.poll_id] || 0,
+    total_votes: votesCounts[poll.poll_id] || 0
+  }));
 };
 
 export const fetchPollById = async (pollId: string) => {
@@ -45,9 +98,7 @@ export const fetchPollById = async (pollId: string) => {
     .from('polis_polls')
     .select(`
       *,
-      polis_poll_categories(name),
-      polis_consensus_points(statement_id),
-      polis_statements(statement_id)
+      polis_poll_categories(name)
     `)
     .eq('poll_id', pollId)
     .single();
@@ -58,6 +109,19 @@ export const fetchPollById = async (pollId: string) => {
   }
 
   if (!data) return null;
+
+  // Get additional data separately to avoid relationship issues
+  const [consensusData, statementsData] = await Promise.all([
+    supabase
+      .from('polis_consensus_points')
+      .select('statement_id')
+      .eq('poll_id', pollId),
+    supabase
+      .from('polis_statements')
+      .select('statement_id')
+      .eq('poll_id', pollId)
+      .eq('is_approved', true)
+  ]);
 
   return {
     poll_id: data.poll_id,
@@ -73,8 +137,8 @@ export const fetchPollById = async (pollId: string) => {
     min_support_pct: data.min_support_pct || 50,
     max_opposition_pct: data.max_opposition_pct || 50,
     min_votes_per_group: data.min_votes_per_group || 1,
-    current_consensus_points: data.polis_consensus_points?.length || 0,
-    total_statements: data.polis_statements?.length || 0,
+    current_consensus_points: consensusData.data?.length || 0,
+    total_statements: statementsData.data?.length || 0,
     total_votes: 0
   } as Poll;
 };
