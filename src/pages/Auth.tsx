@@ -22,9 +22,12 @@ const Auth = () => {
   }, [user, loading, navigate]);
 
   const onLoginSubmit = async (data: LoginFormData) => {
+    console.log('Login form submitted:', data.email);
+    
     const { error } = await signIn(data.email, data.password);
     
     if (error) {
+      console.error('Login error:', error);
       toast({
         title: 'שגיאת התחברות',
         description: error.message === 'Invalid login credentials' 
@@ -41,9 +44,12 @@ const Auth = () => {
   };
 
   const onSignupSubmit = async (data: SignupFormData) => {
+    console.log('Signup form submitted:', data.email, data.fullName);
+    
     const { error } = await signUp(data.email, data.password, data.fullName);
     
     if (error) {
+      console.error('Signup error:', error);
       toast({
         title: 'שגיאת הרשמה',
         description: error.message === 'User already registered'
@@ -54,8 +60,9 @@ const Auth = () => {
     } else {
       toast({
         title: 'הרשמה הצליחה',
-        description: 'נשלח אימייל לאימות החשבון',
+        description: 'בדוק את האימייל שלך לאימות החשבון (או התחבר ישירות אם אימות אימייל מבוטל)',
       });
+      console.log('Signup successful - check email for verification or login directly if email confirmation is disabled');
     }
   };
 
