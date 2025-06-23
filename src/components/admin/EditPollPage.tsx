@@ -18,6 +18,9 @@ import { StatementsManagement } from './StatementsManagement';
 import { AdvancedSettings } from './AdvancedSettings';
 import { PollAnalytics } from './PollAnalytics';
 import { ExportImport } from './ExportImport';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchPollById } from '@/integrations/supabase/polls';
+import { supabase } from '@/integrations/supabase/client';
 import type { Poll } from '@/types/poll';
 
 const editPollSchema = z.object({
@@ -48,32 +51,12 @@ const categories = [
   { value: 'transport', label: 'תחבורה' }
 ];
 
-const mockPoll: Poll = {
-  poll_id: '1',
-  title: 'עתיד החינוך בישראל',
-  topic: 'חינוך',
-  description: 'סקר לבדיקת דעות הציבור על כיווני החינוך בישראל בעשור הבא',
-  category: 'education',
-  end_time: '2024-12-31T23:59:59',
-  min_consensus_points_to_win: 5,
-  allow_user_statements: true,
-  auto_approve_statements: false,
-  status: 'active',
-  min_support_pct: 60,
-  max_opposition_pct: 30,
-  min_votes_per_group: 3,
-  current_consensus_points: 3,
-  total_statements: 12,
-  total_votes: 1247
-};
-
 export const EditPollPage: React.FC = () => {
   const { pollId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [poll, setPoll] = useState<Poll | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('basic');
+  const queryClient = useQueryClient();
 
   const form = useForm<EditPollFormData>({
     resolver: zodResolver(editPollSchema),
@@ -93,60 +76,99 @@ export const EditPollPage: React.FC = () => {
     }
   });
 
-  useEffect(() => {
-    const fetchPoll = async () => {
-      setIsLoading(true);
-      try {
-        await new Promise(resolve => setTimeout(resolve, 500));
+  // Fetch poll data
+  const { data: poll, isLoading, error } = useQuery({
+    queryKey: ['poll', pollId],
+    queryFn: () => fetchPollById(pollId!),
+    enabled: !!pollId
+  });
+
+  // Update poll mutation
+  const updatePollMutation = useMutation({
+    mutationFn: async (data: EditPollFormData) => {
+      // First, get or create the category
+      let categoryId: string;
+      const { data: existingCategory } = await supabase
+        .from('polis_poll_categories')
+        .select('category_id')
+        .eq('name', data.category)
+        .single();
+
+      if (existingCategory) {
+        categoryId = existingCategory.category_id;
+      } else {
+        const { data: newCategory, error: categoryError } = await supabase
+          .from('polis_poll_categories')
+          .insert({ name: data.category })
+          .select('category_id')
+          .single();
         
-        const pollData = mockPoll;
-        setPoll(pollData);
-        
-        form.reset({
-          title: pollData.title,
-          topic: pollData.topic,
-          description: pollData.description,
-          category: pollData.category,
-          end_time: pollData.end_time.slice(0, 16),
-          min_consensus_points_to_win: pollData.min_consensus_points_to_win,
-          allow_user_statements: pollData.allow_user_statements,
-          auto_approve_statements: pollData.auto_approve_statements,
-          min_support_pct: pollData.min_support_pct,
-          max_opposition_pct: pollData.max_opposition_pct,
-          min_votes_per_group: pollData.min_votes_per_group,
-          status: pollData.status
-        });
-      } catch (error) {
-        toast({
-          title: 'שגיאה בטעינת הסקר',
-          description: 'לא ניתן לטעון את פרטי הסקר',
-          variant: 'destructive'
-        });
-        navigate('/admin/dashboard');
-      } finally {
-        setIsLoading(false);
+        if (categoryError) throw categoryError;
+        categoryId = newCategory.category_id;
       }
-    };
 
-    fetchPoll();
-  }, [pollId, form, navigate, toast]);
+      const { data: updatedPoll, error } = await supabase
+        .from('polis_polls')
+        .update({
+          title: data.title,
+          topic: data.topic,
+          description: data.description,
+          category_id: categoryId,
+          end_time: data.end_time,
+          min_consensus_points_to_win: data.min_consensus_points_to_win,
+          allow_user_statements: data.allow_user_statements,
+          auto_approve_statements: data.auto_approve_statements,
+          status: data.status,
+          min_support_pct: data.min_support_pct,
+          max_opposition_pct: data.max_opposition_pct,
+          min_votes_per_group: data.min_votes_per_group
+        })
+        .eq('poll_id', pollId)
+        .select()
+        .single();
 
-  const onSubmit = async (data: EditPollFormData) => {
-    try {
-      console.log('Updating poll:', data);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      if (error) throw error;
+      return updatedPoll;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['poll', pollId] });
+      queryClient.invalidateQueries({ queryKey: ['polls'] });
       toast({
         title: 'סקר עודכן בהצלחה',
         description: 'השינויים נשמרו במערכת',
       });
-    } catch (error) {
+    },
+    onError: (error) => {
       toast({
         title: 'שגיאה בעדכון הסקר',
         description: 'אנא נסה שוב מאוחר יותר',
         variant: 'destructive'
       });
     }
+  });
+
+  // Update form values when poll data is loaded
+  useEffect(() => {
+    if (poll) {
+      form.reset({
+        title: poll.title,
+        topic: poll.topic,
+        description: poll.description,
+        category: poll.category,
+        end_time: poll.end_time ? poll.end_time.slice(0, 16) : '',
+        min_consensus_points_to_win: poll.min_consensus_points_to_win,
+        allow_user_statements: poll.allow_user_statements,
+        auto_approve_statements: poll.auto_approve_statements,
+        min_support_pct: poll.min_support_pct,
+        max_opposition_pct: poll.max_opposition_pct,
+        min_votes_per_group: poll.min_votes_per_group,
+        status: poll.status
+      });
+    }
+  }, [poll, form]);
+
+  const onSubmit = async (data: EditPollFormData) => {
+    updatePollMutation.mutate(data);
   };
 
   if (isLoading) {
@@ -160,7 +182,7 @@ export const EditPollPage: React.FC = () => {
     );
   }
 
-  if (!poll) {
+  if (error || !poll) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -414,9 +436,12 @@ export const EditPollPage: React.FC = () => {
                   </div>
 
                   <div className="flex justify-end pt-6 border-t">
-                    <Button type="submit" disabled={form.formState.isSubmitting}>
+                    <Button 
+                      type="submit" 
+                      disabled={updatePollMutation.isPending}
+                    >
                       <Save className="h-4 w-4 ml-1" />
-                      {form.formState.isSubmitting ? 'שומר...' : 'שמור שינויים'}
+                      {updatePollMutation.isPending ? 'שומר...' : 'שמור שינויים'}
                     </Button>
                   </div>
                 </form>

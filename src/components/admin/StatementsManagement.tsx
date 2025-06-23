@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,119 +10,177 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Check, X, Eye, AlertTriangle } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchStatementsByPollId, submitUserStatement } from '@/integrations/supabase/statements';
+import { fetchPendingStatements, approveStatement, rejectStatement } from '@/integrations/supabase/admin';
+import { supabase } from '@/integrations/supabase/client';
 import type { Statement } from '@/types/poll';
-
-// Mock statements data
-const mockStatements: Statement[] = [
-  {
-    statement_id: '1',
-    poll_id: '1',
-    content_type: 'text',
-    content: 'יש להגדיל את התקציב לחינוך בישראל',
-    is_user_suggested: false,
-    is_approved: true,
-    is_consensus_point: true,
-    support_pct: 75,
-    oppose_pct: 15,
-    unsure_pct: 10,
-    total_votes: 234,
-    score: 95
-  },
-  {
-    statement_id: '2',
-    poll_id: '1',
-    content_type: 'text',
-    content: 'חובה לכלול תכנות בתכנית הלימודים',
-    is_user_suggested: true,
-    is_approved: false,
-    is_consensus_point: false,
-    support_pct: 0,
-    oppose_pct: 0,
-    unsure_pct: 0,
-    total_votes: 0,
-    score: 0
-  }
-];
 
 interface StatementsManagementProps {
   pollId: string;
 }
 
 export const StatementsManagement: React.FC<StatementsManagementProps> = ({ pollId }) => {
-  const [statements, setStatements] = useState<Statement[]>(mockStatements);
   const [newStatement, setNewStatement] = useState('');
   const [newStatementType, setNewStatementType] = useState<'text' | 'image' | 'audio' | 'video'>('text');
   const [selectedStatements, setSelectedStatements] = useState<string[]>([]);
   const [editingStatement, setEditingStatement] = useState<Statement | null>(null);
   const [showApprovalQueue, setShowApprovalQueue] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch approved statements for this poll
+  const { data: statements = [], isLoading: statementsLoading } = useQuery({
+    queryKey: ['statements', pollId],
+    queryFn: () => fetchStatementsByPollId(pollId),
+    enabled: !!pollId
+  });
+
+  // Fetch pending statements
+  const { data: pendingStatementsData = [], isLoading: pendingLoading } = useQuery({
+    queryKey: ['pendingStatements'],
+    queryFn: fetchPendingStatements
+  });
+
+  // Filter pending statements for this poll
+  const pendingStatements = pendingStatementsData.filter(stmt => stmt.poll_id === pollId);
+
+  // Create statement mutation
+  const createStatementMutation = useMutation({
+    mutationFn: async (content: string) => {
+      const { data, error } = await supabase
+        .from('polis_statements')
+        .insert({
+          poll_id: pollId,
+          content,
+          content_type: newStatementType,
+          is_user_suggested: false,
+          is_approved: true
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['statements', pollId] });
+      setNewStatement('');
+      toast({
+        title: 'הצהרה נוצרה',
+        description: 'הצהרה חדשה נוספה לסקר',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'שגיאה ביצירת הצהרה',
+        description: 'אנא נסה שוב מאוחר יותר',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  // Approve statement mutation
+  const approveStatementMutation = useMutation({
+    mutationFn: approveStatement,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['statements', pollId] });
+      queryClient.invalidateQueries({ queryKey: ['pendingStatements'] });
+      toast({
+        title: 'הצהרה אושרה',
+        description: 'הצהרה אושרה ותופיע בסקר',
+      });
+    }
+  });
+
+  // Reject statement mutation
+  const rejectStatementMutation = useMutation({
+    mutationFn: rejectStatement,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pendingStatements'] });
+      toast({
+        title: 'הצהרה נדחתה',
+        description: 'הצהרה נמחקה מהסקר',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  // Delete statement mutation
+  const deleteStatementMutation = useMutation({
+    mutationFn: async (statementId: string) => {
+      const { error } = await supabase
+        .from('polis_statements')
+        .delete()
+        .eq('statement_id', statementId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['statements', pollId] });
+      toast({
+        title: 'הצהרה נמחקה',
+        description: 'הצהרה הוסרה מהסקר',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  // Update statement mutation
+  const updateStatementMutation = useMutation({
+    mutationFn: async ({ statementId, content }: { statementId: string; content: string }) => {
+      const { data, error } = await supabase
+        .from('polis_statements')
+        .update({ content })
+        .eq('statement_id', statementId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['statements', pollId] });
+      setEditingStatement(null);
+      toast({
+        title: 'הצהרה עודכנה',
+        description: 'השינויים נשמרו בהצלחה',
+      });
+    }
+  });
 
   const handleCreateStatement = () => {
     if (!newStatement.trim()) return;
-    
-    const statement: Statement = {
-      statement_id: Date.now().toString(),
-      poll_id: pollId,
-      content_type: newStatementType,
-      content: newStatement,
-      is_user_suggested: false,
-      is_approved: true,
-      is_consensus_point: false,
-      support_pct: 0,
-      oppose_pct: 0,
-      unsure_pct: 0,
-      total_votes: 0,
-      score: 0
-    };
-    
-    setStatements([...statements, statement]);
-    setNewStatement('');
-    toast({
-      title: 'הצהרה נוצרה',
-      description: 'הצהרה חדשה נוספה לסקר',
-    });
+    createStatementMutation.mutate(newStatement);
   };
 
   const handleApproveStatement = (statementId: string) => {
-    setStatements(statements.map(stmt => 
-      stmt.statement_id === statementId 
-        ? { ...stmt, is_approved: true }
-        : stmt
-    ));
-    toast({
-      title: 'הצהרה אושרה',
-      description: 'הצהרה אושרה ותופיע בסקר',
-    });
+    approveStatementMutation.mutate(statementId);
   };
 
   const handleRejectStatement = (statementId: string) => {
-    setStatements(statements.filter(stmt => stmt.statement_id !== statementId));
-    toast({
-      title: 'הצהרה נדחתה',
-      description: 'הצהרה נמחקה מהסקר',
-      variant: 'destructive'
-    });
+    rejectStatementMutation.mutate(statementId);
   };
 
   const handleDeleteStatement = (statementId: string) => {
-    setStatements(statements.filter(stmt => stmt.statement_id !== statementId));
-    toast({
-      title: 'הצהרה נמחקה',
-      description: 'הצהרה הוסרה מהסקר',
-      variant: 'destructive'
+    deleteStatementMutation.mutate(statementId);
+  };
+
+  const handleUpdateStatement = () => {
+    if (!editingStatement) return;
+    updateStatementMutation.mutate({
+      statementId: editingStatement.statement_id,
+      content: editingStatement.content
     });
   };
 
-  const handleToggleConsensusPoint = (statementId: string) => {
-    setStatements(statements.map(stmt => 
-      stmt.statement_id === statementId 
-        ? { ...stmt, is_consensus_point: !stmt.is_consensus_point }
-        : stmt
-    ));
-  };
-
-  const approvedStatements = statements.filter(stmt => stmt.is_approved);
-  const pendingStatements = statements.filter(stmt => !stmt.is_approved);
+  if (statementsLoading || pendingLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -155,9 +213,13 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
               />
             </div>
             <div>
-              <Button onClick={handleCreateStatement} className="w-full">
+              <Button 
+                onClick={handleCreateStatement} 
+                className="w-full"
+                disabled={createStatementMutation.isPending}
+              >
                 <Plus className="h-4 w-4 ml-1" />
-                הוסף הצהרה
+                {createStatementMutation.isPending ? 'מוסיף...' : 'הוסף הצהרה'}
               </Button>
             </div>
           </div>
@@ -201,6 +263,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
                         size="sm"
                         variant="outline"
                         onClick={() => handleApproveStatement(statement.statement_id)}
+                        disabled={approveStatementMutation.isPending}
                       >
                         <Check className="h-4 w-4" />
                       </Button>
@@ -208,6 +271,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
                         size="sm"
                         variant="outline"
                         onClick={() => handleRejectStatement(statement.statement_id)}
+                        disabled={rejectStatementMutation.isPending}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -224,7 +288,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="hebrew-text">הצהרות מאושרות ({approvedStatements.length})</CardTitle>
+            <CardTitle className="hebrew-text">הצהרות מאושרות ({statements.length})</CardTitle>
             <div className="flex gap-2">
               {selectedStatements.length > 0 && (
                 <Button variant="destructive" size="sm">
@@ -251,7 +315,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
               </TableRow>
             </TableHeader>
             <TableBody>
-              {approvedStatements.map((statement) => (
+              {statements.map((statement) => (
                 <TableRow key={statement.statement_id}>
                   <TableCell>
                     <input
@@ -299,15 +363,9 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
                       </Button>
                       <Button
                         size="sm"
-                        variant={statement.is_consensus_point ? "default" : "outline"}
-                        onClick={() => handleToggleConsensusPoint(statement.statement_id)}
-                      >
-                        <Check className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
                         variant="destructive"
                         onClick={() => handleDeleteStatement(statement.statement_id)}
+                        disabled={deleteStatementMutation.isPending}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -340,17 +398,11 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
                 <Button variant="outline" onClick={() => setEditingStatement(null)}>
                   ביטול
                 </Button>
-                <Button onClick={() => {
-                  setStatements(statements.map(stmt => 
-                    stmt.statement_id === editingStatement.statement_id ? editingStatement : stmt
-                  ));
-                  setEditingStatement(null);
-                  toast({
-                    title: 'הצהרה עודכנה',
-                    description: 'השינויים נשמרו בהצלחה',
-                  });
-                }}>
-                  שמור
+                <Button 
+                  onClick={handleUpdateStatement}
+                  disabled={updateStatementMutation.isPending}
+                >
+                  {updateStatementMutation.isPending ? 'שומר...' : 'שמור'}
                 </Button>
               </div>
             </div>
