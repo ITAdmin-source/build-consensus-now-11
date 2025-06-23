@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 
 export const fetchAdminStats = async () => {
@@ -9,14 +8,20 @@ export const fetchAdminStats = async () => {
       .select('poll_id')
       .eq('status', 'active');
 
-    if (pollsError) throw pollsError;
+    if (pollsError) {
+      console.error('Error fetching active polls:', pollsError);
+      throw pollsError;
+    }
 
     // Get total participants (distinct user_id and session_id from votes)
     const { data: votes, error: votesError } = await supabase
       .from('polis_votes')
       .select('user_id, session_id');
 
-    if (votesError) throw votesError;
+    if (votesError) {
+      console.error('Error fetching votes for participants:', votesError);
+      throw votesError;
+    }
 
     // Count unique participants (either user_id or session_id)
     const uniqueParticipants = new Set();
@@ -37,7 +42,10 @@ export const fetchAdminStats = async () => {
       .select('vote_id')
       .gte('voted_at', today.toISOString());
 
-    if (todayVotesError) throw todayVotesError;
+    if (todayVotesError) {
+      console.error('Error fetching today votes:', todayVotesError);
+      throw todayVotesError;
+    }
 
     // Get pending statements count
     const { data: pendingStatements, error: pendingError } = await supabase
@@ -46,7 +54,10 @@ export const fetchAdminStats = async () => {
       .eq('is_approved', false)
       .eq('is_user_suggested', true);
 
-    if (pendingError) throw pendingError;
+    if (pendingError) {
+      console.error('Error fetching pending statements:', pendingError);
+      throw pendingError;
+    }
 
     return {
       activePolls: activePolls?.length || 0,
@@ -56,6 +67,7 @@ export const fetchAdminStats = async () => {
     };
   } catch (error) {
     console.error('Error fetching admin stats:', error);
+    // Return default values instead of throwing
     return {
       activePolls: 0,
       totalParticipants: 0,
@@ -67,29 +79,62 @@ export const fetchAdminStats = async () => {
 
 export const fetchPendingStatements = async () => {
   try {
-    const { data, error } = await supabase
+    // First, get pending statements without the problematic join
+    const { data: statements, error: statementsError } = await supabase
       .from('polis_statements')
       .select(`
         statement_id,
         content,
         content_type,
         created_at,
-        poll_id,
-        polis_polls!inner(title)
+        poll_id
       `)
       .eq('is_approved', false)
       .eq('is_user_suggested', true)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching pending statements:', error);
-      throw error;
+    if (statementsError) {
+      console.error('Error fetching pending statements:', statementsError);
+      throw statementsError;
     }
 
-    return data || [];
+    if (!statements || statements.length === 0) {
+      return [];
+    }
+
+    // Get unique poll IDs
+    const pollIds = [...new Set(statements.map(s => s.poll_id))];
+    
+    // Fetch poll titles separately
+    const { data: polls, error: pollsError } = await supabase
+      .from('polis_polls')
+      .select('poll_id, title')
+      .in('poll_id', pollIds);
+
+    if (pollsError) {
+      console.error('Error fetching poll titles:', pollsError);
+      // Continue without poll titles rather than failing completely
+    }
+
+    // Create a map of poll_id to title
+    const pollTitlesMap = new Map();
+    polls?.forEach(poll => {
+      pollTitlesMap.set(poll.poll_id, poll.title);
+    });
+
+    // Combine statements with poll titles
+    const statementsWithPollTitles = statements.map(statement => ({
+      ...statement,
+      polis_polls: {
+        title: pollTitlesMap.get(statement.poll_id) || 'סקר לא זמין'
+      }
+    }));
+
+    return statementsWithPollTitles;
   } catch (error) {
     console.error('Error in fetchPendingStatements:', error);
-    throw error;
+    // Return empty array instead of throwing to prevent dashboard crash
+    return [];
   }
 };
 

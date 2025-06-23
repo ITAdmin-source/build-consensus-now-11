@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -46,7 +45,16 @@ const AdminDashboard = () => {
     pendingStatements: 0
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingStates, setLoadingStates] = useState({
+    polls: true,
+    stats: true,
+    statements: true
+  });
+  const [errors, setErrors] = useState({
+    polls: null as string | null,
+    stats: null as string | null,
+    statements: null as string | null
+  });
 
   useEffect(() => {
     loadData();
@@ -55,32 +63,75 @@ const AdminDashboard = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      setError(null);
+      setLoadingStates({ polls: true, stats: true, statements: true });
+      setErrors({ polls: null, stats: null, statements: null });
+      
       console.log('Loading admin dashboard data...');
       
-      const [pollsData, statsData, pendingData] = await Promise.all([
-        fetchAllPolls(),
-        fetchAdminStats(),
-        fetchPendingStatements()
-      ]);
-      
-      console.log('Polls loaded:', pollsData);
-      console.log('Stats loaded:', statsData);
-      console.log('Pending statements loaded:', pendingData);
-      
-      setPolls(pollsData);
-      setStats(statsData);
-      setPendingStatements(pendingData);
+      // Load data with individual error handling
+      const dataPromises = [
+        loadPolls(),
+        loadStats(), 
+        loadPendingStatements()
+      ];
+
+      await Promise.allSettled(dataPromises);
     } catch (error) {
       console.error('Error loading admin data:', error);
-      setError('שגיאה בטעינת נתוני הניהול');
       toast({
         title: 'שגיאה בטעינת נתונים',
-        description: 'אנא נסה לרענן את העמוד',
+        description: 'חלק מהנתונים עלולים להיות לא מעודכנים',
         variant: 'destructive'
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPolls = async () => {
+    try {
+      setLoadingStates(prev => ({ ...prev, polls: true }));
+      const pollsData = await fetchAllPolls();
+      console.log('Polls loaded:', pollsData);
+      setPolls(pollsData);
+      setErrors(prev => ({ ...prev, polls: null }));
+    } catch (error) {
+      console.error('Error loading polls:', error);
+      setErrors(prev => ({ ...prev, polls: 'שגיאה בטעינת הסקרים' }));
+      setPolls([]);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, polls: false }));
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      setLoadingStates(prev => ({ ...prev, stats: true }));
+      const statsData = await fetchAdminStats();
+      console.log('Stats loaded:', statsData);
+      setStats(statsData);
+      setErrors(prev => ({ ...prev, stats: null }));
+    } catch (error) {
+      console.error('Error loading stats:', error);
+      setErrors(prev => ({ ...prev, stats: 'שגיאה בטעינת הסטטיסטיקות' }));
+    } finally {
+      setLoadingStates(prev => ({ ...prev, stats: false }));
+    }
+  };
+
+  const loadPendingStatements = async () => {
+    try {
+      setLoadingStates(prev => ({ ...prev, statements: true }));
+      const pendingData = await fetchPendingStatements();
+      console.log('Pending statements loaded:', pendingData);
+      setPendingStatements(pendingData);
+      setErrors(prev => ({ ...prev, statements: null }));
+    } catch (error) {
+      console.error('Error loading pending statements:', error);
+      setErrors(prev => ({ ...prev, statements: 'שגיאה בטעינת ההצהרות הממתינות' }));
+      setPendingStatements([]);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, statements: false }));
     }
   };
 
@@ -161,7 +212,7 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading && loadingStates.polls && loadingStates.stats && loadingStates.statements) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 hebrew-text flex items-center justify-center">
         <div className="text-center">
@@ -172,14 +223,40 @@ const AdminDashboard = () => {
     );
   }
 
-  if (error) {
+  if (errors.stats) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 hebrew-text flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">שגיאה בטעינת הנתונים</h2>
-          <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={loadData}>נסה שוב</Button>
+          <h2 className="text-xl font-bold mb-2">שגיאה בטעינת הסטטיסטיקות</h2>
+          <p className="text-muted-foreground mb-4">{errors.stats}</p>
+          <Button onClick={loadStats}>נסה שוב</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (errors.polls) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 hebrew-text flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">שגיאה בטעינת הסקרים</h2>
+          <p className="text-muted-foreground mb-4">{errors.polls}</p>
+          <Button onClick={loadPolls}>נסה שוב</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (errors.statements) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 hebrew-text flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">שגיאה בטעינת ההצהרות הממתינות</h2>
+          <p className="text-muted-foreground mb-4">{errors.statements}</p>
+          <Button onClick={loadPendingStatements}>נסה שוב</Button>
         </div>
       </div>
     );
@@ -238,13 +315,26 @@ const AdminDashboard = () => {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
+            {errors.stats && (
+              <Card className="border-orange-200 bg-orange-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-orange-700">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{errors.stats}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">סקרים פעילים</p>
-                      <p className="text-2xl font-bold">{stats.activePolls}</p>
+                      <p className="text-2xl font-bold">
+                        {loadingStates.stats ? '...' : stats.activePolls}
+                      </p>
                     </div>
                     <BarChart3 className="h-8 w-8 text-blue-500" />
                   </div>
@@ -256,7 +346,9 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">משתתפים פעילים</p>
-                      <p className="text-2xl font-bold">{stats.totalParticipants}</p>
+                      <p className="text-2xl font-bold">
+                        {loadingStates.stats ? '...' : stats.totalParticipants}
+                      </p>
                     </div>
                     <Users className="h-8 w-8 text-green-500" />
                   </div>
@@ -268,7 +360,9 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">הצבעות היום</p>
-                      <p className="text-2xl font-bold">{stats.votesToday}</p>
+                      <p className="text-2xl font-bold">
+                        {loadingStates.stats ? '...' : stats.votesToday}
+                      </p>
                     </div>
                     <Vote className="h-8 w-8 text-purple-500" />
                   </div>
@@ -280,7 +374,9 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">הצהרות ממתינות</p>
-                      <p className="text-2xl font-bold">{stats.pendingStatements}</p>
+                      <p className="text-2xl font-bold">
+                        {loadingStates.stats ? '...' : stats.pendingStatements}
+                      </p>
                     </div>
                     <AlertCircle className="h-8 w-8 text-orange-500" />
                   </div>
@@ -298,15 +394,8 @@ const AdminDashboard = () => {
                   <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                     <CheckCircle className="h-5 w-5 text-green-500" />
                     <div className="flex-1">
-                      <p className="font-medium">סקר חדש נוצר: "מדיניות דיור"</p>
-                      <p className="text-sm text-muted-foreground">לפני 2 שעות</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                    <Users className="h-5 w-5 text-blue-500" />
-                    <div className="flex-1">
-                      <p className="font-medium">23 משתתפים חדשים הצטרפו היום</p>
-                      <p className="text-sm text-muted-foreground">לפני 4 שעות</p>
+                      <p className="font-medium">מערכת הניהול פעילה ותקינה</p>
+                      <p className="text-sm text-muted-foreground">עודכן זה עתה</p>
                     </div>
                   </div>
                 </div>
@@ -337,7 +426,33 @@ const AdminDashboard = () => {
               </Dialog>
             </div>
 
-            {polls.length === 0 ? (
+            {errors.polls && (
+              <Card className="border-red-200 bg-red-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-red-700">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{errors.polls}</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={loadPolls}
+                      className="mr-auto"
+                    >
+                      נסה שוב
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {loadingStates.polls ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p>טוען סקרים...</p>
+                </CardContent>
+              </Card>
+            ) : polls.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">
                   <AlertCircle className="h-12 w-12 mx-auto mb-4 text-blue-500" />
@@ -414,55 +529,83 @@ const AdminDashboard = () => {
           <TabsContent value="statements" className="space-y-6">
             <h2 className="text-2xl font-bold">אישור הצהרות</h2>
             
-            <div className="grid gap-4">
-              {pendingStatements.map((statement) => (
-                <Card key={statement.statement_id}>
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      <div>
-                        <Badge variant="outline" className="mb-2">
-                          {statement.polis_polls?.title || 'סקר לא זמין'}
-                        </Badge>
-                        <p className="text-lg">{statement.content}</p>
+            {errors.statements && (
+              <Card className="border-red-200 bg-red-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-red-700">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{errors.statements}</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={loadPendingStatements}
+                      className="mr-auto"
+                    >
+                      נסה שוב
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {loadingStates.statements ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p>טוען הצהרות ממתינות...</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {pendingStatements.map((statement) => (
+                  <Card key={statement.statement_id}>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <div>
+                          <Badge variant="outline" className="mb-2">
+                            {statement.polis_polls?.title || 'סקר לא זמין'}
+                          </Badge>
+                          <p className="text-lg">{statement.content}</p>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <span>נשלח ב-{new Date(statement.created_at).toLocaleString('he-IL')}</span>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleApproveStatement(statement.statement_id)}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <CheckCircle className="h-4 w-4 ml-1" />
+                            אשר
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => handleRejectStatement(statement.statement_id)}
+                          >
+                            <XCircle className="h-4 w-4 ml-1" />
+                            דחה
+                          </Button>
+                        </div>
                       </div>
-                      
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>נשלח ב-{new Date(statement.created_at).toLocaleString('he-IL')}</span>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleApproveStatement(statement.statement_id)}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <CheckCircle className="h-4 w-4 ml-1" />
-                          אשר
-                        </Button>
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => handleRejectStatement(statement.statement_id)}
-                        >
-                          <XCircle className="h-4 w-4 ml-1" />
-                          דחה
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              {pendingStatements.length === 0 && (
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                    <p className="text-lg font-medium">אין הצהרות ממתינות לאישור</p>
-                    <p className="text-muted-foreground">כל ההצהרות שהוגשו כבר אושרו או נדחו</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {pendingStatements.length === 0 && !loadingStates.statements && (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                      <p className="text-lg font-medium">אין הצהרות ממתינות לאישור</p>
+                      <p className="text-muted-foreground">כל ההצהרות שהוגשו כבר אושרו או נדחו</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
           </TabsContent>
 
           {/* Analytics Tab */}
