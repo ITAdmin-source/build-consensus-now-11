@@ -27,7 +27,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { NewPollForm } from '@/components/admin/NewPollForm';
 import { SystemConfig } from '@/components/admin/SystemConfig';
-import { fetchActivePolls } from '@/integrations/supabase/polls';
+import { fetchAllPolls } from '@/integrations/supabase/polls';
 import { fetchAdminStats, fetchPendingStatements, approveStatement, rejectStatement, extendPollTime } from '@/integrations/supabase/admin';
 import type { Poll } from '@/types/poll';
 
@@ -46,6 +46,7 @@ const AdminDashboard = () => {
     pendingStatements: 0
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -54,17 +55,25 @@ const AdminDashboard = () => {
   const loadData = async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('Loading admin dashboard data...');
+      
       const [pollsData, statsData, pendingData] = await Promise.all([
-        fetchActivePolls(),
+        fetchAllPolls(),
         fetchAdminStats(),
         fetchPendingStatements()
       ]);
+      
+      console.log('Polls loaded:', pollsData);
+      console.log('Stats loaded:', statsData);
+      console.log('Pending statements loaded:', pendingData);
       
       setPolls(pollsData);
       setStats(statsData);
       setPendingStatements(pendingData);
     } catch (error) {
       console.error('Error loading admin data:', error);
+      setError('שגיאה בטעינת נתוני הניהול');
       toast({
         title: 'שגיאה בטעינת נתונים',
         description: 'אנא נסה לרענן את העמוד',
@@ -158,6 +167,19 @@ const AdminDashboard = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
           <p className="mt-4 text-lg">טוען נתונים...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 hebrew-text flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">שגיאה בטעינת הנתונים</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={loadData}>נסה שוב</Button>
         </div>
       </div>
     );
@@ -315,63 +337,77 @@ const AdminDashboard = () => {
               </Dialog>
             </div>
 
-            <div className="grid gap-6">
-              {polls.map((poll) => (
-                <Card key={poll.poll_id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold mb-2">{poll.title}</h3>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Target className="h-4 w-4" />
-                            {poll.current_consensus_points}/{poll.min_consensus_points_to_win} נק' חיבור
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Vote className="h-4 w-4" />
-                            {poll.total_votes} הצבעות
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            {poll.total_statements} הצהרות
+            {polls.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-4 text-blue-500" />
+                  <p className="text-lg font-medium">אין סקרים במערכת</p>
+                  <p className="text-muted-foreground mb-4">צור סקר חדש כדי להתחיל</p>
+                  <Button onClick={() => setShowNewPollDialog(true)}>
+                    <Plus className="h-4 w-4 ml-1" />
+                    צור סקר חדש
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-6">
+                {polls.map((poll) => (
+                  <Card key={poll.poll_id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold mb-2">{poll.title}</h3>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Target className="h-4 w-4" />
+                              {poll.current_consensus_points}/{poll.min_consensus_points_to_win} נק' חיבור
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Vote className="h-4 w-4" />
+                              {poll.total_votes} הצבעות
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Users className="h-4 w-4" />
+                              {poll.total_statements} הצהרות
+                            </div>
                           </div>
                         </div>
+                        <Badge variant={poll.status === 'active' ? 'default' : 'secondary'}>
+                          {poll.status === 'active' ? 'פעיל' : poll.status === 'closed' ? 'סגור' : 'טיוטה'}
+                        </Badge>
                       </div>
-                      <Badge variant={poll.status === 'active' ? 'default' : 'secondary'}>
-                        {poll.status === 'active' ? 'פעיל' : poll.status === 'closed' ? 'סגור' : 'טיוטה'}
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditPoll(poll.poll_id)}
-                      >
-                        <Edit className="h-4 w-4 ml-1" />
-                        עריכה
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => navigate(`/results/${poll.poll_id}`)}
-                      >
-                        <Eye className="h-4 w-4 ml-1" />
-                        תוצאות
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleExtendTime(poll.poll_id)}
-                      >
-                        <Clock className="h-4 w-4 ml-1" />
-                        הארך זמן
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleEditPoll(poll.poll_id)}
+                        >
+                          <Edit className="h-4 w-4 ml-1" />
+                          עריכה
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/results/${poll.poll_id}`)}
+                        >
+                          <Eye className="h-4 w-4 ml-1" />
+                          תוצאות
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleExtendTime(poll.poll_id)}
+                        >
+                          <Clock className="h-4 w-4 ml-1" />
+                          הארך זמן
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* Statements Approval Tab */}
