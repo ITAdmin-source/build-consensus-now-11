@@ -433,6 +433,7 @@ export type Database = {
       }
       polis_votes: {
         Row: {
+          poll_id: string
           session_id: string | null
           statement_id: string | null
           user_id: string | null
@@ -441,6 +442,7 @@ export type Database = {
           voted_at: string | null
         }
         Insert: {
+          poll_id: string
           session_id?: string | null
           statement_id?: string | null
           user_id?: string | null
@@ -449,6 +451,7 @@ export type Database = {
           voted_at?: string | null
         }
         Update: {
+          poll_id?: string
           session_id?: string | null
           statement_id?: string | null
           user_id?: string | null
@@ -457,6 +460,13 @@ export type Database = {
           voted_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_votes_poll_id"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polis_polls"
+            referencedColumns: ["poll_id"]
+          },
           {
             foreignKeyName: "polis_votes_statement_id_fkey"
             columns: ["statement_id"]
