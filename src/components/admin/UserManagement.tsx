@@ -36,6 +36,11 @@ interface User {
   last_sign_in_at: string | null;
 }
 
+interface AdminResult {
+  success: boolean;
+  error?: string;
+}
+
 export const UserManagement: React.FC = () => {
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
@@ -87,7 +92,7 @@ export const UserManagement: React.FC = () => {
         password: newAdminData.password,
         full_name: newAdminData.full_name,
         role: newAdminData.role as 'super_admin' | 'poll_admin'
-      });
+      }) as AdminResult;
       
       if (result.success) {
         await loadUsers();
@@ -121,7 +126,7 @@ export const UserManagement: React.FC = () => {
     
     try {
       setActionLoading('assign');
-      const result = await assignUserRole(selectedUserId, selectedRole);
+      const result = await assignUserRole(selectedUserId, selectedRole) as AdminResult;
       
       if (result.success) {
         await loadUsers();
@@ -153,7 +158,7 @@ export const UserManagement: React.FC = () => {
   const handleRemoveRole = async (userId: string) => {
     try {
       setActionLoading(`remove-${userId}`);
-      const result = await removeUserRole(userId);
+      const result = await removeUserRole(userId) as AdminResult;
       
       if (result.success) {
         await loadUsers();
@@ -192,7 +197,7 @@ export const UserManagement: React.FC = () => {
     
     try {
       setActionLoading(`delete-${userId}`);
-      const result = await deleteAdminUser(userId);
+      const result = await deleteAdminUser(userId) as AdminResult;
       
       if (result.success) {
         await loadUsers();
@@ -223,7 +228,7 @@ export const UserManagement: React.FC = () => {
     
     try {
       setActionLoading('password');
-      const result = await updateUserPassword(selectedUserId, newPassword);
+      const result = await updateUserPassword(selectedUserId, newPassword) as AdminResult;
       
       if (result.success) {
         setNewPassword('');
