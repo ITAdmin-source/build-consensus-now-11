@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -13,11 +14,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, Save, Settings, FileText, BarChart3, Download } from 'lucide-react';
+import { ArrowRight, Save, Settings, FileText } from 'lucide-react';
 import { StatementsManagement } from './StatementsManagement';
-import { AdvancedSettings } from './AdvancedSettings';
-import { PollAnalytics } from './PollAnalytics';
-import { ExportImport } from './ExportImport';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPollById } from '@/integrations/supabase/polls';
 import { supabase } from '@/integrations/supabase/client';
@@ -226,7 +224,7 @@ export const EditPollPage: React.FC = () => {
       <Card className="max-w-6xl mx-auto">
         <CardContent className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 hebrew-text">
+            <TabsList className="grid w-full grid-cols-2 hebrew-text">
               <TabsTrigger value="basic" className="hebrew-text">
                 <Settings className="h-4 w-4 ml-1" />
                 הגדרות בסיסיות
@@ -234,18 +232,6 @@ export const EditPollPage: React.FC = () => {
               <TabsTrigger value="statements" className="hebrew-text">
                 <FileText className="h-4 w-4 ml-1" />
                 ניהול הצהרות
-              </TabsTrigger>
-              <TabsTrigger value="advanced" className="hebrew-text">
-                <Settings className="h-4 w-4 ml-1" />
-                הגדרות מתקדמות
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="hebrew-text">
-                <BarChart3 className="h-4 w-4 ml-1" />
-                אנליטיקה
-              </TabsTrigger>
-              <TabsTrigger value="export" className="hebrew-text">
-                <Download className="h-4 w-4 ml-1" />
-                ייצוא/ייבוא
               </TabsTrigger>
             </TabsList>
 
@@ -384,6 +370,67 @@ export const EditPollPage: React.FC = () => {
                         )}
                       />
 
+                      <div className="grid grid-cols-1 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="min_support_pct"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="hebrew-text">אחוז תמיכה מינימלי (%)</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  {...field}
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="max_opposition_pct"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="hebrew-text">אחוז התנגדות מקסימלי (%)</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  {...field}
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="min_votes_per_group"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="hebrew-text">מינימום הצבעות לקבוצה</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number"
+                                  min="1"
+                                  {...field}
+                                  onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
                       <div className="space-y-4">
                         <FormField
                           control={form.control}
@@ -450,18 +497,6 @@ export const EditPollPage: React.FC = () => {
 
             <TabsContent value="statements" className="mt-6">
               <StatementsManagement pollId={pollId || ''} />
-            </TabsContent>
-
-            <TabsContent value="advanced" className="mt-6">
-              <AdvancedSettings pollId={pollId || ''} />
-            </TabsContent>
-
-            <TabsContent value="analytics" className="mt-6">
-              <PollAnalytics pollId={pollId || ''} />
-            </TabsContent>
-
-            <TabsContent value="export" className="mt-6">
-              <ExportImport pollId={pollId || ''} />
             </TabsContent>
           </Tabs>
         </CardContent>
