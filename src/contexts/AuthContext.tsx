@@ -58,30 +58,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshUserRole = async () => {
     if (user) {
-      const role = await fetchUserRole(user.id);
-      setUserRole(role);
+      try {
+        const role = await fetchUserRole(user.id);
+        setUserRole(role);
+      } catch (error) {
+        console.error('Error refreshing user role:', error);
+        setUserRole('participant');
+      }
     } else {
       setUserRole(null);
     }
   };
 
   useEffect(() => {
-    // Set up auth state listener
+    console.log('Setting up auth state listener');
+    
+    // Set up auth state listener - NEVER use async function here
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state change:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Use setTimeout to defer async operations and prevent infinite loops
         if (session?.user) {
-          // Fetch user role when user is authenticated
-          const role = await fetchUserRole(session.user.id);
-          setUserRole(role);
+          setTimeout(async () => {
+            try {
+              const role = await fetchUserRole(session.user.id);
+              setUserRole(role);
+            } catch (error) {
+              console.error('Error fetching role in auth state change:', error);
+              setUserRole('participant');
+            } finally {
+              setLoading(false);
+            }
+          }, 0);
         } else {
           setUserRole(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
@@ -92,14 +107,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        const role = await fetchUserRole(session.user.id);
-        setUserRole(role);
+        try {
+          const role = await fetchUserRole(session.user.id);
+          setUserRole(role);
+        } catch (error) {
+          console.error('Error fetching role in initial session:', error);
+          setUserRole('participant');
+        }
       }
       
       setLoading(false);
+    }).catch((error) => {
+      console.error('Error getting initial session:', error);
+      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
@@ -127,20 +153,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('Attempting signin for:', email);
     setLoading(true);
     
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    
-    console.log('Signin response:', { data, error });
-    
-    return { error };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      console.log('Signin response:', { data, error });
+      
+      // Loading will be set to false by the auth state change handler
+      return { error };
+    } catch (error) {
+      console.error('Error in signIn:', error);
+      setLoading(false);
+      return { error };
+    }
   };
 
   const signOut = async () => {
     console.log('Signing out user');
-    await supabase.auth.signOut();
-    setUserRole(null);
+    setLoading(true);
+    
+    try {
+      await supabase.auth.signOut();
+      setUserRole(null);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isAuthenticated = !!user;
