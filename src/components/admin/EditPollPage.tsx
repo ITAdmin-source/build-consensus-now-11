@@ -18,6 +18,7 @@ import { ArrowRight, Save, Settings, FileText } from 'lucide-react';
 import { StatementsManagement } from './StatementsManagement';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPollById } from '@/integrations/supabase/polls';
+import { fetchCategories } from '@/integrations/supabase/categories';
 import { supabase } from '@/integrations/supabase/client';
 import type { Poll } from '@/types/poll';
 
@@ -25,7 +26,7 @@ const editPollSchema = z.object({
   title: z.string().min(1, 'כותרת נדרשת').max(100, 'כותרת ארוכה מדי'),
   topic: z.string().min(1, 'נושא נדרש').max(50, 'נושא ארוך מדי'),
   description: z.string().min(10, 'תיאור חייב להכיל לפחות 10 תווים').max(500, 'תיאור ארוך מדי'),
-  category: z.string().min(1, 'קטגוריה נדרשת'),
+  category_id: z.string().min(1, 'קטגוריה נדרשת'),
   end_time: z.string().min(1, 'זמן סיום נדרש'),
   min_consensus_points_to_win: z.number().min(1, 'מינימום נקודת חיבור אחת').max(20, 'מקסימום 20 נקודות חיבור'),
   allow_user_statements: z.boolean(),
@@ -37,17 +38,6 @@ const editPollSchema = z.object({
 });
 
 type EditPollFormData = z.infer<typeof editPollSchema>;
-
-const categories = [
-  { value: 'politics', label: 'פוליטיקה' },
-  { value: 'education', label: 'חינוך' },
-  { value: 'environment', label: 'איכות סביבה' },
-  { value: 'economy', label: 'כלכלה' },
-  { value: 'society', label: 'חברה' },
-  { value: 'technology', label: 'טכנולוגיה' },
-  { value: 'health', label: 'בריאות' },
-  { value: 'transport', label: 'תחבורה' }
-];
 
 export const EditPollPage: React.FC = () => {
   const { pollId } = useParams();
@@ -62,7 +52,7 @@ export const EditPollPage: React.FC = () => {
       title: '',
       topic: '',
       description: '',
-      category: '',
+      category_id: '',
       end_time: '',
       min_consensus_points_to_win: 5,
       allow_user_statements: true,
@@ -72,6 +62,12 @@ export const EditPollPage: React.FC = () => {
       min_votes_per_group: 3,
       status: 'draft'
     }
+  });
+
+  // Fetch categories from database
+  const { data: categories, isLoading: categoriesLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: fetchCategories
   });
 
   // Fetch poll data
@@ -84,35 +80,36 @@ export const EditPollPage: React.FC = () => {
   // Update poll mutation
   const updatePollMutation = useMutation({
     mutationFn: async (data: EditPollFormData) => {
-      // First, get or create the category
-      let categoryId: string;
-      const { data: existingCategory } = await supabase
-        .from('polis_poll_categories')
-        .select('category_id')
-        .eq('name', data.category)
-        .single();
-
-      if (existingCategory) {
-        categoryId = existingCategory.category_id;
-      } else {
-        const { data: newCategory, error: categoryError } = await supabase
-          .from('polis_poll_categories')
-          .insert({ name: data.category })
-          .select('category_id')
-          .single();
-        
-        if (categoryError) throw categoryError;
-        categoryId = newCategory.category_id;
+      console.log('Updating poll with data:', data);
+      
+      if (!pollId) {
+        throw new Error('Poll ID is missing');
       }
+
+      // Validate required fields
+      if (!data.title || !data.topic || !data.description || !data.category_id) {
+        throw new Error('Missing required fields');
+      }
+
+      // Convert datetime-local to ISO string if needed
+      let endTime = data.end_time;
+      if (endTime && !endTime.includes('T')) {
+        endTime = data.end_time + ':00';
+      }
+      if (endTime && !endTime.includes('Z') && !endTime.includes('+')) {
+        endTime = new Date(endTime).toISOString();
+      }
+
+      console.log('Processed end_time:', endTime);
 
       const { data: updatedPoll, error } = await supabase
         .from('polis_polls')
         .update({
-          title: data.title,
-          topic: data.topic,
-          description: data.description,
-          category_id: categoryId,
-          end_time: data.end_time,
+          title: data.title.trim(),
+          topic: data.topic.trim(),
+          description: data.description.trim(),
+          category_id: data.category_id,
+          end_time: endTime,
           min_consensus_points_to_win: data.min_consensus_points_to_win,
           allow_user_statements: data.allow_user_statements,
           auto_approve_statements: data.auto_approve_statements,
@@ -125,7 +122,12 @@ export const EditPollPage: React.FC = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+      
+      console.log('Poll updated successfully:', updatedPoll);
       return updatedPoll;
     },
     onSuccess: () => {
@@ -137,9 +139,10 @@ export const EditPollPage: React.FC = () => {
       });
     },
     onError: (error) => {
+      console.error('Update poll error:', error);
       toast({
         title: 'שגיאה בעדכון הסקר',
-        description: 'אנא נסה שוב מאוחר יותר',
+        description: error.message || 'אנא נסה שוב מאוחר יותר',
         variant: 'destructive'
       });
     }
@@ -147,29 +150,47 @@ export const EditPollPage: React.FC = () => {
 
   // Update form values when poll data is loaded
   useEffect(() => {
-    if (poll) {
+    if (poll && categories) {
+      console.log('Setting form values from poll:', poll);
+      
+      // Find category_id by name
+      const category = categories.find(cat => cat.name === poll.category);
+      const categoryId = category?.category_id || '';
+      
+      console.log('Found category:', category, 'ID:', categoryId);
+
+      // Format datetime for datetime-local input
+      let formattedEndTime = '';
+      if (poll.end_time) {
+        const date = new Date(poll.end_time);
+        if (!isNaN(date.getTime())) {
+          formattedEndTime = date.toISOString().slice(0, 16);
+        }
+      }
+
       form.reset({
-        title: poll.title,
-        topic: poll.topic,
-        description: poll.description,
-        category: poll.category,
-        end_time: poll.end_time ? poll.end_time.slice(0, 16) : '',
-        min_consensus_points_to_win: poll.min_consensus_points_to_win,
-        allow_user_statements: poll.allow_user_statements,
-        auto_approve_statements: poll.auto_approve_statements,
-        min_support_pct: poll.min_support_pct,
-        max_opposition_pct: poll.max_opposition_pct,
-        min_votes_per_group: poll.min_votes_per_group,
-        status: poll.status
+        title: poll.title || '',
+        topic: poll.topic || '',
+        description: poll.description || '',
+        category_id: categoryId,
+        end_time: formattedEndTime,
+        min_consensus_points_to_win: poll.min_consensus_points_to_win || 5,
+        allow_user_statements: poll.allow_user_statements ?? true,
+        auto_approve_statements: poll.auto_approve_statements ?? false,
+        min_support_pct: poll.min_support_pct || 60,
+        max_opposition_pct: poll.max_opposition_pct || 30,
+        min_votes_per_group: poll.min_votes_per_group || 3,
+        status: poll.status || 'draft'
       });
     }
-  }, [poll, form]);
+  }, [poll, categories, form]);
 
   const onSubmit = async (data: EditPollFormData) => {
+    console.log('Form submitted with data:', data);
     updatePollMutation.mutate(data);
   };
 
-  if (isLoading) {
+  if (isLoading || categoriesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -272,20 +293,20 @@ export const EditPollPage: React.FC = () => {
 
                       <FormField
                         control={form.control}
-                        name="category"
+                        name="category_id"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="hebrew-text">קטגוריה</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger className="hebrew-text">
-                                  <SelectValue />
+                                  <SelectValue placeholder="בחר קטגוריה" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {categories.map((category) => (
-                                  <SelectItem key={category.value} value={category.value} className="hebrew-text">
-                                    {category.label}
+                                {categories?.map((category) => (
+                                  <SelectItem key={category.category_id} value={category.category_id} className="hebrew-text">
+                                    {category.name}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -362,7 +383,7 @@ export const EditPollPage: React.FC = () => {
                                 min="1"
                                 max="20"
                                 {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -383,7 +404,7 @@ export const EditPollPage: React.FC = () => {
                                   min="0"
                                   max="100"
                                   {...field}
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -403,7 +424,7 @@ export const EditPollPage: React.FC = () => {
                                   min="0"
                                   max="100"
                                   {...field}
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -422,7 +443,7 @@ export const EditPollPage: React.FC = () => {
                                   type="number"
                                   min="1"
                                   {...field}
-                                  onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                  onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                                 />
                               </FormControl>
                               <FormMessage />
