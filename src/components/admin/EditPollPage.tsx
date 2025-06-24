@@ -86,6 +86,12 @@ export const EditPollPage: React.FC = () => {
         throw new Error('Poll ID is missing');
       }
 
+      // Check authentication
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       // Validate required fields
       if (!data.title || !data.topic || !data.description || !data.category_id) {
         throw new Error('Missing required fields');
@@ -102,6 +108,7 @@ export const EditPollPage: React.FC = () => {
 
       console.log('Processed end_time:', endTime);
 
+      // Remove .single() to avoid the JSON object error
       const { data: updatedPoll, error } = await supabase
         .from('polis_polls')
         .update({
@@ -119,16 +126,19 @@ export const EditPollPage: React.FC = () => {
           min_votes_per_group: data.min_votes_per_group
         })
         .eq('poll_id', pollId)
-        .select()
-        .single();
+        .select();
 
       if (error) {
         console.error('Database error:', error);
         throw new Error(`Database error: ${error.message}`);
       }
       
+      if (!updatedPoll || updatedPoll.length === 0) {
+        throw new Error('No poll was updated. Check if the poll exists and you have permission to update it.');
+      }
+      
       console.log('Poll updated successfully:', updatedPoll);
-      return updatedPoll;
+      return updatedPoll[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['poll', pollId] });
