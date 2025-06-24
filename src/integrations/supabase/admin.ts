@@ -299,3 +299,137 @@ export const resetPoll = async (pollId: string) => {
     throw error;
   }
 };
+
+export const fetchAllUsers = async () => {
+  try {
+    const { data, error } = await supabase.rpc('polis_get_all_users');
+    
+    if (error) {
+      console.error('Error fetching all users:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error in fetchAllUsers:', error);
+    throw error;
+  }
+};
+
+export const createAdminUser = async (userData: {
+  email: string;
+  password: string;
+  full_name: string;
+  role: 'super_admin' | 'poll_admin';
+}) => {
+  try {
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (!currentUser.user) {
+      throw new Error('Not authenticated');
+    }
+
+    const { data, error } = await supabase.rpc('polis_create_admin_user', {
+      _email: userData.email,
+      _password: userData.password,
+      _full_name: userData.full_name,
+      _role: userData.role,
+      _created_by: currentUser.user.id
+    });
+
+    if (error) {
+      console.error('Error creating admin user:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in createAdminUser:', error);
+    throw error;
+  }
+};
+
+export const assignUserRole = async (userId: string, role: 'super_admin' | 'poll_admin') => {
+  try {
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (!currentUser.user) {
+      throw new Error('Not authenticated');
+    }
+
+    const { data, error } = await supabase.rpc('polis_assign_role_to_user', {
+      _user_id: userId,
+      _role: role,
+      _assigned_by: currentUser.user.id
+    });
+
+    if (error) {
+      console.error('Error assigning user role:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in assignUserRole:', error);
+    throw error;
+  }
+};
+
+export const removeUserRole = async (userId: string) => {
+  try {
+    const { data, error } = await supabase.rpc('polis_remove_user_role', {
+      _user_id: userId
+    });
+
+    if (error) {
+      console.error('Error removing user role:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in removeUserRole:', error);
+    throw error;
+  }
+};
+
+export const deleteAdminUser = async (userId: string) => {
+  try {
+    const { data, error } = await supabase.rpc('polis_delete_admin_user', {
+      _user_id: userId
+    });
+
+    if (error) {
+      console.error('Error deleting admin user:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in deleteAdminUser:', error);
+    throw error;
+  }
+};
+
+export const updateUserPassword = async (userId: string, newPassword: string) => {
+  try {
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (!currentUser.user) {
+      throw new Error('Not authenticated');
+    }
+
+    const { data, error } = await supabase.rpc('polis_update_user_password', {
+      _user_id: userId,
+      _new_password: newPassword,
+      _updated_by: currentUser.user.id
+    });
+
+    if (error) {
+      console.error('Error updating user password:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in updateUserPassword:', error);
+    throw error;
+  }
+};
