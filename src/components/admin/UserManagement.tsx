@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -92,9 +91,12 @@ export const UserManagement: React.FC = () => {
         password: newAdminData.password,
         full_name: newAdminData.full_name,
         role: newAdminData.role as 'super_admin' | 'poll_admin'
-      }) as AdminResult;
+      });
       
-      if (result.success) {
+      // Handle the Json type properly
+      const adminResult = result as unknown as AdminResult;
+      
+      if (adminResult.success) {
         await loadUsers();
         setNewAdminData({ email: '', full_name: '', password: '', role: 'poll_admin' });
         setShowNewAdminDialog(false);
@@ -106,7 +108,7 @@ export const UserManagement: React.FC = () => {
       } else {
         toast({
           title: 'שגיאה ביצירת מנהל',
-          description: result.error || 'שגיאה לא ידועה',
+          description: adminResult.error || 'שגיאה לא ידועה',
           variant: 'destructive',
         });
       }
@@ -126,9 +128,12 @@ export const UserManagement: React.FC = () => {
     
     try {
       setActionLoading('assign');
-      const result = await assignUserRole(selectedUserId, selectedRole) as AdminResult;
+      const result = await assignUserRole(selectedUserId, selectedRole);
       
-      if (result.success) {
+      // Handle the Json type properly
+      const adminResult = result as unknown as AdminResult;
+      
+      if (adminResult.success) {
         await loadUsers();
         setShowRoleDialog(false);
         setSelectedUserId(null);
@@ -140,7 +145,7 @@ export const UserManagement: React.FC = () => {
       } else {
         toast({
           title: 'שגיאה בהקצאת תפקיד',
-          description: result.error || 'שגיאה לא ידועה',
+          description: adminResult.error || 'שגיאה לא ידועה',
           variant: 'destructive',
         });
       }
@@ -158,9 +163,12 @@ export const UserManagement: React.FC = () => {
   const handleRemoveRole = async (userId: string) => {
     try {
       setActionLoading(`remove-${userId}`);
-      const result = await removeUserRole(userId) as AdminResult;
+      const result = await removeUserRole(userId);
       
-      if (result.success) {
+      // Handle the Json type properly
+      const adminResult = result as unknown as AdminResult;
+      
+      if (adminResult.success) {
         await loadUsers();
         toast({
           title: 'תפקיד הוסר',
@@ -169,7 +177,7 @@ export const UserManagement: React.FC = () => {
       } else {
         toast({
           title: 'שגיאה בהסרת תפקיד',
-          description: result.error || 'שגיאה לא ידועה',
+          description: adminResult.error || 'שגיאה לא ידועה',
           variant: 'destructive',
         });
       }
@@ -197,9 +205,12 @@ export const UserManagement: React.FC = () => {
     
     try {
       setActionLoading(`delete-${userId}`);
-      const result = await deleteAdminUser(userId) as AdminResult;
+      const result = await deleteAdminUser(userId);
       
-      if (result.success) {
+      // Handle the Json type properly
+      const adminResult = result as unknown as AdminResult;
+      
+      if (adminResult.success) {
         await loadUsers();
         toast({
           title: 'משתמש נמחק',
@@ -208,7 +219,7 @@ export const UserManagement: React.FC = () => {
       } else {
         toast({
           title: 'שגיאה במחיקת משתמש',
-          description: result.error || 'שגיאה לא ידועה',
+          description: adminResult.error || 'שגיאה לא ידועה',
           variant: 'destructive',
         });
       }
@@ -228,9 +239,12 @@ export const UserManagement: React.FC = () => {
     
     try {
       setActionLoading('password');
-      const result = await updateUserPassword(selectedUserId, newPassword) as AdminResult;
+      const result = await updateUserPassword(selectedUserId, newPassword);
       
-      if (result.success) {
+      // Handle the Json type properly
+      const adminResult = result as unknown as AdminResult;
+      
+      if (adminResult.success) {
         setNewPassword('');
         setSelectedUserId(null);
         setShowPasswordDialog(false);
@@ -242,7 +256,7 @@ export const UserManagement: React.FC = () => {
       } else {
         toast({
           title: 'שגיאה בעדכון סיסמה',
-          description: result.error || 'שגיאה לא ידועה',
+          description: adminResult.error || 'שגיאה לא ידועה',
           variant: 'destructive',
         });
       }
