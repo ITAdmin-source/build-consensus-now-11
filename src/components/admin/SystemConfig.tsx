@@ -12,7 +12,8 @@ import {
   Plus, 
   Edit, 
   Trash2,
-  Save
+  Save,
+  AlertCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchCategories, createCategory, updateCategory, deleteCategory, type Category } from '@/integrations/supabase/categories';
@@ -24,10 +25,14 @@ export const SystemConfig: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [showNewCategoryDialog, setShowNewCategoryDialog] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryError, setNewCategoryError] = useState('');
   const [editingCategory, setEditingCategory] = useState<{ id: string; name: string } | null>(null);
+  const [editCategoryError, setEditCategoryError] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+  const [operationLoading, setOperationLoading] = useState<string | null>(null);
 
   useEffect(() => {
     loadInitialData();
@@ -61,21 +66,39 @@ export const SystemConfig: React.FC = () => {
   const loadCategories = async () => {
     try {
       setCategoriesLoading(true);
+      setCategoriesError(null);
       console.log('Fetching categories from database...');
       const categoriesData = await fetchCategories();
       console.log('Categories loaded:', categoriesData);
       setCategories(categoriesData);
     } catch (error) {
       console.error('Error loading categories:', error);
+      setCategoriesError('שגיאה בטעינת קטגוריות מהמסד נתונים');
+      setCategories([]);
       toast({
         title: 'שגיאה בטעינת קטגוריות',
         description: 'אנא נסה שוב',
         variant: 'destructive',
       });
-      setCategories([]);
     } finally {
       setCategoriesLoading(false);
     }
+  };
+
+  const validateCategoryName = (name: string): string => {
+    if (!name.trim()) {
+      return 'שם הקטגוריה הוא שדה חובה';
+    }
+    if (name.trim().length < 2) {
+      return 'שם הקטגוריה חייב להכיל לפחות 2 תווים';
+    }
+    if (name.trim().length > 50) {
+      return 'שם הקטגוריה לא יכול להכיל יותר מ-50 תווים';
+    }
+    if (categories.some(cat => cat.name.toLowerCase() === name.trim().toLowerCase())) {
+      return 'קטגוריה עם השם הזה כבר קיימת';
+    }
+    return '';
   };
 
   const handleSaveMinStatements = async () => {
@@ -99,19 +122,25 @@ export const SystemConfig: React.FC = () => {
   };
 
   const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) return;
+    const error = validateCategoryName(newCategoryName);
+    if (error) {
+      setNewCategoryError(error);
+      return;
+    }
     
     try {
-      console.log('Creating new category:', newCategoryName);
-      const newCategory = await createCategory(newCategoryName);
+      setOperationLoading('add');
+      console.log('Creating new category:', newCategoryName.trim());
+      const newCategory = await createCategory(newCategoryName.trim());
       console.log('Category created:', newCategory);
       setCategories([...categories, newCategory]);
       setNewCategoryName('');
+      setNewCategoryError('');
       setShowNewCategoryDialog(false);
       
       toast({
         title: 'קטגוריה נוספה',
-        description: `הקטגוריה "${newCategoryName}" נוספה בהצלחה`,
+        description: `הקטגוריה "${newCategoryName.trim()}" נוספה בהצלחה`,
       });
     } catch (error) {
       console.error('Error creating category:', error);
@@ -120,21 +149,31 @@ export const SystemConfig: React.FC = () => {
         description: 'אנא נסה שוב',
         variant: 'destructive',
       });
+    } finally {
+      setOperationLoading(null);
     }
   };
 
   const handleEditCategory = async () => {
-    if (!editingCategory || !editingCategory.name.trim()) return;
+    if (!editingCategory) return;
+    
+    const error = validateCategoryName(editingCategory.name);
+    if (error) {
+      setEditCategoryError(error);
+      return;
+    }
     
     try {
+      setOperationLoading('edit');
       console.log('Updating category:', editingCategory);
-      await updateCategory(editingCategory.id, editingCategory.name);
+      await updateCategory(editingCategory.id, editingCategory.name.trim());
       setCategories(categories.map(cat => 
         cat.category_id === editingCategory.id 
-          ? { ...cat, name: editingCategory.name }
+          ? { ...cat, name: editingCategory.name.trim() }
           : cat
       ));
       setEditingCategory(null);
+      setEditCategoryError('');
       
       toast({
         title: 'קטגוריה עודכנה',
@@ -147,6 +186,8 @@ export const SystemConfig: React.FC = () => {
         description: 'אנא נסה שוב',
         variant: 'destructive',
       });
+    } finally {
+      setOperationLoading(null);
     }
   };
 
@@ -160,8 +201,13 @@ export const SystemConfig: React.FC = () => {
       });
       return;
     }
+
+    if (!confirm(`האם אתה בטוח שברצונך למחוק את הקטגוריה "${category?.name}"?`)) {
+      return;
+    }
     
     try {
+      setOperationLoading(categoryId);
       console.log('Deleting category:', categoryId);
       await deleteCategory(categoryId);
       setCategories(categories.filter(c => c.category_id !== categoryId));
@@ -176,6 +222,37 @@ export const SystemConfig: React.FC = () => {
         description: 'אנא נסה שוב',
         variant: 'destructive',
       });
+    } finally {
+      setOperationLoading(null);
+    }
+  };
+
+  const handleNewCategoryDialogChange = (open: boolean) => {
+    setShowNewCategoryDialog(open);
+    if (!open) {
+      setNewCategoryName('');
+      setNewCategoryError('');
+    }
+  };
+
+  const handleEditCategoryDialogChange = (open: boolean) => {
+    if (!open) {
+      setEditingCategory(null);
+      setEditCategoryError('');
+    }
+  };
+
+  const handleNewCategoryNameChange = (value: string) => {
+    setNewCategoryName(value);
+    if (newCategoryError) {
+      setNewCategoryError('');
+    }
+  };
+
+  const handleEditCategoryNameChange = (value: string) => {
+    setEditingCategory(prev => prev ? { ...prev, name: value } : null);
+    if (editCategoryError) {
+      setEditCategoryError('');
     }
   };
 
@@ -237,9 +314,9 @@ export const SystemConfig: React.FC = () => {
       <TabsContent value="categories" className="space-y-6">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold">ניהול קטגוריות</h3>
-          <Dialog open={showNewCategoryDialog} onOpenChange={setShowNewCategoryDialog}>
+          <Dialog open={showNewCategoryDialog} onOpenChange={handleNewCategoryDialogChange}>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled={operationLoading !== null}>
                 <Plus className="h-4 w-4 ml-1" />
                 קטגוריה חדשה
               </Button>
@@ -254,35 +331,67 @@ export const SystemConfig: React.FC = () => {
                   <Input
                     id="category-name"
                     value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    onChange={(e) => handleNewCategoryNameChange(e.target.value)}
                     placeholder="הכנס שם קטגוריה..."
+                    maxLength={50}
                   />
+                  {newCategoryError && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {newCategoryError}
+                    </p>
+                  )}
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setShowNewCategoryDialog(false)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowNewCategoryDialog(false)}
+                  disabled={operationLoading === 'add'}
+                >
                   ביטול
                 </Button>
-                <Button onClick={handleAddCategory}>הוסף</Button>
+                <Button 
+                  onClick={handleAddCategory}
+                  disabled={operationLoading === 'add' || !newCategoryName.trim()}
+                >
+                  {operationLoading === 'add' ? 'מוסיף...' : 'הוסף'}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
 
+        {categoriesError && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="h-4 w-4" />
+                <span>{categoriesError}</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={loadCategories}
+                  className="mr-auto"
+                  disabled={categoriesLoading}
+                >
+                  {categoriesLoading ? 'טוען...' : 'נסה שוב'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {categoriesLoading ? (
           <div className="flex items-center justify-center p-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
           </div>
-        ) : categories.length === 0 ? (
+        ) : categories.length === 0 && !categoriesError ? (
           <Card>
             <CardContent className="p-8 text-center">
               <Tags className="h-12 w-12 mx-auto mb-4 text-blue-500" />
               <p className="text-lg font-medium">אין קטגוריות במערכת</p>
               <p className="text-muted-foreground mb-4">צור קטגוריה חדשה כדי להתחיל</p>
-              <Button onClick={() => setShowNewCategoryDialog(true)}>
-                <Plus className="h-4 w-4 ml-1" />
-                צור קטגוריה חדשה
-              </Button>
             </CardContent>
           </Card>
         ) : (
@@ -305,6 +414,7 @@ export const SystemConfig: React.FC = () => {
                         variant="outline" 
                         size="sm"
                         onClick={() => setEditingCategory({ id: category.category_id, name: category.name })}
+                        disabled={operationLoading !== null}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -312,9 +422,16 @@ export const SystemConfig: React.FC = () => {
                         variant="destructive" 
                         size="sm"
                         onClick={() => handleDeleteCategory(category.category_id)}
-                        disabled={category.polls_count && category.polls_count > 0}
+                        disabled={
+                          operationLoading !== null || 
+                          (category.polls_count && category.polls_count > 0)
+                        }
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {operationLoading === category.category_id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -325,7 +442,7 @@ export const SystemConfig: React.FC = () => {
         )}
 
         {/* Edit Category Dialog */}
-        <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
+        <Dialog open={!!editingCategory} onOpenChange={handleEditCategoryDialogChange}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>עריכת קטגוריה</DialogTitle>
@@ -336,16 +453,32 @@ export const SystemConfig: React.FC = () => {
                 <Input
                   id="edit-category-name"
                   value={editingCategory?.name || ''}
-                  onChange={(e) => setEditingCategory(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  onChange={(e) => handleEditCategoryNameChange(e.target.value)}
                   placeholder="הכנס שם קטגוריה..."
+                  maxLength={50}
                 />
+                {editCategoryError && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {editCategoryError}
+                  </p>
+                )}
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingCategory(null)}>
+              <Button 
+                variant="outline" 
+                onClick={() => setEditingCategory(null)}
+                disabled={operationLoading === 'edit'}
+              >
                 ביטול
               </Button>
-              <Button onClick={handleEditCategory}>עדכן</Button>
+              <Button 
+                onClick={handleEditCategory}
+                disabled={operationLoading === 'edit' || !editingCategory?.name.trim()}
+              >
+                {operationLoading === 'edit' ? 'מעדכן...' : 'עדכן'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
