@@ -42,8 +42,10 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
     queryFn: fetchPendingStatements
   });
 
-  // Filter pending statements for this poll
-  const pendingStatements = pendingStatementsData.filter(stmt => stmt.poll_id === pollId);
+  // Filter pending statements for this poll - handle array safely
+  const pendingStatements = Array.isArray(pendingStatementsData) 
+    ? pendingStatementsData.filter(stmt => stmt.poll_id === pollId)
+    : [];
 
   // Create statement mutation
   const createStatementMutation = useMutation({
@@ -82,7 +84,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
 
   // Approve statement mutation
   const approveStatementMutation = useMutation({
-    mutationFn: approveStatement,
+    mutationFn: (statementId: string) => approveStatement(statementId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['statements', pollId] });
       queryClient.invalidateQueries({ queryKey: ['pendingStatements'] });
@@ -95,7 +97,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
 
   // Reject statement mutation
   const rejectStatementMutation = useMutation({
-    mutationFn: rejectStatement,
+    mutationFn: (statementId: string) => rejectStatement(statementId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pendingStatements'] });
       toast({
@@ -338,10 +340,10 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
                       {statement.content_type === 'text' ? 'טקסט' : statement.content_type}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-center">{statement.support_pct}%</TableCell>
-                  <TableCell className="text-center">{statement.oppose_pct}%</TableCell>
-                  <TableCell className="text-center">{statement.total_votes}</TableCell>
-                  <TableCell className="text-center">{statement.score}</TableCell>
+                  <TableCell className="text-center">{statement.support_pct || 0}%</TableCell>
+                  <TableCell className="text-center">{statement.oppose_pct || 0}%</TableCell>
+                  <TableCell className="text-center">{statement.total_votes || 0}</TableCell>
+                  <TableCell className="text-center">{statement.score || 0}</TableCell>
                   <TableCell className="text-center">
                     <div className="flex gap-1 justify-center">
                       {statement.is_consensus_point && (
