@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,14 +11,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, Save } from 'lucide-react';
+import { ArrowRight, Save, RefreshCw } from 'lucide-react';
 import { createPoll } from '@/integrations/supabase/admin';
+import { generateSlug, isSlugFormatValid } from '@/utils/slugUtils';
 
 const pollSchema = z.object({
   title: z.string().min(1, 'כותרת נדרשת').max(100, 'כותרת ארוכה מדי'),
   topic: z.string().min(1, 'נושא נדרש').max(50, 'נושא ארוך מדי'),
   description: z.string().min(10, 'תיאור חייב להכיל לפחות 10 תווים').max(500, 'תיאור ארוך מדי'),
   category: z.string().min(1, 'קטגוריה נדרשת'),
+  slug: z.string().min(1, 'כתובת URL נדרשת').max(100, 'כתובת URL ארוכה מדי'),
   end_time: z.string().min(1, 'זמן סיום נדרש'),
   min_consensus_points_to_win: z.number().min(1, 'מינימום נקודת חיבור אחת').max(20, 'מקסימום 20 נקודות חיבור'),
   allow_user_statements: z.boolean(),
@@ -47,6 +50,7 @@ interface NewPollFormProps {
 
 export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel }) => {
   const { toast } = useToast();
+  const [slugGenerated, setSlugGenerated] = useState(false);
   
   const form = useForm<PollFormData>({
     resolver: zodResolver(pollSchema),
@@ -55,6 +59,7 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
       topic: '',
       description: '',
       category: '',
+      slug: '',
       end_time: '',
       min_consensus_points_to_win: 5,
       allow_user_statements: true,
@@ -65,15 +70,38 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
     }
   });
 
+  // Auto-generate slug from title
+  const handleTitleChange = (title: string) => {
+    if (!slugGenerated && title) {
+      const generatedSlug = generateSlug(title);
+      form.setValue('slug', generatedSlug);
+    }
+  };
+
+  const handleGenerateSlug = () => {
+    const title = form.getValues('title');
+    if (title) {
+      const generatedSlug = generateSlug(title);
+      form.setValue('slug', generatedSlug);
+      setSlugGenerated(true);
+    }
+  };
+
   const onSubmit = async (data: PollFormData) => {
     try {
-      // Since the form is validated by Zod, we know all required fields are present
-      // We can safely cast to the expected type
+      // Validate slug format
+      const slugValidation = isSlugFormatValid(data.slug);
+      if (!slugValidation.valid) {
+        form.setError('slug', { message: slugValidation.error });
+        return;
+      }
+
       await createPoll({
         title: data.title,
         topic: data.topic,
         description: data.description,
         category: data.category,
+        slug: data.slug,
         end_time: data.end_time,
         min_consensus_points_to_win: data.min_consensus_points_to_win,
         allow_user_statements: data.allow_user_statements,
@@ -89,6 +117,7 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
       });
       
       form.reset();
+      setSlugGenerated(false);
       onSuccess?.();
     } catch (error) {
       console.error('Error creating poll:', error);
@@ -123,9 +152,48 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
                         <Input 
                           placeholder="לדוגמה: עתיד החינוך בישראל" 
                           className="hebrew-text text-right"
-                          {...field} 
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            handleTitleChange(e.target.value);
+                          }}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="slug"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="hebrew-text">כתובת URL</FormLabel>
+                      <FormControl>
+                        <div className="flex gap-2">
+                          <Input 
+                            placeholder="education-future" 
+                            className="text-left"
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              setSlugGenerated(true);
+                            }}
+                          />
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm"
+                            onClick={handleGenerateSlug}
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <div className="text-xs text-muted-foreground hebrew-text">
+                        הסקר יהיה זמין בכתובת: /poll/{form.watch('slug')}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

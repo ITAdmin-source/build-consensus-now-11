@@ -1,4 +1,3 @@
-
 export interface Poll {
   poll_id: string;
   title: string;
@@ -16,6 +15,7 @@ export interface Poll {
   current_consensus_points: number;
   total_statements: number;
   total_votes: number;
+  slug: string; // Add slug field
 }
 
 export interface Statement {

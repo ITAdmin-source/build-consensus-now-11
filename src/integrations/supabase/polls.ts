@@ -99,7 +99,8 @@ export const fetchActivePolls = async () => {
       min_votes_per_group: poll.min_votes_per_group || 1,
       current_consensus_points: consensusCounts[poll.poll_id] || 0,
       total_statements: statementsCounts[poll.poll_id] || 0,
-      total_votes: votesCounts[poll.poll_id] || 0
+      total_votes: votesCounts[poll.poll_id] || 0,
+      slug: poll.slug || '' // Add slug field
     }));
 
     console.log('Transformed polls:', transformedPolls);
@@ -166,13 +167,83 @@ export const fetchPollById = async (pollId: string) => {
       min_votes_per_group: data.min_votes_per_group || 1,
       current_consensus_points: consensusData.data?.length || 0,
       total_statements: statementsData.data?.length || 0,
-      total_votes: votesData.data?.length || 0
+      total_votes: votesData.data?.length || 0,
+      slug: data.slug || '' // Add slug field
     };
 
     console.log('Transformed poll:', transformedPoll);
     return transformedPoll;
   } catch (error) {
     console.error('Error in fetchPollById:', error);
+    throw error;
+  }
+};
+
+// Add function to fetch poll by slug
+export const fetchPollBySlug = async (slug: string) => {
+  try {
+    console.log('Fetching poll by slug:', slug);
+    
+    const { data, error } = await supabase
+      .from('polis_polls')
+      .select(`
+        *,
+        polis_poll_categories(name)
+      `)
+      .eq('slug', slug)
+      .single();
+
+    if (error) {
+      console.error('Error fetching poll by slug:', error);
+      throw error;
+    }
+
+    if (!data) {
+      console.log('No poll found with slug:', slug);
+      return null;
+    }
+
+    // Get additional data separately to avoid relationship issues
+    const [consensusData, statementsData, votesData] = await Promise.all([
+      supabase
+        .from('polis_consensus_points')
+        .select('statement_id')
+        .eq('poll_id', data.poll_id),
+      supabase
+        .from('polis_statements')
+        .select('statement_id')
+        .eq('poll_id', data.poll_id)
+        .eq('is_approved', true),
+      supabase
+        .from('polis_votes')
+        .select('vote_id')
+        .eq('poll_id', data.poll_id)
+    ]);
+
+    const transformedPoll: Poll = {
+      poll_id: data.poll_id,
+      title: data.title,
+      topic: data.topic || '',
+      description: data.description || '',
+      category: data.polis_poll_categories?.name || 'כללי',
+      end_time: data.end_time,
+      min_consensus_points_to_win: data.min_consensus_points_to_win || 3,
+      allow_user_statements: data.allow_user_statements || false,
+      auto_approve_statements: data.auto_approve_statements || false,
+      status: data.status,
+      min_support_pct: data.min_support_pct || 50,
+      max_opposition_pct: data.max_opposition_pct || 50,
+      min_votes_per_group: data.min_votes_per_group || 1,
+      current_consensus_points: consensusData.data?.length || 0,
+      total_statements: statementsData.data?.length || 0,
+      total_votes: votesData.data?.length || 0,
+      slug: data.slug || ''
+    };
+
+    console.log('Transformed poll by slug:', transformedPoll);
+    return transformedPoll;
+  } catch (error) {
+    console.error('Error in fetchPollBySlug:', error);
     throw error;
   }
 };
@@ -257,7 +328,8 @@ export const fetchAllPolls = async () => {
       min_votes_per_group: poll.min_votes_per_group || 1,
       current_consensus_points: consensusCounts[poll.poll_id] || 0,
       total_statements: statementsCounts[poll.poll_id] || 0,
-      total_votes: votesCounts[poll.poll_id] || 0
+      total_votes: votesCounts[poll.poll_id] || 0,
+      slug: poll.slug || '' // Add slug field
     }));
 
     console.log('All transformed polls:', transformedPolls);

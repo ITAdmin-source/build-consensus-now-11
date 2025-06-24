@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminProtectedRoute } from "@/components/AdminProtectedRoute";
 import { EditPollPage } from "@/components/admin/EditPollPage";
 import Index from "./pages/Index";
+import PollPage from "./pages/PollPage";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
@@ -24,6 +25,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/poll/:slug" element={<PollPage />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route 

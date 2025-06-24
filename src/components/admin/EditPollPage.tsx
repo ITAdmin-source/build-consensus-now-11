@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -14,12 +13,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, Save, Settings, FileText } from 'lucide-react';
+import { ArrowRight, Save, Settings, FileText, RefreshCw, ExternalLink } from 'lucide-react';
 import { StatementsManagement } from './StatementsManagement';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPollById } from '@/integrations/supabase/polls';
 import { fetchCategories } from '@/integrations/supabase/categories';
 import { supabase } from '@/integrations/supabase/client';
+import { generateSlug, isSlugFormatValid } from '@/utils/slugUtils';
 import type { Poll } from '@/types/poll';
 
 const editPollSchema = z.object({
@@ -27,6 +27,7 @@ const editPollSchema = z.object({
   topic: z.string().min(1, 'נושא נדרש').max(50, 'נושא ארוך מדי'),
   description: z.string().min(10, 'תיאור חייב להכיל לפחות 10 תווים').max(500, 'תיאור ארוך מדי'),
   category_id: z.string().min(1, 'קטגוריה נדרשת'),
+  slug: z.string().min(1, 'כתובת URL נדרשת').max(100, 'כתובת URL ארוכה מדי'),
   end_time: z.string().min(1, 'זמן סיום נדרש'),
   min_consensus_points_to_win: z.number().min(1, 'מינימום נקודת חיבור אחת').max(20, 'מקסימום 20 נקודות חיבור'),
   allow_user_statements: z.boolean(),
@@ -53,6 +54,7 @@ export const EditPollPage: React.FC = () => {
       topic: '',
       description: '',
       category_id: '',
+      slug: '',
       end_time: '',
       min_consensus_points_to_win: 5,
       allow_user_statements: true,
@@ -77,6 +79,14 @@ export const EditPollPage: React.FC = () => {
     enabled: !!pollId
   });
 
+  const handleGenerateSlug = () => {
+    const title = form.getValues('title');
+    if (title) {
+      const generatedSlug = generateSlug(title);
+      form.setValue('slug', generatedSlug);
+    }
+  };
+
   // Update poll mutation
   const updatePollMutation = useMutation({
     mutationFn: async (data: EditPollFormData) => {
@@ -93,8 +103,14 @@ export const EditPollPage: React.FC = () => {
       }
 
       // Validate required fields
-      if (!data.title || !data.topic || !data.description || !data.category_id) {
+      if (!data.title || !data.topic || !data.description || !data.category_id || !data.slug) {
         throw new Error('Missing required fields');
+      }
+
+      // Validate slug format
+      const slugValidation = isSlugFormatValid(data.slug);
+      if (!slugValidation.valid) {
+        throw new Error(slugValidation.error);
       }
 
       // Convert datetime-local to ISO string if needed
@@ -116,6 +132,7 @@ export const EditPollPage: React.FC = () => {
           topic: data.topic.trim(),
           description: data.description.trim(),
           category_id: data.category_id,
+          slug: data.slug.trim(),
           end_time: endTime,
           min_consensus_points_to_win: data.min_consensus_points_to_win,
           allow_user_statements: data.allow_user_statements,
@@ -183,6 +200,7 @@ export const EditPollPage: React.FC = () => {
         topic: poll.topic || '',
         description: poll.description || '',
         category_id: categoryId,
+        slug: poll.slug || '',
         end_time: formattedEndTime,
         min_consensus_points_to_win: poll.min_consensus_points_to_win || 5,
         allow_user_statements: poll.allow_user_statements ?? true,
@@ -224,6 +242,8 @@ export const EditPollPage: React.FC = () => {
     );
   }
 
+  const pollUrl = poll.slug ? `/poll/${poll.slug}` : `/poll/${poll.poll_id}`;
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
@@ -241,13 +261,25 @@ export const EditPollPage: React.FC = () => {
             <h1 className="text-3xl font-bold hebrew-text">עריכת סקר</h1>
             <p className="text-muted-foreground hebrew-text">ניהול ועריכה מתקדמת של הסקר</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant={poll.status === 'active' ? 'default' : 'secondary'}>
-              {poll.status === 'active' ? 'פעיל' : poll.status === 'draft' ? 'טיוטה' : 'סגור'}
-            </Badge>
-            <span className="text-sm text-muted-foreground">
-              {poll.total_votes} הצבעות | {poll.current_consensus_points}/{poll.min_consensus_points_to_win} נק' חיבור
-            </span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Badge variant={poll.status === 'active' ? 'default' : 'secondary'}>
+                {poll.status === 'active' ? 'פעיל' : poll.status === 'draft' ? 'טיוטה' : 'סגור'}
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                {poll.total_votes} הצבעות | {poll.current_consensus_points}/{poll.min_consensus_points_to_win} נק' חיבור
+              </span>
+            </div>
+            {poll.slug && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.open(pollUrl, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 ml-1" />
+                צפה בסקר
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -282,6 +314,37 @@ export const EditPollPage: React.FC = () => {
                             <FormControl>
                               <Input className="hebrew-text text-right" {...field} />
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="slug"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="hebrew-text">כתובת URL</FormLabel>
+                            <FormControl>
+                              <div className="flex gap-2">
+                                <Input 
+                                  placeholder="education-future" 
+                                  className="text-left"
+                                  {...field}
+                                />
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={handleGenerateSlug}
+                                >
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </FormControl>
+                            <div className="text-xs text-muted-foreground hebrew-text">
+                              הסקר זמין בכתובת: {pollUrl}
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}

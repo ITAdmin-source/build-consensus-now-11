@@ -6,16 +6,32 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Users, Target, Star } from 'lucide-react';
+import { Users, Target, Star, Copy, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface PollCardProps {
   poll: Poll;
-  onJoinPoll: (pollId: string) => void;
+  onJoinPoll: (pollSlug: string) => void;
 }
 
 export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
   const progressPercentage = (poll.current_consensus_points / poll.min_consensus_points_to_win) * 100;
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
+  const pollUrl = `${window.location.origin}/poll/${poll.slug}`;
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(pollUrl);
+      toast.success('קישור הסקר הועתק ללוח');
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
+      toast.error('שגיאה בהעתקת הקישור');
+    }
+  };
+
+  const handleJoinPoll = () => {
+    onJoinPoll(poll.slug || poll.poll_id);
+  };
 
   return (
     <Card className="poll-card hebrew-text">
@@ -68,9 +84,27 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
             </div>
           </div>
 
+          {/* Poll URL */}
+          {poll.slug && (
+            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+              <ExternalLink className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground truncate flex-1">
+                /poll/{poll.slug}
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleCopyUrl}
+                className="h-6 w-6 p-0"
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+
           {/* Action Button */}
           <Button 
-            onClick={() => onJoinPoll(poll.poll_id)}
+            onClick={handleJoinPoll}
             className="w-full vote-button bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
             disabled={poll.status === 'closed'}
           >

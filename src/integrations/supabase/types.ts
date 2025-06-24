@@ -234,6 +234,7 @@ export type Database = {
           min_support_pct: number | null
           min_votes_per_group: number | null
           poll_id: string
+          slug: string | null
           status: Database["public"]["Enums"]["polis_poll_status"] | null
           title: string
           topic: string | null
@@ -251,6 +252,7 @@ export type Database = {
           min_support_pct?: number | null
           min_votes_per_group?: number | null
           poll_id?: string
+          slug?: string | null
           status?: Database["public"]["Enums"]["polis_poll_status"] | null
           title: string
           topic?: string | null
@@ -268,6 +270,7 @@ export type Database = {
           min_support_pct?: number | null
           min_votes_per_group?: number | null
           poll_id?: string
+          slug?: string | null
           status?: Database["public"]["Enums"]["polis_poll_status"] | null
           title?: string
           topic?: string | null
@@ -619,6 +622,14 @@ export type Database = {
       current_user_has_role: {
         Args: { _role: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
+      }
+      ensure_unique_slug: {
+        Args: { base_slug: string; exclude_poll_id?: string }
+        Returns: string
+      }
+      generate_slug: {
+        Args: { input_text: string }
+        Returns: string
       }
       get_all_users_with_roles: {
         Args: Record<PropertyKey, never>
