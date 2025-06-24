@@ -27,14 +27,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
 
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserRole = async (userId: string): Promise<UserRole> => {
     try {
-      const { data, error } = await supabase.rpc('get_user_role', { _user_id: userId });
+      console.log('Fetching role for user:', userId);
+      
+      // Query the polis_user_roles table directly
+      const { data, error } = await supabase
+        .from('polis_user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+      
       if (error) {
         console.error('Error fetching user role:', error);
+        // If no role found, default to participant
+        if (error.code === 'PGRST116') {
+          console.log('No role found, defaulting to participant');
+          return 'participant';
+        }
         return 'participant';
       }
-      return data || 'participant';
+      
+      console.log('Fetched role:', data?.role);
+      return data?.role || 'participant';
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
       return 'participant';
@@ -110,6 +125,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     console.log('Attempting signin for:', email);
+    setLoading(true);
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
