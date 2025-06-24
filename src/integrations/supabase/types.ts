@@ -574,10 +574,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_initial_super_admin: {
-        Args: { admin_email: string }
-        Returns: undefined
-      }
       assign_user_role: {
         Args: {
           _user_id: string
@@ -592,10 +588,6 @@ export type Database = {
       }
       current_user_has_role: {
         Args: { _role: Database["public"]["Enums"]["user_role"] }
-        Returns: boolean
-      }
-      current_user_is_super_admin: {
-        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       get_all_users_with_roles: {
@@ -645,28 +637,8 @@ export type Database = {
         Args: { _user_id: string; _poll_id: string }
         Returns: boolean
       }
-      polis_delete_admin_user: {
-        Args: { _user_id: string }
-        Returns: Json
-      }
-      polis_get_admin_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       polis_get_user_management_stats: {
         Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      polis_remove_user_role: {
-        Args: { _user_id: string }
-        Returns: Json
-      }
-      polis_update_user_password: {
-        Args: { _user_id: string; _new_password: string; _updated_by: string }
-        Returns: Json
-      }
-      polis_update_user_password_secure: {
-        Args: { _user_id: string; _new_password: string; _updated_by: string }
         Returns: Json
       }
       record_vote_with_elo_update: {

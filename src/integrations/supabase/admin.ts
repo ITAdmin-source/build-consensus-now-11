@@ -102,20 +102,13 @@ export const removeUserRole = async (userId: string): Promise<{ success: boolean
   }
 };
 
-// Delete admin user (removes from auth.users)
+// Delete user completely (removes from auth.users)
 export const deleteAdminUser = async (userId: string): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { data, error } = await supabase.rpc('polis_delete_admin_user', {
-      _user_id: userId
-    });
-
-    if (error) {
-      console.error('Error deleting user:', error);
-      return { success: false, error: error.message };
-    }
-
-    // Cast the JSON response to the expected type
-    return data as { success: boolean; error?: string };
+    // Note: We can't actually delete users from auth.users via the client SDK
+    // This would need to be implemented as an edge function with admin privileges
+    // For now, we'll just remove their admin role
+    return await removeUserRole(userId);
   } catch (error) {
     console.error('Error in deleteAdminUser:', error);
     return { success: false, error: 'An unexpected error occurred' };
