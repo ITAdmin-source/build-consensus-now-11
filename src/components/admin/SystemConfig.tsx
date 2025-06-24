@@ -27,6 +27,7 @@ export const SystemConfig: React.FC = () => {
   const [editingCategory, setEditingCategory] = useState<{ id: string; name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
 
   useEffect(() => {
     loadInitialData();
@@ -35,16 +36,16 @@ export const SystemConfig: React.FC = () => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      
-      // Load categories
-      const categoriesData = await fetchCategories();
-      setCategories(categoriesData);
+      console.log('Loading system settings and categories...');
       
       // Load minimum statements setting
       const minStatementsValue = await getSystemSetting('min_statements_per_poll');
       if (minStatementsValue) {
         setMinStatements(parseInt(minStatementsValue, 10));
       }
+      
+      // Load categories separately
+      await loadCategories();
     } catch (error) {
       console.error('Error loading initial data:', error);
       toast({
@@ -57,6 +58,26 @@ export const SystemConfig: React.FC = () => {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      console.log('Fetching categories from database...');
+      const categoriesData = await fetchCategories();
+      console.log('Categories loaded:', categoriesData);
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      toast({
+        title: 'שגיאה בטעינת קטגוריות',
+        description: 'אנא נסה שוב',
+        variant: 'destructive',
+      });
+      setCategories([]);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
   const handleSaveMinStatements = async () => {
     try {
       setSaving(true);
@@ -66,6 +87,7 @@ export const SystemConfig: React.FC = () => {
         description: `מינימום הצהרות לסקר עודכן ל-${minStatements}`,
       });
     } catch (error) {
+      console.error('Error saving settings:', error);
       toast({
         title: 'שגיאה בשמירת ההגדרות',
         description: 'אנא נסה שוב',
@@ -80,7 +102,9 @@ export const SystemConfig: React.FC = () => {
     if (!newCategoryName.trim()) return;
     
     try {
+      console.log('Creating new category:', newCategoryName);
       const newCategory = await createCategory(newCategoryName);
+      console.log('Category created:', newCategory);
       setCategories([...categories, newCategory]);
       setNewCategoryName('');
       setShowNewCategoryDialog(false);
@@ -90,6 +114,7 @@ export const SystemConfig: React.FC = () => {
         description: `הקטגוריה "${newCategoryName}" נוספה בהצלחה`,
       });
     } catch (error) {
+      console.error('Error creating category:', error);
       toast({
         title: 'שגיאה בהוספת קטגוריה',
         description: 'אנא נסה שוב',
@@ -102,6 +127,7 @@ export const SystemConfig: React.FC = () => {
     if (!editingCategory || !editingCategory.name.trim()) return;
     
     try {
+      console.log('Updating category:', editingCategory);
       await updateCategory(editingCategory.id, editingCategory.name);
       setCategories(categories.map(cat => 
         cat.category_id === editingCategory.id 
@@ -115,6 +141,7 @@ export const SystemConfig: React.FC = () => {
         description: 'הקטגוריה עודכנה בהצלחה',
       });
     } catch (error) {
+      console.error('Error updating category:', error);
       toast({
         title: 'שגיאה בעדכון קטגוריה',
         description: 'אנא נסה שוב',
@@ -135,6 +162,7 @@ export const SystemConfig: React.FC = () => {
     }
     
     try {
+      console.log('Deleting category:', categoryId);
       await deleteCategory(categoryId);
       setCategories(categories.filter(c => c.category_id !== categoryId));
       toast({
@@ -142,6 +170,7 @@ export const SystemConfig: React.FC = () => {
         description: 'הקטגוריה נמחקה בהצלחה',
       });
     } catch (error) {
+      console.error('Error deleting category:', error);
       toast({
         title: 'שגיאה במחיקת קטגוריה',
         description: 'אנא נסה שוב',
@@ -240,42 +269,60 @@ export const SystemConfig: React.FC = () => {
           </Dialog>
         </div>
 
-        <div className="grid gap-4">
-          {categories.map((category) => (
-            <Card key={category.category_id}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Tags className="h-5 w-5 text-blue-500" />
-                    <div>
-                      <h4 className="font-medium">{category.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {category.polls_count || 0} סקרים
-                      </p>
+        {categoriesLoading ? (
+          <div className="flex items-center justify-center p-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+          </div>
+        ) : categories.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Tags className="h-12 w-12 mx-auto mb-4 text-blue-500" />
+              <p className="text-lg font-medium">אין קטגוריות במערכת</p>
+              <p className="text-muted-foreground mb-4">צור קטגוריה חדשה כדי להתחיל</p>
+              <Button onClick={() => setShowNewCategoryDialog(true)}>
+                <Plus className="h-4 w-4 ml-1" />
+                צור קטגוריה חדשה
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {categories.map((category) => (
+              <Card key={category.category_id}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Tags className="h-5 w-5 text-blue-500" />
+                      <div>
+                        <h4 className="font-medium">{category.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {category.polls_count || 0} סקרים
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setEditingCategory({ id: category.category_id, name: category.name })}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => handleDeleteCategory(category.category_id)}
+                        disabled={category.polls_count && category.polls_count > 0}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setEditingCategory({ id: category.category_id, name: category.name })}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={() => handleDeleteCategory(category.category_id)}
-                      disabled={category.polls_count && category.polls_count > 0}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Edit Category Dialog */}
         <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
