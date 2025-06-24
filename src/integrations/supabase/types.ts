@@ -327,6 +327,36 @@ export type Database = {
           },
         ]
       }
+      polis_system_settings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          setting_key: string
+          setting_type: string
+          setting_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_type?: string
+          setting_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_type?: string
+          setting_value?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       polis_user_group_membership: {
         Row: {
           group_id: string | null
@@ -601,6 +631,10 @@ export type Database = {
           assigned_at: string
           last_sign_in_at: string
         }[]
+      }
+      get_category_poll_count: {
+        Args: { category_id_param: string }
+        Returns: number
       }
       get_global_admin_stats: {
         Args: Record<PropertyKey, never>
