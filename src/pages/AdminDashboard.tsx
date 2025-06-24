@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,20 +14,21 @@ import {
   LogOut,
   Home,
   Vote,
-  Clock,
   Target,
   AlertCircle,
   Edit,
-  Eye,
   Cog,
-  Database
+  Database,
+  Trash2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NewPollForm } from '@/components/admin/NewPollForm';
 import { SystemConfig } from '@/components/admin/SystemConfig';
 import { UserManagement } from '@/components/admin/UserManagement';
+import { ConfirmationDialog } from '@/components/admin/ConfirmationDialog';
 import { fetchAllPolls } from '@/integrations/supabase/polls';
 import { extendPollTime } from '@/integrations/supabase/admin';
+import { supabase } from '@/integrations/supabase/client';
 import type { Poll } from '@/types/poll';
 
 const AdminDashboard = () => {
@@ -38,6 +40,12 @@ const AdminDashboard = () => {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; pollId: string; pollTitle: string }>({
+    open: false,
+    pollId: '',
+    pollTitle: ''
+  });
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadPolls();
@@ -80,24 +88,57 @@ const AdminDashboard = () => {
     });
   };
 
-  const handleExtendTime = async (pollId: string) => {
-    const newEndTime = new Date();
-    newEndTime.setDate(newEndTime.getDate() + 7);
-    
+  const handleDeletePoll = (pollId: string, pollTitle: string) => {
+    setDeleteDialog({
+      open: true,
+      pollId,
+      pollTitle
+    });
+  };
+
+  const confirmDeletePoll = async () => {
     try {
-      await extendPollTime(pollId, newEndTime.toISOString());
-      loadPolls();
+      setDeleting(true);
+      
+      // Delete the poll from the database
+      const { error } = await supabase
+        .from('polis_polls')
+        .delete()
+        .eq('poll_id', deleteDialog.pollId);
+
+      if (error) {
+        throw error;
+      }
+
       toast({
-        title: 'זמן הסקר הוארך',
-        description: 'הסקר הוארך בשבוע נוסף',
+        title: 'הסקר נמחק בהצלחה',
+        description: 'הסקר הוסר מהמערכת',
       });
+
+      // Reload polls and close dialog
+      loadPolls();
+      setDeleteDialog({ open: false, pollId: '', pollTitle: '' });
     } catch (error) {
+      console.error('Error deleting poll:', error);
       toast({
-        title: 'שגיאה בהארכת הזמן',
+        title: 'שגיאה במחיקת הסקר',
         description: 'אנא נסה שוב',
         variant: 'destructive'
       });
+    } finally {
+      setDeleting(false);
     }
+  };
+
+  const formatEndTime = (endTime: string) => {
+    const date = new Date(endTime);
+    return date.toLocaleDateString('he-IL', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (loading) {
@@ -229,7 +270,7 @@ const AdminDashboard = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold mb-2">{poll.title}</h3>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
                             <div className="flex items-center gap-1">
                               <Target className="h-4 w-4" />
                               {poll.current_consensus_points}/{poll.min_consensus_points_to_win} נק' חיבור
@@ -242,6 +283,9 @@ const AdminDashboard = () => {
                               <Users className="h-4 w-4" />
                               {poll.total_statements} הצהרות
                             </div>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            <span>תאריך סיום: {formatEndTime(poll.end_time)}</span>
                           </div>
                         </div>
                         <Badge variant={poll.status === 'active' ? 'default' : 'secondary'}>
@@ -261,18 +305,11 @@ const AdminDashboard = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => navigate(`/results/${poll.poll_id}`)}
+                          onClick={() => handleDeletePoll(poll.poll_id, poll.title)}
+                          className="text-red-600 border-red-200 hover:bg-red-50"
                         >
-                          <Eye className="h-4 w-4 ml-1" />
-                          תוצאות
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleExtendTime(poll.poll_id)}
-                        >
-                          <Clock className="h-4 w-4 ml-1" />
-                          הארך זמן
+                          <Trash2 className="h-4 w-4 ml-1" />
+                          מחק
                         </Button>
                       </div>
                     </CardContent>
@@ -303,6 +340,19 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
+        title="מחיקת סקר"
+        description={`האם אתה בטוח שברצונך למחוק את הסקר "${deleteDialog.pollTitle}"? פעולה זו אינה ניתנת לביטול.`}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="destructive"
+        onConfirm={confirmDeletePoll}
+        isLoading={deleting}
+      />
     </div>
   );
 };
