@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdmin } from '@/contexts/AdminContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +31,7 @@ import type { Poll } from '@/types/poll';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { admin, logout } = useAdmin();
+  const { user, signOut, userRole, isSuperAdmin } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('polls');
   const [showNewPollDialog, setShowNewPollDialog] = useState(false);
@@ -60,7 +59,7 @@ const AdminDashboard = () => {
   };
 
   const handleLogout = () => {
-    logout();
+    signOut();
     toast({
       title: 'התנתקת בהצלחה',
       description: 'להתראות!',
@@ -112,6 +111,8 @@ const AdminDashboard = () => {
     );
   }
 
+  const userName = user?.user_metadata?.full_name || user?.email || 'מנהל';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 hebrew-text">
       {/* Admin Header */}
@@ -130,10 +131,13 @@ const AdminDashboard = () => {
               <Badge variant="secondary" className="bg-slate-600 text-white">
                 מערכת ניהול
               </Badge>
+              <Badge variant="outline" className="text-white border-white">
+                {userRole === 'super_admin' ? 'מנהל ראשי' : 'מנהל סקרים'}
+              </Badge>
             </div>
             
             <div className="flex items-center gap-4">
-              <span className="text-sm">שלום, {admin?.name}</span>
+              <span className="text-sm">שלום, {userName}</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -155,9 +159,11 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <TabsTrigger value="polls" className="hebrew-text">ניהול סקרים</TabsTrigger>
-            <TabsTrigger value="users" className="hebrew-text">ניהול משתמשים</TabsTrigger>
+            {isSuperAdmin && (
+              <TabsTrigger value="users" className="hebrew-text">ניהול משתמשים</TabsTrigger>
+            )}
             <TabsTrigger value="settings" className="hebrew-text">הגדרות מערכת</TabsTrigger>
           </TabsList>
 
@@ -276,14 +282,16 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
-          {/* User Management Tab */}
-          <TabsContent value="users" className="space-y-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Users className="h-6 w-6" />
-              <h2 className="text-2xl font-bold">ניהול משתמשים ומנהלים</h2>
-            </div>
-            <UserManagement />
-          </TabsContent>
+          {/* User Management Tab - Only for Super Admins */}
+          {isSuperAdmin && (
+            <TabsContent value="users" className="space-y-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Users className="h-6 w-6" />
+                <h2 className="text-2xl font-bold">ניהול משתמשים ותפקידים</h2>
+              </div>
+              <UserManagement />
+            </TabsContent>
+          )}
 
           {/* System Settings Tab */}
           <TabsContent value="settings" className="space-y-6">

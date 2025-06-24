@@ -68,7 +68,6 @@ export const fetchAdminStats = async () => {
     };
   } catch (error) {
     console.error('Error fetching admin stats:', error);
-    // Return default values instead of throwing
     return {
       activePolls: 0,
       totalParticipants: 0,
@@ -80,7 +79,6 @@ export const fetchAdminStats = async () => {
 
 export const fetchPendingStatements = async () => {
   try {
-    // First, get pending statements without the problematic join
     const { data: statements, error: statementsError } = await supabase
       .from('polis_statements')
       .select(`
@@ -103,10 +101,8 @@ export const fetchPendingStatements = async () => {
       return [];
     }
 
-    // Get unique poll IDs
     const pollIds = [...new Set(statements.map(s => s.poll_id))];
     
-    // Fetch poll titles separately
     const { data: polls, error: pollsError } = await supabase
       .from('polis_polls')
       .select('poll_id, title')
@@ -114,16 +110,13 @@ export const fetchPendingStatements = async () => {
 
     if (pollsError) {
       console.error('Error fetching poll titles:', pollsError);
-      // Continue without poll titles rather than failing completely
     }
 
-    // Create a map of poll_id to title
     const pollTitlesMap = new Map();
     polls?.forEach(poll => {
       pollTitlesMap.set(poll.poll_id, poll.title);
     });
 
-    // Combine statements with poll titles
     const statementsWithPollTitles = statements.map(statement => ({
       ...statement,
       polis_polls: {
@@ -134,7 +127,6 @@ export const fetchPendingStatements = async () => {
     return statementsWithPollTitles;
   } catch (error) {
     console.error('Error in fetchPendingStatements:', error);
-    // Return empty array instead of throwing to prevent dashboard crash
     return [];
   }
 };
@@ -204,7 +196,6 @@ export const createPoll = async (pollData: {
   min_votes_per_group: number;
 }) => {
   try {
-    // First, get or create the category
     let categoryId: string;
     
     const { data: existingCategory, error: categoryFetchError } = await supabase
@@ -221,7 +212,6 @@ export const createPoll = async (pollData: {
     if (existingCategory) {
       categoryId = existingCategory.category_id;
     } else {
-      // Create new category
       const { data: newCategory, error: categoryCreateError } = await supabase
         .from('polis_poll_categories')
         .insert({ name: pollData.category })
@@ -236,7 +226,6 @@ export const createPoll = async (pollData: {
       categoryId = newCategory.category_id;
     }
 
-    // Create the poll
     const { data, error } = await supabase
       .from('polis_polls')
       .insert({
@@ -270,25 +259,21 @@ export const createPoll = async (pollData: {
 
 export const resetPoll = async (pollId: string) => {
   try {
-    // Delete all votes for this poll
     await supabase
       .from('polis_votes')
       .delete()
       .eq('poll_id', pollId);
 
-    // Delete all consensus points
     await supabase
       .from('polis_consensus_points')
       .delete()
       .eq('poll_id', pollId);
 
-    // Delete all groups
     await supabase
       .from('polis_groups')
       .delete()
       .eq('poll_id', pollId);
 
-    // Delete all group memberships
     await supabase
       .from('polis_user_group_membership')
       .delete()
@@ -303,62 +288,17 @@ export const resetPoll = async (pollId: string) => {
 
 export const fetchAllUsers = async () => {
   try {
-    // Use the new database function to get all admin users
-    const { data, error } = await supabase.rpc('polis_get_admin_users');
+    const { data, error } = await supabase.rpc('get_all_users_with_roles');
 
     if (error) {
       console.error('Error fetching users:', error);
       throw error;
     }
 
-    // Transform the data to match the expected format
-    const transformedUsers = data?.map((user: any) => ({
-      id: user.id,
-      email: user.email,
-      full_name: user.full_name,
-      role: user.role,
-      created_at: user.created_at,
-      assigned_at: user.assigned_at,
-      last_sign_in_at: null // This would need to come from auth.users but it's not accessible via client
-    })) || [];
-
-    return transformedUsers;
+    return data || [];
   } catch (error) {
     console.error('Error in fetchAllUsers:', error);
     throw error;
-  }
-};
-
-export const createAdminUser = async (userData: {
-  email: string;
-  password: string;
-  full_name: string;
-  role: 'super_admin' | 'poll_admin';
-}) => {
-  try {
-    // Use the database function for creating admin user
-    const { data, error } = await supabase.rpc('polis_create_admin_user', {
-      _email: userData.email,
-      _password: userData.password,
-      _full_name: userData.full_name,
-      _role: userData.role
-    });
-
-    if (error) {
-      console.error('Error creating admin user:', error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error in createAdminUser:', error);
-    return {
-      success: false,
-      error: 'Failed to create admin user'
-    };
   }
 };
 
@@ -369,8 +309,7 @@ export const assignUserRole = async (userId: string, role: 'super_admin' | 'poll
       throw new Error('Not authenticated');
     }
 
-    // Use the database function for assigning role
-    const { data, error } = await supabase.rpc('polis_assign_role_to_user', {
+    const { data, error } = await supabase.rpc('assign_user_role', {
       _user_id: userId,
       _role: role,
       _assigned_by: currentUser.user.id
@@ -396,10 +335,15 @@ export const assignUserRole = async (userId: string, role: 'super_admin' | 'poll
 
 export const removeUserRole = async (userId: string) => {
   try {
-    const { error } = await supabase
-      .from('polis_admin_roles')
-      .delete()
-      .eq('user_id', userId);
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (!currentUser.user) {
+      throw new Error('Not authenticated');
+    }
+
+    const { data, error } = await supabase.rpc('remove_user_admin_role', {
+      _user_id: userId,
+      _removed_by: currentUser.user.id
+    });
 
     if (error) {
       console.error('Error removing user role:', error);
@@ -409,9 +353,7 @@ export const removeUserRole = async (userId: string) => {
       };
     }
 
-    return {
-      success: true
-    };
+    return data;
   } catch (error) {
     console.error('Error in removeUserRole:', error);
     return {
@@ -423,21 +365,9 @@ export const removeUserRole = async (userId: string) => {
 
 export const deleteAdminUser = async (userId: string) => {
   try {
-    // Note: Deleting users requires admin API access
-    // For now, we'll just remove their profile and role
-    await supabase
-      .from('polis_admin_roles')
-      .delete()
-      .eq('user_id', userId);
-
-    await supabase
-      .from('polis_admin_profiles')
-      .delete()
-      .eq('id', userId);
-
-    return {
-      success: true
-    };
+    // For now, we'll just remove their role instead of deleting the user
+    // Actual user deletion requires admin API access
+    return await removeUserRole(userId);
   } catch (error) {
     console.error('Error in deleteAdminUser:', error);
     return {
@@ -449,27 +379,11 @@ export const deleteAdminUser = async (userId: string) => {
 
 export const updateUserPassword = async (userId: string, newPassword: string) => {
   try {
-    const { data: currentUser } = await supabase.auth.getUser();
-    if (!currentUser.user) {
-      throw new Error('Not authenticated');
-    }
-
-    // Use the database function for updating password
-    const { data, error } = await supabase.rpc('polis_update_user_password_secure', {
-      _user_id: userId,
-      _new_password: newPassword,
-      _updated_by: currentUser.user.id
-    });
-
-    if (error) {
-      console.error('Error updating user password:', error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-
-    return data;
+    // Password updates require server-side admin API access
+    return {
+      success: false,
+      error: 'Password updates require server-side admin API access'
+    };
   } catch (error) {
     console.error('Error in updateUserPassword:', error);
     return {

@@ -3,13 +3,20 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+type UserRole = 'participant' | 'poll_admin' | 'super_admin';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  userRole: UserRole | null;
+  isAuthenticated: boolean;
+  isAdmin: boolean; // poll_admin or super_admin
+  isSuperAdmin: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  refreshUserRole: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,23 +25,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+
+  const fetchUserRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase.rpc('get_user_role', { _user_id: userId });
+      if (error) {
+        console.error('Error fetching user role:', error);
+        return 'participant';
+      }
+      return data || 'participant';
+    } catch (error) {
+      console.error('Error in fetchUserRole:', error);
+      return 'participant';
+    }
+  };
+
+  const refreshUserRole = async () => {
+    if (user) {
+      const role = await fetchUserRole(user.id);
+      setUserRole(role);
+    } else {
+      setUserRole(null);
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state change:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Fetch user role when user is authenticated
+          const role = await fetchUserRole(session.user.id);
+          setUserRole(role);
+        } else {
+          setUserRole(null);
+        }
+        
         setLoading(false);
       }
     );
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('Initial session:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        const role = await fetchUserRole(session.user.id);
+        setUserRole(role);
+      }
+      
       setLoading(false);
     });
 
@@ -44,7 +90,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, fullName?: string) => {
     console.log('Attempting signup for:', email, 'with name:', fullName);
     
-    // Use the current window location as redirect URL
     const redirectUrl = `${window.location.origin}/`;
     
     const { data, error } = await supabase.auth.signUp({
@@ -59,10 +104,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     
     console.log('Signup response:', { data, error });
-    
-    if (data?.user && !error) {
-      console.log('User created successfully:', data.user.id);
-    }
     
     return { error };
   };
@@ -83,16 +124,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     console.log('Signing out user');
     await supabase.auth.signOut();
+    setUserRole(null);
   };
+
+  const isAuthenticated = !!user;
+  const isAdmin = userRole === 'poll_admin' || userRole === 'super_admin';
+  const isSuperAdmin = userRole === 'super_admin';
 
   return (
     <AuthContext.Provider value={{
       user,
       session,
       loading,
+      userRole,
+      isAuthenticated,
+      isAdmin,
+      isSuperAdmin,
       signUp,
       signIn,
-      signOut
+      signOut,
+      refreshUserRole
     }}>
       {children}
     </AuthContext.Provider>

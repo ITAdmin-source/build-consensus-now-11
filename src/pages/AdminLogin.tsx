@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { useAdmin } from '@/contexts/AdminContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +21,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 const AdminLogin = () => {
   const navigate = useNavigate();
-  const { login, isLoading, admin, isAdmin } = useAdmin();
+  const { signIn, loading, isAdmin, isAuthenticated, refreshUserRole } = useAuth();
   const { toast } = useToast();
   
   const form = useForm<LoginFormData>({
@@ -34,39 +34,41 @@ const AdminLogin = () => {
 
   // Redirect if already logged in as admin
   useEffect(() => {
-    if (admin && isAdmin && !isLoading) {
+    if (isAuthenticated && isAdmin && !loading) {
       navigate('/admin/dashboard');
     }
-  }, [admin, isAdmin, isLoading, navigate]);
+  }, [isAuthenticated, isAdmin, loading, navigate]);
 
   const onSubmit = async (data: LoginFormData) => {
-    const success = await login(data.email, data.password);
+    const { error } = await signIn(data.email, data.password);
     
-    if (success) {
-      // Wait a bit for the role check to complete
-      setTimeout(() => {
-        // Check if user has admin role after login
-        if (isAdmin) {
-          toast({
-            title: 'התחברות הצליחה',
-            description: 'ברוך הבא למערכת הניהול',
-          });
-          navigate('/admin/dashboard');
-        } else {
-          toast({
-            title: 'אין הרשאות ניהול',
-            description: 'המשתמש אינו מורשה לגשת למערכת הניהול',
-            variant: 'destructive',
-          });
-        }
-      }, 1500);
-    } else {
+    if (error) {
       toast({
         title: 'שגיאת התחברות',
         description: 'כתובת אימייל או סיסמה שגויים',
         variant: 'destructive',
       });
+      return;
     }
+
+    // Wait for role to be fetched and check admin status
+    setTimeout(async () => {
+      await refreshUserRole();
+      // Check if user has admin role after login
+      if (isAdmin) {
+        toast({
+          title: 'התחברות הצליחה',
+          description: 'ברוך הבא למערכת הניהול',
+        });
+        navigate('/admin/dashboard');
+      } else {
+        toast({
+          title: 'אין הרשאות ניהול',
+          description: 'המשתמש אינו מורשה לגשת למערכת הניהול',
+          variant: 'destructive',
+        });
+      }
+    }, 1000);
   };
 
   return (
@@ -107,7 +109,7 @@ const AdminLogin = () => {
                           type="email"
                           placeholder="הזן כתובת אימייל"
                           className="text-right"
-                          disabled={isLoading}
+                          disabled={loading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -127,7 +129,7 @@ const AdminLogin = () => {
                           type="password"
                           placeholder="הזן סיסמה"
                           className="text-right"
-                          disabled={isLoading}
+                          disabled={loading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -138,9 +140,9 @@ const AdminLogin = () => {
                 <Button 
                   type="submit" 
                   className="w-full hebrew-text" 
-                  disabled={isLoading}
+                  disabled={loading}
                 >
-                  {isLoading ? 'מתחבר...' : 'התחבר'}
+                  {loading ? 'מתחבר...' : 'התחבר'}
                 </Button>
               </form>
             </Form>

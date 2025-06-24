@@ -94,48 +94,6 @@ export type Database = {
           },
         ]
       }
-      polis_admin_profiles: {
-        Row: {
-          created_at: string | null
-          email: string | null
-          full_name: string | null
-          id: string
-        }
-        Insert: {
-          created_at?: string | null
-          email?: string | null
-          full_name?: string | null
-          id: string
-        }
-        Update: {
-          created_at?: string | null
-          email?: string | null
-          full_name?: string | null
-          id?: string
-        }
-        Relationships: []
-      }
-      polis_admin_roles: {
-        Row: {
-          assigned_at: string | null
-          assigned_by: string | null
-          role: Database["public"]["Enums"]["polis_admin_role"]
-          user_id: string
-        }
-        Insert: {
-          assigned_at?: string | null
-          assigned_by?: string | null
-          role: Database["public"]["Enums"]["polis_admin_role"]
-          user_id: string
-        }
-        Update: {
-          assigned_at?: string | null
-          assigned_by?: string | null
-          role?: Database["public"]["Enums"]["polis_admin_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
       polis_consensus_points: {
         Row: {
           detected_at: string | null
@@ -240,29 +198,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "polis_groups_poll_id_fkey"
-            columns: ["poll_id"]
-            isOneToOne: false
-            referencedRelation: "polis_polls"
-            referencedColumns: ["poll_id"]
-          },
-        ]
-      }
-      polis_poll_admins: {
-        Row: {
-          poll_id: string
-          user_id: string
-        }
-        Insert: {
-          poll_id: string
-          user_id: string
-        }
-        Update: {
-          poll_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "polis_poll_admins_poll_id_fkey"
             columns: ["poll_id"]
             isOneToOne: false
             referencedRelation: "polis_polls"
@@ -431,6 +366,30 @@ export type Database = {
           },
         ]
       }
+      polis_user_roles: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       polis_votes: {
         Row: {
           poll_id: string
@@ -548,24 +507,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_sessions: {
-        Row: {
-          created_at: string
-          session_id: string
-          started_voting: boolean
-        }
-        Insert: {
-          created_at?: string
-          session_id: string
-          started_voting?: boolean
-        }
-        Update: {
-          created_at?: string
-          session_id?: string
-          started_voting?: boolean
-        }
-        Relationships: []
-      }
       votes: {
         Row: {
           created_at: string
@@ -637,17 +578,37 @@ export type Database = {
         Args: { admin_email: string }
         Returns: undefined
       }
+      assign_user_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["user_role"]
+          _assigned_by: string
+        }
+        Returns: Json
+      }
       calculate_consensus_points: {
         Args: { poll_id_param: string; cluster_profiles_param: Json }
         Returns: undefined
       }
       current_user_has_role: {
-        Args: { _role: Database["public"]["Enums"]["polis_admin_role"] }
+        Args: { _role: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
       }
       current_user_is_super_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      get_all_users_with_roles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          full_name: string
+          role: Database["public"]["Enums"]["user_role"]
+          created_at: string
+          assigned_at: string
+          last_sign_in_at: string
+        }[]
       }
       get_global_admin_stats: {
         Args: Record<PropertyKey, never>
@@ -676,34 +637,13 @@ export type Database = {
           results_subtitle: string
         }[]
       }
-      polis_assign_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["polis_admin_role"]
-          _assigned_by: string
-        }
-        Returns: Json
-      }
-      polis_assign_role_to_user: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["polis_admin_role"]
-          _assigned_by: string
-        }
-        Returns: Json
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
       }
       polis_can_manage_poll: {
         Args: { _user_id: string; _poll_id: string }
         Returns: boolean
-      }
-      polis_create_admin_user: {
-        Args: {
-          _email: string
-          _password: string
-          _full_name: string
-          _role: Database["public"]["Enums"]["polis_admin_role"]
-        }
-        Returns: Json
       }
       polis_delete_admin_user: {
         Args: { _user_id: string }
@@ -713,23 +653,9 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
-      polis_get_admin_users: {
+      polis_get_user_management_stats: {
         Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          email: string
-          full_name: string
-          role: Database["public"]["Enums"]["polis_admin_role"]
-          created_at: string
-          assigned_at: string
-        }[]
-      }
-      polis_has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["polis_admin_role"]
-        }
-        Returns: boolean
+        Returns: Json
       }
       polis_remove_user_role: {
         Args: { _user_id: string }
@@ -762,6 +688,10 @@ export type Database = {
             }
         Returns: Json
       }
+      remove_user_admin_role: {
+        Args: { _user_id: string; _removed_by: string }
+        Returns: Json
+      }
       trigger_clustering_and_consensus: {
         Args: { poll_id_param: string }
         Returns: undefined
@@ -782,12 +712,19 @@ export type Database = {
         }
         Returns: Json
       }
+      user_has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      polis_admin_role: "poll_admin" | "super_admin"
       polis_content_type: "text" | "image" | "audio" | "video"
       polis_poll_status: "draft" | "active" | "closed"
       polis_vote_value: "support" | "oppose" | "unsure"
+      user_role: "participant" | "poll_admin" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -903,10 +840,10 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      polis_admin_role: ["poll_admin", "super_admin"],
       polis_content_type: ["text", "image", "audio", "video"],
       polis_poll_status: ["draft", "active", "closed"],
       polis_vote_value: ["support", "oppose", "unsure"],
+      user_role: ["participant", "poll_admin", "super_admin"],
     },
   },
 } as const
