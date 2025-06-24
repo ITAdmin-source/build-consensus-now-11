@@ -66,3 +66,131 @@ export const createPoll = async (pollData: CreatePollData) => {
     throw error;
   }
 };
+
+// User management functions
+export const fetchAllUsers = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('polis_user_roles')
+      .select(`
+        user_id,
+        role,
+        assigned_at,
+        assigned_by
+      `);
+    
+    if (error) {
+      console.error('Error fetching users:', error);
+      throw error;
+    }
+    
+    // Transform the data to match the expected format
+    const users = data?.map(user => ({
+      id: user.user_id,
+      email: '', // We don't have access to auth.users table
+      full_name: '',
+      role: user.role,
+      created_at: '',
+      assigned_at: user.assigned_at,
+      last_sign_in_at: null
+    })) || [];
+    
+    return users;
+  } catch (error) {
+    console.error('Error in fetchAllUsers:', error);
+    throw error;
+  }
+};
+
+export const assignUserRole = async (userId: string, role: 'poll_admin' | 'super_admin') => {
+  try {
+    const { error } = await supabase
+      .from('polis_user_roles')
+      .upsert({
+        user_id: userId,
+        role: role,
+        assigned_by: (await supabase.auth.getUser()).data.user?.id
+      });
+    
+    if (error) {
+      console.error('Error assigning user role:', error);
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error in assignUserRole:', error);
+    throw error;
+  }
+};
+
+export const removeUserRole = async (userId: string) => {
+  try {
+    const { error } = await supabase
+      .from('polis_user_roles')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Error removing user role:', error);
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error in removeUserRole:', error);
+    throw error;
+  }
+};
+
+// Statement management functions
+export const fetchPendingStatements = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('polis_statements')
+      .select('*')
+      .eq('is_approved', false)
+      .eq('is_user_suggested', true)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching pending statements:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error in fetchPendingStatements:', error);
+    throw error;
+  }
+};
+
+export const approveStatement = async (statementId: string) => {
+  try {
+    const { error } = await supabase
+      .from('polis_statements')
+      .update({ is_approved: true })
+      .eq('statement_id', statementId);
+    
+    if (error) {
+      console.error('Error approving statement:', error);
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error in approveStatement:', error);
+    throw error;
+  }
+};
+
+export const rejectStatement = async (statementId: string) => {
+  try {
+    const { error } = await supabase
+      .from('polis_statements')
+      .delete()
+      .eq('statement_id', statementId);
+    
+    if (error) {
+      console.error('Error rejecting statement:', error);
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error in rejectStatement:', error);
+    throw error;
+  }
+};
