@@ -14,6 +14,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchStatementsByPollId, submitUserStatement } from '@/integrations/supabase/statements';
 import { fetchPendingStatements, approveStatement, rejectStatement } from '@/integrations/supabase/admin';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Statement } from '@/types/poll';
 
 interface StatementsManagementProps {
@@ -28,6 +29,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
   const [showApprovalQueue, setShowApprovalQueue] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, isAdmin } = useAuth();
 
   // Fetch approved statements for this poll
   const { data: statements = [], isLoading: statementsLoading } = useQuery({
@@ -50,20 +52,43 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
   // Create statement mutation
   const createStatementMutation = useMutation({
     mutationFn: async (content: string) => {
+      console.log('Creating statement:', { content, pollId, user: user?.id });
+      
+      if (!user) {
+        throw new Error('User must be authenticated to create statements');
+      }
+
+      if (!isAdmin) {
+        throw new Error('Only admins can create statements directly');
+      }
+
+      if (!content.trim()) {
+        throw new Error('Statement content is required');
+      }
+
       const { data, error } = await supabase
         .from('polis_statements')
         .insert({
           poll_id: pollId,
-          content,
+          content: content.trim(),
           content_type: newStatementType,
+          created_by_user_id: user.id,
           is_user_suggested: false,
           is_approved: true
         })
-        .select()
-        .single();
+        .select();
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Create statement error:', error);
+        throw new Error(`Failed to create statement: ${error.message}`);
+      }
+      
+      if (!data || data.length === 0) {
+        throw new Error('No statement was created');
+      }
+      
+      console.log('Statement created successfully:', data[0]);
+      return data[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['statements', pollId] });
@@ -74,9 +99,10 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
       });
     },
     onError: (error) => {
+      console.error('Create statement mutation error:', error);
       toast({
         title: 'שגיאה ביצירת הצהרה',
-        description: 'אנא נסה שוב מאוחר יותר',
+        description: error.message || 'אנא נסה שוב מאוחר יותר',
         variant: 'destructive'
       });
     }
@@ -84,7 +110,10 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
 
   // Approve statement mutation
   const approveStatementMutation = useMutation({
-    mutationFn: (statementId: string) => approveStatement(statementId),
+    mutationFn: (statementId: string) => {
+      console.log('Approving statement:', statementId);
+      return approveStatement(statementId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['statements', pollId] });
       queryClient.invalidateQueries({ queryKey: ['pendingStatements'] });
@@ -92,17 +121,36 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
         title: 'הצהרה אושרה',
         description: 'הצהרה אושרה ותופיע בסקר',
       });
+    },
+    onError: (error) => {
+      console.error('Approve statement error:', error);
+      toast({
+        title: 'שגיאה באישור הצהרה',
+        description: 'אנא נסה שוב מאוחר יותר',
+        variant: 'destructive'
+      });
     }
   });
 
   // Reject statement mutation
   const rejectStatementMutation = useMutation({
-    mutationFn: (statementId: string) => rejectStatement(statementId),
+    mutationFn: (statementId: string) => {
+      console.log('Rejecting statement:', statementId);
+      return rejectStatement(statementId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pendingStatements'] });
       toast({
         title: 'הצהרה נדחתה',
         description: 'הצהרה נמחקה מהסקר',
+        variant: 'destructive'
+      });
+    },
+    onError: (error) => {
+      console.error('Reject statement error:', error);
+      toast({
+        title: 'שגיאה בדחיית הצהרה',
+        description: 'אנא נסה שוב מאוחר יותר',
         variant: 'destructive'
       });
     }
@@ -111,12 +159,27 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
   // Delete statement mutation
   const deleteStatementMutation = useMutation({
     mutationFn: async (statementId: string) => {
+      console.log('Deleting statement:', statementId);
+      
+      if (!user) {
+        throw new Error('User must be authenticated to delete statements');
+      }
+
+      if (!isAdmin) {
+        throw new Error('Only admins can delete statements');
+      }
+
       const { error } = await supabase
         .from('polis_statements')
         .delete()
         .eq('statement_id', statementId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Delete statement error:', error);
+        throw new Error(`Failed to delete statement: ${error.message}`);
+      }
+      
+      console.log('Statement deleted successfully');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['statements', pollId] });
@@ -125,21 +188,51 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
         description: 'הצהרה הוסרה מהסקר',
         variant: 'destructive'
       });
+    },
+    onError: (error) => {
+      console.error('Delete statement mutation error:', error);
+      toast({
+        title: 'שגיאה במחיקת הצהרה',
+        description: error.message || 'אנא נסה שוב מאוחר יותר',
+        variant: 'destructive'
+      });
     }
   });
 
   // Update statement mutation
   const updateStatementMutation = useMutation({
     mutationFn: async ({ statementId, content }: { statementId: string; content: string }) => {
+      console.log('Updating statement:', { statementId, content });
+      
+      if (!user) {
+        throw new Error('User must be authenticated to update statements');
+      }
+
+      if (!isAdmin) {
+        throw new Error('Only admins can update statements');
+      }
+
+      if (!content.trim()) {
+        throw new Error('Statement content is required');
+      }
+
       const { data, error } = await supabase
         .from('polis_statements')
-        .update({ content })
+        .update({ content: content.trim() })
         .eq('statement_id', statementId)
-        .select()
-        .single();
+        .select();
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Update statement error:', error);
+        throw new Error(`Failed to update statement: ${error.message}`);
+      }
+      
+      if (!data || data.length === 0) {
+        throw new Error('No statement was updated. Statement may not exist or you may not have permission to update it.');
+      }
+      
+      console.log('Statement updated successfully:', data[0]);
+      return data[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['statements', pollId] });
@@ -148,11 +241,26 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
         title: 'הצהרה עודכנה',
         description: 'השינויים נשמרו בהצלחה',
       });
+    },
+    onError: (error) => {
+      console.error('Update statement mutation error:', error);
+      toast({
+        title: 'שגיאה בעדכון הצהרה',
+        description: error.message || 'אנא נסה שוב מאוחר יותר',
+        variant: 'destructive'
+      });
     }
   });
 
   const handleCreateStatement = () => {
-    if (!newStatement.trim()) return;
+    if (!newStatement.trim()) {
+      toast({
+        title: 'שגיאה',
+        description: 'נא להזין תוכן להצהרה',
+        variant: 'destructive'
+      });
+      return;
+    }
     createStatementMutation.mutate(newStatement);
   };
 
@@ -165,11 +273,23 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
   };
 
   const handleDeleteStatement = (statementId: string) => {
-    deleteStatementMutation.mutate(statementId);
+    if (window.confirm('האם אתה בטוח שברצונך למחוק הצהרה זו?')) {
+      deleteStatementMutation.mutate(statementId);
+    }
   };
 
   const handleUpdateStatement = () => {
     if (!editingStatement) return;
+    
+    if (!editingStatement.content.trim()) {
+      toast({
+        title: 'שגיאה',
+        description: 'נא להזין תוכן להצהרה',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     updateStatementMutation.mutate({
       statementId: editingStatement.statement_id,
       content: editingStatement.content
@@ -180,6 +300,14 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-muted-foreground">רק מנהלים יכולים לנהל הצהרות</p>
       </div>
     );
   }
@@ -218,7 +346,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
               <Button 
                 onClick={handleCreateStatement} 
                 className="w-full"
-                disabled={createStatementMutation.isPending}
+                disabled={createStatementMutation.isPending || !newStatement.trim()}
               >
                 <Plus className="h-4 w-4 ml-1" />
                 {createStatementMutation.isPending ? 'מוסיף...' : 'הוסף הצהרה'}
@@ -360,6 +488,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
                         size="sm"
                         variant="outline"
                         onClick={() => setEditingStatement(statement)}
+                        disabled={updateStatementMutation.isPending}
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
@@ -402,7 +531,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
                 </Button>
                 <Button 
                   onClick={handleUpdateStatement}
-                  disabled={updateStatementMutation.isPending}
+                  disabled={updateStatementMutation.isPending || !editingStatement.content.trim()}
                 >
                   {updateStatementMutation.isPending ? 'שומר...' : 'שמור'}
                 </Button>
