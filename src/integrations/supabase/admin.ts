@@ -303,33 +303,22 @@ export const resetPoll = async (pollId: string) => {
 
 export const fetchAllUsers = async () => {
   try {
-    // Get all users from auth.users with their profiles and roles
-    const { data: users, error: usersError } = await supabase
-      .from('polis_admin_profiles')
-      .select(`
-        id,
-        email,
-        full_name,
-        created_at,
-        polis_admin_roles (
-          role,
-          assigned_at
-        )
-      `);
+    // Use the new database function to get all admin users
+    const { data, error } = await supabase.rpc('polis_get_admin_users');
 
-    if (usersError) {
-      console.error('Error fetching users:', usersError);
-      throw usersError;
+    if (error) {
+      console.error('Error fetching users:', error);
+      throw error;
     }
 
     // Transform the data to match the expected format
-    const transformedUsers = users?.map(user => ({
+    const transformedUsers = data?.map((user: any) => ({
       id: user.id,
       email: user.email,
       full_name: user.full_name,
-      role: user.polis_admin_roles?.[0]?.role || null,
+      role: user.role,
       created_at: user.created_at,
-      assigned_at: user.polis_admin_roles?.[0]?.assigned_at || null,
+      assigned_at: user.assigned_at,
       last_sign_in_at: null // This would need to come from auth.users but it's not accessible via client
     })) || [];
 
@@ -347,15 +336,23 @@ export const createAdminUser = async (userData: {
   role: 'super_admin' | 'poll_admin';
 }) => {
   try {
-    // Note: In a real implementation, you'd use Supabase Admin API
-    // For now, we'll simulate the response since we can't create users from client-side
-    console.log('Create admin user called with:', userData);
-    
-    // Return a mock success response for demonstration
-    return {
-      success: false,
-      error: 'User creation from client-side is not implemented. This requires server-side admin API access.'
-    };
+    // Use the database function for creating admin user
+    const { data, error } = await supabase.rpc('polis_create_admin_user', {
+      _email: userData.email,
+      _password: userData.password,
+      _full_name: userData.full_name,
+      _role: userData.role
+    });
+
+    if (error) {
+      console.error('Error creating admin user:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+
+    return data;
   } catch (error) {
     console.error('Error in createAdminUser:', error);
     return {
@@ -372,15 +369,12 @@ export const assignUserRole = async (userId: string, role: 'super_admin' | 'poll
       throw new Error('Not authenticated');
     }
 
-    // Insert or update the role
-    const { error } = await supabase
-      .from('polis_admin_roles')
-      .upsert({
-        user_id: userId,
-        role: role,
-        assigned_by: currentUser.user.id,
-        assigned_at: new Date().toISOString()
-      });
+    // Use the database function for assigning role
+    const { data, error } = await supabase.rpc('polis_assign_role_to_user', {
+      _user_id: userId,
+      _role: role,
+      _assigned_by: currentUser.user.id
+    });
 
     if (error) {
       console.error('Error assigning user role:', error);
@@ -390,9 +384,7 @@ export const assignUserRole = async (userId: string, role: 'super_admin' | 'poll
       };
     }
 
-    return {
-      success: true
-    };
+    return data;
   } catch (error) {
     console.error('Error in assignUserRole:', error);
     return {
@@ -457,13 +449,27 @@ export const deleteAdminUser = async (userId: string) => {
 
 export const updateUserPassword = async (userId: string, newPassword: string) => {
   try {
-    // Note: Password updates require admin API access
-    console.log('Update password called for user:', userId);
-    
-    return {
-      success: false,
-      error: 'Password updates require server-side admin API access'
-    };
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (!currentUser.user) {
+      throw new Error('Not authenticated');
+    }
+
+    // Use the database function for updating password
+    const { data, error } = await supabase.rpc('polis_update_user_password_secure', {
+      _user_id: userId,
+      _new_password: newPassword,
+      _updated_by: currentUser.user.id
+    });
+
+    if (error) {
+      console.error('Error updating user password:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+
+    return data;
   } catch (error) {
     console.error('Error in updateUserPassword:', error);
     return {

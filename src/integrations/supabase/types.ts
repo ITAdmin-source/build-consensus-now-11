@@ -684,9 +684,26 @@ export type Database = {
         }
         Returns: Json
       }
+      polis_assign_role_to_user: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["polis_admin_role"]
+          _assigned_by: string
+        }
+        Returns: Json
+      }
       polis_can_manage_poll: {
         Args: { _user_id: string; _poll_id: string }
         Returns: boolean
+      }
+      polis_create_admin_user: {
+        Args: {
+          _email: string
+          _password: string
+          _full_name: string
+          _role: Database["public"]["Enums"]["polis_admin_role"]
+        }
+        Returns: Json
       }
       polis_delete_admin_user: {
         Args: { _user_id: string }
@@ -719,6 +736,10 @@ export type Database = {
         Returns: Json
       }
       polis_update_user_password: {
+        Args: { _user_id: string; _new_password: string; _updated_by: string }
+        Returns: Json
+      }
+      polis_update_user_password_secure: {
         Args: { _user_id: string; _new_password: string; _updated_by: string }
         Returns: Json
       }
