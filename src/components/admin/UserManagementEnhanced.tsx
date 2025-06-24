@@ -184,7 +184,7 @@ export const UserManagementEnhanced: React.FC = () => {
               key={user.id}
               user={user}
               currentUserRole={userRole || ''}
-              currentUserId={currentUser?.user?.id}
+              currentUserId={currentUser?.id}
               onRoleChange={(user) => {
                 setSelectedUser(user);
                 setShowRoleDialog(true);
@@ -223,7 +223,7 @@ export const UserManagementEnhanced: React.FC = () => {
               key={user.id}
               user={user}
               currentUserRole={userRole || ''}
-              currentUserId={currentUser?.user?.id}
+              currentUserId={currentUser?.id}
               onRoleChange={(user) => {
                 setSelectedUser(user);
                 setShowRoleDialog(true);
@@ -254,7 +254,7 @@ export const UserManagementEnhanced: React.FC = () => {
               key={user.id}
               user={user}
               currentUserRole={userRole || ''}
-              currentUserId={currentUser?.user?.id}
+              currentUserId={currentUser?.id}
               onRoleChange={(user) => {
                 setSelectedUser(user);
                 setShowRoleDialog(true);
