@@ -1,8 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PollCard } from '@/components/PollCard';
 import { Badge } from '@/components/ui/badge';
 import { Poll } from '@/types/poll';
+import { fetchCategories, Category } from '@/integrations/supabase/categories';
+import { toast } from 'sonner';
 
 interface PollsGridProps {
   polls: Poll[];
@@ -12,8 +14,28 @@ interface PollsGridProps {
 export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('הכל');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
-  const categories = ['הכל', 'חינוך', 'חברה', 'סביבה'];
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const categoriesData = await fetchCategories();
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      toast.error('שגיאה בטעינת הקטגוריות');
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  // Create categories list with "הכל" at the beginning
+  const categoryOptions = ['הכל', ...categories.map(cat => cat.name)];
   
   const filteredPolls = polls.filter(poll => {
     const matchesSearch = searchQuery === '' || 
@@ -34,16 +56,20 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
         {/* Filter */}
         <div className="max-w-2xl mx-auto space-y-4">
           <div className="flex flex-wrap justify-center gap-2">
-            {categories.map((category) => (
-              <Badge
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </Badge>
-            ))}
+            {categoriesLoading ? (
+              <div className="text-sm text-muted-foreground hebrew-text">טוען קטגוריות...</div>
+            ) : (
+              categoryOptions.map((category) => (
+                <Badge
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category}
+                </Badge>
+              ))
+            )}
           </div>
         </div>
       </div>
