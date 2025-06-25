@@ -49,7 +49,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
       return <UserStatementForm poll={poll} onSubmitStatement={handleSubmitStatement} />;
     } else {
       // User is not authenticated - show login prompt
-      return <div className="text-center p-4 rounded-lg border border-blue-200 bg-slate-50">
+      return <div className="text-center p-4 rounded-lg border border-blue-200 bg-white">
           <LogIn className="h-8 w-8 mx-auto mb-2 text-blue-600" />
           <p className="text-blue-800 mb-3 hebrew-text">
             להוספת הצהרות חדשות נדרשת התחברות
