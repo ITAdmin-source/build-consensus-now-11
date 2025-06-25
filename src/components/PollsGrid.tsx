@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { PollCard } from '@/components/PollCard';
 import { Badge } from '@/components/ui/badge';
 import { Poll } from '@/types/poll';
-import { fetchCategories, Category } from '@/integrations/supabase/categories';
+import { fetchActivePollCategories, CategoryWithPollCount } from '@/integrations/supabase/categories';
 import { toast } from 'sonner';
 
 interface PollsGridProps {
@@ -14,7 +14,7 @@ interface PollsGridProps {
 export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('הכל');
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryWithPollCount[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
   const loadCategories = async () => {
     try {
       setCategoriesLoading(true);
-      const categoriesData = await fetchCategories();
+      const categoriesData = await fetchActivePollCategories();
       setCategories(categoriesData);
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -34,7 +34,7 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
     }
   };
 
-  // Create categories list with "הכל" at the beginning
+  // Create categories list with "הכל" at the beginning, only showing categories with active polls
   const categoryOptions = ['הכל', ...categories.map(cat => cat.name)];
   
   const filteredPolls = polls.filter(poll => {
@@ -58,7 +58,7 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
           <div className="flex flex-wrap justify-center gap-2">
             {categoriesLoading ? (
               <div className="text-sm text-muted-foreground hebrew-text">טוען קטגוריות...</div>
-            ) : (
+            ) : categoryOptions.length > 1 ? (
               categoryOptions.map((category) => (
                 <Badge
                   key={category}
@@ -69,6 +69,8 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
                   {category}
                 </Badge>
               ))
+            ) : (
+              <div className="text-sm text-muted-foreground hebrew-text">אין קטגוריות זמינות</div>
             )}
           </div>
         </div>

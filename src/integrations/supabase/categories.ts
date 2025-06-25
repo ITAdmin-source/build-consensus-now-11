@@ -1,69 +1,79 @@
 
-import { supabase } from "./client";
+import { supabase } from './client';
 
 export interface Category {
   category_id: string;
   name: string;
-  polls_count?: number;
+}
+
+export interface CategoryWithPollCount extends Category {
+  poll_count: number;
 }
 
 export const fetchCategories = async (): Promise<Category[]> => {
-  const { data, error } = await supabase
-    .from('polis_poll_categories')
-    .select('category_id, name');
-  
-  if (error) {
-    throw new Error(`Failed to fetch categories: ${error.message}`);
-  }
+  try {
+    console.log('Fetching all categories...');
+    
+    const { data, error } = await supabase
+      .from('polis_poll_categories')
+      .select('*')
+      .order('name');
 
-  // Get poll counts for each category
-  const categoriesWithCounts = await Promise.all(
-    (data || []).map(async (category) => {
-      const { data: pollCount } = await supabase
-        .rpc('get_category_poll_count', { category_id_param: category.category_id });
-      
-      return {
-        ...category,
-        polls_count: pollCount || 0
-      };
-    })
-  );
+    if (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
 
-  return categoriesWithCounts;
-};
-
-export const createCategory = async (name: string): Promise<Category> => {
-  const { data, error } = await supabase
-    .from('polis_poll_categories')
-    .insert({ name })
-    .select('category_id, name')
-    .single();
-  
-  if (error) {
-    throw new Error(`Failed to create category: ${error.message}`);
-  }
-
-  return { ...data, polls_count: 0 };
-};
-
-export const updateCategory = async (categoryId: string, name: string): Promise<void> => {
-  const { error } = await supabase
-    .from('polis_poll_categories')
-    .update({ name })
-    .eq('category_id', categoryId);
-  
-  if (error) {
-    throw new Error(`Failed to update category: ${error.message}`);
+    console.log('Categories fetched:', data);
+    return data || [];
+  } catch (error) {
+    console.error('Error in fetchCategories:', error);
+    throw error;
   }
 };
 
-export const deleteCategory = async (categoryId: string): Promise<void> => {
-  const { error } = await supabase
-    .from('polis_poll_categories')
-    .delete()
-    .eq('category_id', categoryId);
-  
-  if (error) {
-    throw new Error(`Failed to delete category: ${error.message}`);
+// New function to fetch only categories that have active polls
+export const fetchActivePollCategories = async (): Promise<CategoryWithPollCount[]> => {
+  try {
+    console.log('Fetching categories with active polls...');
+    
+    const { data, error } = await supabase
+      .from('polis_poll_categories')
+      .select(`
+        category_id,
+        name,
+        polis_polls!inner(poll_id)
+      `)
+      .eq('polis_polls.status', 'active')
+      .order('name');
+
+    if (error) {
+      console.error('Error fetching active poll categories:', error);
+      throw error;
+    }
+
+    console.log('Active poll categories data:', data);
+
+    // Transform the data to include poll count
+    const categoriesWithCount: CategoryWithPollCount[] = [];
+    const categoryMap = new Map<string, CategoryWithPollCount>();
+
+    data?.forEach(item => {
+      const categoryId = item.category_id;
+      if (!categoryMap.has(categoryId)) {
+        categoryMap.set(categoryId, {
+          category_id: categoryId,
+          name: item.name,
+          poll_count: 0
+        });
+      }
+      const category = categoryMap.get(categoryId)!;
+      category.poll_count += 1;
+    });
+
+    return Array.from(categoryMap.values());
+  } catch (error) {
+    console.error('Error in fetchActivePollCategories:', error);
+    throw error;
   }
 };

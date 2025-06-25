@@ -88,7 +88,8 @@ export const fetchActivePolls = async () => {
       title: poll.title,
       topic: poll.topic || '',
       description: poll.description || '',
-      category: poll.polis_poll_categories?.name || 'כללי',
+      // Ensure we properly get the category name from the joined table
+      category: poll.polis_poll_categories?.name || 'ללא קטגוריה',
       end_time: poll.end_time,
       min_consensus_points_to_win: poll.min_consensus_points_to_win || 3,
       allow_user_statements: poll.allow_user_statements || false,
@@ -100,7 +101,7 @@ export const fetchActivePolls = async () => {
       current_consensus_points: consensusCounts[poll.poll_id] || 0,
       total_statements: statementsCounts[poll.poll_id] || 0,
       total_votes: votesCounts[poll.poll_id] || 0,
-      slug: poll.slug || '' // Add slug field
+      slug: poll.slug || ''
     }));
 
     console.log('Transformed polls:', transformedPolls);
