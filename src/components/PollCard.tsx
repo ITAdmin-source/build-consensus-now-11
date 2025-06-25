@@ -19,16 +19,6 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
   const pollUrl = `${window.location.origin}/poll/${poll.slug}`;
 
-  const handleCopyUrl = async () => {
-    try {
-      await navigator.clipboard.writeText(pollUrl);
-      toast.success('קישור הסקר הועתק ללוח');
-    } catch (error) {
-      console.error('Failed to copy URL:', error);
-      toast.error('שגיאה בהעתקת הקישור');
-    }
-  };
-
   const handleJoinPoll = () => {
     onJoinPoll(poll.slug || poll.poll_id);
   };
@@ -84,23 +74,6 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
             </div>
           </div>
 
-          {/* Poll URL 
-          {poll.slug && (
-            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-              <ExternalLink className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground truncate flex-1">
-                /poll/{poll.slug}
-              </span>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleCopyUrl}
-                className="h-6 w-6 p-0"
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
-            </div>
-          )} */}
 
           {/* Action Button */}
           <Button 
