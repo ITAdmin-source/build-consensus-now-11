@@ -50,6 +50,37 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
     }
   };
 
+  // Render user statement form if allowed by poll
+  const renderUserStatementSection = () => {
+    if (!poll.allow_user_statements) return null;
+
+    if (user && onSubmitStatement) {
+      // User is authenticated - show the form
+      return (
+        <UserStatementForm 
+          poll={poll}
+          onSubmitStatement={handleSubmitStatement}
+        />
+      );
+    } else {
+      // User is not authenticated - show login prompt
+      return (
+        <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <LogIn className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+          <p className="text-blue-800 mb-3 hebrew-text">
+            להוספת הצהרות חדשות נדרשת התחברות
+          </p>
+          <Link to="/auth">
+            <Button variant="outline" size="sm">
+              <LogIn className="h-4 w-4 ml-2" />
+              התחבר למערכת
+            </Button>
+          </Link>
+        </div>
+      );
+    }
+  };
+
   // Show completion message when no statement is available (all voted)
   if (!statement) {
     return (
@@ -70,13 +101,8 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
           </Button>
         </div>
 
-        {/* User Statement Form - Only show if user statements are allowed and user is authenticated */}
-        {poll.allow_user_statements && user && onSubmitStatement && (
-          <UserStatementForm 
-            poll={poll}
-            onSubmitStatement={handleSubmitStatement}
-          />
-        )}
+        {/* User Statement Form - Show consistently based on poll settings */}
+        {renderUserStatementSection()}
       </div>
     );
   }
@@ -130,32 +156,11 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
               <span className="hebrew-text text-lg">מתנגד</span>
             </Button>
           </div>
-
-          {/* Authentication prompt for user statement submission */}
-          {!user && poll.allow_user_statements && (
-            <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6">
-              <LogIn className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-              <p className="text-blue-800 mb-3 hebrew-text">
-                להוספת הצהרות חדשות נדרשת התחברות
-              </p>
-              <Link to="/auth">
-                <Button variant="outline" size="sm">
-                  <LogIn className="h-4 w-4 ml-2" />
-                  התחבר למערכת
-                </Button>
-              </Link>
-            </div>
-          )}
         </CardContent>
       </Card>
 
-      {/* User Statement Form - Only show if user statements are allowed and user is authenticated */}
-      {poll.allow_user_statements && user && onSubmitStatement && (
-        <UserStatementForm 
-          poll={poll}
-          onSubmitStatement={handleSubmitStatement}
-        />
-      )}
+      {/* User Statement Form - Show consistently based on poll settings */}
+      {renderUserStatementSection()}
     </div>
   );
 };
