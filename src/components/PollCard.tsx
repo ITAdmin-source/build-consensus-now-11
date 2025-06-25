@@ -84,7 +84,7 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
             </div>
           </div>
 
-          {/* Poll URL */}
+          {/* Poll URL 
           {poll.slug && (
             <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
               <ExternalLink className="h-4 w-4 text-muted-foreground" />
@@ -100,7 +100,7 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
                 <Copy className="h-3 w-3" />
               </Button>
             </div>
-          )}
+          )} */}
 
           {/* Action Button */}
           <Button 
