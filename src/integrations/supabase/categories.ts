@@ -4,6 +4,7 @@ import { supabase } from './client';
 export interface Category {
   category_id: string;
   name: string;
+  polls_count?: number; // Add optional polls_count property
 }
 
 export interface CategoryWithPollCount extends Category {
@@ -74,6 +75,71 @@ export const fetchActivePollCategories = async (): Promise<CategoryWithPollCount
     return Array.from(categoryMap.values());
   } catch (error) {
     console.error('Error in fetchActivePollCategories:', error);
+    throw error;
+  }
+};
+
+export const createCategory = async (name: string): Promise<Category> => {
+  try {
+    console.log('Creating category:', name);
+    
+    const { data, error } = await supabase
+      .from('polis_poll_categories')
+      .insert({ name: name.trim() })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating category:', error);
+      throw error;
+    }
+
+    console.log('Category created:', data);
+    return data;
+  } catch (error) {
+    console.error('Error in createCategory:', error);
+    throw error;
+  }
+};
+
+export const updateCategory = async (categoryId: string, name: string): Promise<void> => {
+  try {
+    console.log('Updating category:', categoryId, name);
+    
+    const { error } = await supabase
+      .from('polis_poll_categories')
+      .update({ name: name.trim() })
+      .eq('category_id', categoryId);
+
+    if (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+
+    console.log('Category updated successfully');
+  } catch (error) {
+    console.error('Error in updateCategory:', error);
+    throw error;
+  }
+};
+
+export const deleteCategory = async (categoryId: string): Promise<void> => {
+  try {
+    console.log('Deleting category:', categoryId);
+    
+    const { error } = await supabase
+      .from('polis_poll_categories')
+      .delete()
+      .eq('category_id', categoryId);
+
+    if (error) {
+      console.error('Error deleting category:', error);
+      throw error;
+    }
+
+    console.log('Category deleted successfully');
+  } catch (error) {
+    console.error('Error in deleteCategory:', error);
     throw error;
   }
 };
