@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,9 +29,6 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   groupStats
 }) => {
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
-  
-  // Calculate total participants from group member counts
-  const totalParticipants = groups.reduce((sum, group) => sum + group.member_count, 0);
   
   // Sort statements: consensus points first, then by score
   const sortedStatements = [...statements].sort((a, b) => {
@@ -79,7 +75,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                 <div className="text-center">
                   <Users className="h-8 w-8 mx-auto mb-2 text-purple-500" />
                   <div className="text-2xl font-bold text-purple-600">
-                    {totalParticipants}
+                    {groups.reduce((sum, group) => sum + group.member_count, 0)}
                   </div>
                   <div className="text-sm text-muted-foreground">משתתפים</div>
                 </div>
