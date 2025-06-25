@@ -88,7 +88,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
       {/* Statement Card */}
       <Card className="poll-card">
         <CardHeader className="text-center pb-4">
-          {/*<div className="flex justify-center items-center gap-4 mb-4">
+          <div className="flex justify-center items-center gap-4 mb-4">
             <Badge variant="outline" className="hebrew-text">
               {poll.category}
             </Badge>
@@ -96,7 +96,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
               <Users className="h-4 w-4" />
               <span>{poll.total_votes} הצבעות</span>
             </div>
-          </div>*/}
+          </div>
           <CardTitle className="text-2xl font-bold hebrew-text leading-relaxed mb-4">
             {statement.content}
           </CardTitle>
