@@ -10,14 +10,14 @@ interface VotingProgressProps {
   poll: Poll;
   userVoteCount: number;
   totalStatements: number;
-  currentStatementIndex: number;
+  remainingStatements: number;
 }
 
 export const VotingProgress: React.FC<VotingProgressProps> = ({
   poll,
   userVoteCount,
   totalStatements,
-  currentStatementIndex
+  remainingStatements
 }) => {
   const personalProgress = (userVoteCount / totalStatements) * 100;
 
@@ -37,7 +37,10 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
           </div>
           <Progress value={personalProgress} className="h-2" />
           <p className="text-xs text-muted-foreground hebrew-text">
-            הצהרה {currentStatementIndex + 1} מתוך {totalStatements}
+            {remainingStatements > 0 
+              ? `נותרו ${remainingStatements} הצהרות להצבעה`
+              : 'סיימת להצביע על כל ההצהרות!'
+            }
           </p>
         </div>
       </CardContent>

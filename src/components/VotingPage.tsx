@@ -8,9 +8,10 @@ import { Poll, Statement } from '@/types/poll';
 
 interface VotingPageProps {
   poll: Poll;
-  statements: Statement[];
-  currentStatementIndex: number;
-  userVotes: Record<string, string>;
+  currentStatement: Statement | null;
+  unvotedStatements: Statement[];
+  totalStatements: number;
+  userVoteCount: number;
   onVote: (statementId: string, vote: string) => void;
   onViewResults: () => void;
   onBackToHome: () => void;
@@ -19,9 +20,10 @@ interface VotingPageProps {
 
 export const VotingPage: React.FC<VotingPageProps> = ({
   poll,
-  statements,
-  currentStatementIndex,
-  userVotes,
+  currentStatement,
+  unvotedStatements,
+  totalStatements,
+  userVoteCount,
   onVote,
   onViewResults,
   onBackToHome,
@@ -40,17 +42,18 @@ export const VotingPage: React.FC<VotingPageProps> = ({
         
         <VotingProgress
           poll={poll}
-          userVoteCount={Object.keys(userVotes).length}
-          totalStatements={statements.length}
-          currentStatementIndex={currentStatementIndex}
+          userVoteCount={userVoteCount}
+          totalStatements={totalStatements}
+          remainingStatements={unvotedStatements.length}
         />
         
         <VotingInterface
           poll={poll}
-          statement={statements[currentStatementIndex]}
+          statement={currentStatement}
+          userVoteCount={userVoteCount}
+          totalStatements={totalStatements}
+          remainingStatements={unvotedStatements.length}
           onVote={onVote}
-          userVoteCount={Object.keys(userVotes).length}
-          totalStatements={statements.length}
           onViewResults={onViewResults}
           onSubmitStatement={onSubmitStatement}
         />

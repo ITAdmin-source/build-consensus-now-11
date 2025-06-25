@@ -17,10 +17,11 @@ import {
 
 interface VotingInterfaceProps {
   poll: Poll;
-  statement: Statement;
-  onVote: (statementId: string, vote: string) => void;
+  statement: Statement | null;
   userVoteCount: number;
   totalStatements: number;
+  remainingStatements: number;
+  onVote: (statementId: string, vote: string) => void;
   onViewResults: () => void;
   onSubmitStatement?: (content: string, contentType: string) => void;
 }
@@ -28,16 +29,19 @@ interface VotingInterfaceProps {
 export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   poll,
   statement,
-  onVote,
   userVoteCount,
   totalStatements,
+  remainingStatements,
+  onVote,
   onViewResults,
   onSubmitStatement
 }) => {
   const { user } = useAuth();
 
   const handleVote = (vote: string) => {
-    onVote(statement.statement_id, vote);
+    if (statement) {
+      onVote(statement.statement_id, vote);
+    }
   };
 
   const handleSubmitStatement = (content: string, contentType: string) => {
@@ -46,8 +50,36 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
     }
   };
 
-  const isLastStatement = userVoteCount === totalStatements - 1;
-  const allStatementsVoted = userVoteCount === totalStatements;
+  // Show completion message when no statement is available (all voted)
+  if (!statement) {
+    return (
+      <div className="space-y-6">
+        {/* Completion Message */}
+        <div className="text-center p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+          <h3 className="text-xl font-bold text-green-800 mb-2 hebrew-text">
+            🎉 סיימת להצביע על כל ההצהרות!
+          </h3>
+          <p className="text-green-700 mb-4 hebrew-text">
+            תודה על השתתפותך. כעת תוכל לראות את התוצאות ולגלות אילו נקודות חיבור נמצאו.
+          </p>
+          <Button 
+            onClick={onViewResults}
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+          >
+            צפה בתוצאות
+          </Button>
+        </div>
+
+        {/* User Statement Form - Only show if user statements are allowed and user is authenticated */}
+        {poll.allow_user_statements && user && onSubmitStatement && (
+          <UserStatementForm 
+            poll={poll}
+            onSubmitStatement={handleSubmitStatement}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -69,7 +101,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
         </CardHeader>
         
         <CardContent>
-          {/* Voting Buttons - Now available to all users */}
+          {/* Voting Buttons - Available to all users */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Button
               onClick={() => handleVote('support')}
@@ -112,24 +144,6 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
                   התחבר למערכת
                 </Button>
               </Link>
-            </div>
-          )}
-
-          {/* Completion Message */}
-          {allStatementsVoted && (
-            <div className="text-center p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-              <h3 className="text-xl font-bold text-green-800 mb-2 hebrew-text">
-                🎉 סיימת להצביע על כל ההצהרות!
-              </h3>
-              <p className="text-green-700 mb-4 hebrew-text">
-                תודה על השתתפותך. כעת תוכל לראות את התוצאות ולגלות אילו נקודות חיבור נמצאו.
-              </p>
-              <Button 
-                onClick={onViewResults}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-              >
-                צפה בתוצאות
-              </Button>
             </div>
           )}
         </CardContent>

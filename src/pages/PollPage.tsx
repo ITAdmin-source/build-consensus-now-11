@@ -10,13 +10,13 @@ import { submitVote, fetchUserVotes } from '@/integrations/supabase/votes';
 import { fetchGroupsByPollId, fetchGroupStatsByPollId, fetchConsensusPointsByPollId } from '@/integrations/supabase/groups';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { getUnvotedStatements, getNextStatementToVote } from '@/utils/statementUtils';
 
 const PollPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [currentView, setCurrentView] = useState<'voting' | 'results'>('voting');
-  const [currentStatementIndex, setCurrentStatementIndex] = useState(0);
   const [userVotes, setUserVotes] = useState<Record<string, string>>({});
   
   // Data states
@@ -27,6 +27,10 @@ const PollPage = () => {
   const [groupStats, setGroupStats] = useState<GroupStatementStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Computed values for filtered statements
+  const unvotedStatements = getUnvotedStatements(statements, userVotes);
+  const currentStatement = getNextStatementToVote(statements, userVotes);
 
   // Load poll data when slug changes
   useEffect(() => {
@@ -74,10 +78,6 @@ const PollPage = () => {
     try {
       await submitVote(statementId, vote as 'support' | 'oppose' | 'unsure');
       setUserVotes(prev => ({ ...prev, [statementId]: vote }));
-      
-      if (currentStatementIndex < statements.length - 1) {
-        setCurrentStatementIndex(prev => prev + 1);
-      }
       
       toast.success('ההצבעה נשמרה בהצלחה');
     } catch (error) {
@@ -144,13 +144,14 @@ const PollPage = () => {
     );
   }
 
-  if (currentView === 'voting' && statements.length > 0) {
+  if (currentView === 'voting') {
     return (
       <VotingPage
         poll={poll}
-        statements={statements}
-        currentStatementIndex={currentStatementIndex}
-        userVotes={userVotes}
+        currentStatement={currentStatement}
+        unvotedStatements={unvotedStatements}
+        totalStatements={statements.length}
+        userVoteCount={Object.keys(userVotes).length}
         onVote={handleVote}
         onViewResults={handleViewResults}
         onBackToHome={handleBackToHome}
@@ -177,9 +178,10 @@ const PollPage = () => {
   return (
     <VotingPage
       poll={poll}
-      statements={statements}
-      currentStatementIndex={currentStatementIndex}
-      userVotes={userVotes}
+      currentStatement={currentStatement}
+      unvotedStatements={unvotedStatements}
+      totalStatements={statements.length}
+      userVoteCount={Object.keys(userVotes).length}
       onVote={handleVote}
       onViewResults={handleViewResults}
       onBackToHome={handleBackToHome}
