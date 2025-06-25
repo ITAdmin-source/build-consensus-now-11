@@ -23,12 +23,15 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
     onJoinPoll(poll.slug || poll.poll_id);
   };
 
+  // Debug logging to see what category value we're getting
+  console.log('Poll category:', poll.category, 'for poll:', poll.title);
+
   return (
     <Card className="poll-card hebrew-text">
       <CardHeader className="pb-4">
         <div className="flex justify-between items-start mb-2">
           <Badge variant="secondary" className="text-xs">
-            {poll.category}
+            {poll.category || 'ללא קטגוריה'}
           </Badge>
           <CountdownTimer endTime={poll.end_time} className="text-sm" />
         </div>
@@ -73,7 +76,6 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
               <span>{poll.total_statements} הצהרות</span>
             </div>
           </div>
-
 
           {/* Action Button */}
           <Button 
