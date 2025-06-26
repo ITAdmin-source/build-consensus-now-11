@@ -3,6 +3,7 @@ import React from 'react';
 import { NavigationHeader } from '@/components/NavigationHeader';
 import { PollHeader } from '@/components/PollHeader';
 import { ResultsDashboard } from '@/components/ResultsDashboard';
+import { LiveIndicator } from '@/components/LiveIndicator';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 
 interface ResultsPageProps {
@@ -13,6 +14,7 @@ interface ResultsPageProps {
   groupStats: GroupStatementStats[];
   onBackToHome: () => void;
   onNavigateToVoting?: () => void;
+  isLive?: boolean;
 }
 
 export const ResultsPage: React.FC<ResultsPageProps> = ({
@@ -22,18 +24,24 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   groups,
   groupStats,
   onBackToHome,
-  onNavigateToVoting
+  onNavigateToVoting,
+  isLive = false
 }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <NavigationHeader currentPage="results" />
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <PollHeader
-          poll={poll}
-          currentPage="results"
-          onNavigateToVoting={onNavigateToVoting}
-        />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1">
+            <PollHeader
+              poll={poll}
+              currentPage="results"
+              onNavigateToVoting={onNavigateToVoting}
+            />
+          </div>
+          <LiveIndicator isLive={isLive} className="mr-2" />
+        </div>
         
         <div className="py-6">
           <ResultsDashboard

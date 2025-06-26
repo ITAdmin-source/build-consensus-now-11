@@ -1,84 +1,42 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { VotingPage } from '@/components/VotingPage';
 import { ResultsPage } from '@/components/ResultsPage';
-import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
-import { fetchPollBySlug } from '@/integrations/supabase/polls';
-import { fetchStatementsByPollId, submitUserStatement } from '@/integrations/supabase/statements';
-import { submitVote, fetchUserVotes } from '@/integrations/supabase/votes';
-import { fetchGroupsByPollId, fetchGroupStatsByPollId, fetchConsensusPointsByPollId } from '@/integrations/supabase/groups';
+import { submitVote } from '@/integrations/supabase/votes';
+import { submitUserStatement } from '@/integrations/supabase/statements';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getUnvotedStatements, getNextStatementToVote } from '@/utils/statementUtils';
+import { useRealtimePollData } from '@/hooks/useRealtimePollData';
 
 const PollPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [currentView, setCurrentView] = useState<'voting' | 'results'>('voting');
-  const [userVotes, setUserVotes] = useState<Record<string, string>>({});
   
-  // Data states
-  const [poll, setPoll] = useState<Poll | null>(null);
-  const [statements, setStatements] = useState<Statement[]>([]);
-  const [consensusPoints, setConsensusPoints] = useState<ConsensusPoint[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [groupStats, setGroupStats] = useState<GroupStatementStats[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use the real-time hook instead of manual data loading
+  const {
+    poll,
+    statements,
+    consensusPoints,
+    groups,
+    groupStats,
+    userVotes,
+    loading,
+    error,
+    isLive
+  } = useRealtimePollData({ slug: slug || '' });
 
   // Computed values for filtered statements
   const unvotedStatements = getUnvotedStatements(statements, userVotes);
   const currentStatement = getNextStatementToVote(statements, userVotes);
 
-  // Load poll data when slug changes
-  useEffect(() => {
-    if (slug) {
-      loadPollData(slug);
-    }
-  }, [slug, user]);
-
-  const loadPollData = async (pollSlug: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const pollData = await fetchPollBySlug(pollSlug);
-      
-      if (!pollData) {
-        setError('סקר לא נמצא');
-        return;
-      }
-      
-      const [statementsData, consensusPointsData, groupsData, groupStatsData, votesData] = await Promise.all([
-        fetchStatementsByPollId(pollData.poll_id),
-        fetchConsensusPointsByPollId(pollData.poll_id),
-        fetchGroupsByPollId(pollData.poll_id),
-        fetchGroupStatsByPollId(pollData.poll_id),
-        fetchUserVotes(pollData.poll_id)
-      ]);
-
-      setPoll(pollData);
-      setStatements(statementsData);
-      setConsensusPoints(consensusPointsData);
-      setGroups(groupsData);
-      setGroupStats(groupStatsData);
-      setUserVotes(votesData);
-    } catch (error) {
-      console.error('Error loading poll data:', error);
-      setError('שגיאה בטעינת נתוני הסקר');
-      toast.error('שגיאה בטעינת נתוני הסקר');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleVote = async (statementId: string, vote: string) => {
     try {
       await submitVote(statementId, vote as 'support' | 'oppose' | 'unsure');
-      setUserVotes(prev => ({ ...prev, [statementId]: vote }));
-      
+      // Note: userVotes will be updated automatically via real-time subscription
       toast.success('ההצבעה נשמרה בהצלחה');
     } catch (error) {
       console.error('Error submitting vote:', error);
@@ -156,6 +114,7 @@ const PollPage = () => {
         onViewResults={handleViewResults}
         onBackToHome={handleBackToHome}
         onSubmitStatement={handleSubmitStatement}
+        isLive={isLive}
       />
     );
   }
@@ -170,6 +129,7 @@ const PollPage = () => {
         groupStats={groupStats}
         onBackToHome={handleBackToHome}
         onNavigateToVoting={statements.length > 0 ? handleNavigateToVoting : undefined}
+        isLive={isLive}
       />
     );
   }
@@ -186,6 +146,7 @@ const PollPage = () => {
       onViewResults={handleViewResults}
       onBackToHome={handleBackToHome}
       onSubmitStatement={handleSubmitStatement}
+      isLive={isLive}
     />
   );
 };
