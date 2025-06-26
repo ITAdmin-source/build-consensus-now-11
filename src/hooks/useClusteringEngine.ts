@@ -76,14 +76,15 @@ export const useClusteringEngine = ({ pollId }: UseClusteringEngineProps) => {
       }
 
       if (data) {
+        const typedData = data as ClusteringJob;
         setState(prev => ({ 
           ...prev, 
-          currentJob: data,
-          isRunning: data.status === 'running' || data.status === 'pending'
+          currentJob: typedData,
+          isRunning: typedData.status === 'running' || typedData.status === 'pending'
         }));
       }
 
-      return data;
+      return data as ClusteringJob | null;
     } catch (error) {
       console.error('Error checking clustering status:', error);
       return null;

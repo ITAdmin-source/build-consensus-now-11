@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats, ClusteringJob } from '@/types/poll';
@@ -57,8 +56,9 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
         .single();
 
       if (data) {
-        setClusteringJob(data);
-        setIsClusteringRunning(data.status === 'running' || data.status === 'pending');
+        const typedData = data as ClusteringJob;
+        setClusteringJob(typedData);
+        setIsClusteringRunning(typedData.status === 'running' || typedData.status === 'pending');
       } else if (error && error.code !== 'PGRST116') {
         console.error('Error fetching clustering job:', error);
       }
@@ -242,8 +242,10 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
           
           // Show toast for clustering status changes
           if (payload.eventType === 'UPDATE' && payload.new) {
-            const newStatus = payload.new.status;
-            const oldStatus = payload.old?.status;
+            const newData = payload.new as any;
+            const oldData = payload.old as any;
+            const newStatus = newData.status;
+            const oldStatus = oldData?.status;
             
             if (newStatus !== oldStatus) {
               switch (newStatus) {
@@ -251,12 +253,12 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
                   toast.info('אלגוריתם הקבצה החל לרוץ...');
                   break;
                 case 'completed':
-                  toast.success(`הקבצה הושלמה! נוצרו ${payload.new.groups_created} קבוצות ונמצאו ${payload.new.consensus_points_found} נקודות הסכמה`);
+                  toast.success(`הקבצה הושלמה! נוצרו ${newData.groups_created} קבוצות ונמצאו ${newData.consensus_points_found} נקודות הסכמה`);
                   // Refresh poll data after clustering completes
                   setTimeout(() => refetchPollData(pollId), 1000);
                   break;
                 case 'failed':
-                  toast.error(`שגיאה בקבצה: ${payload.new.error_message || 'שגיאה לא ידועה'}`);
+                  toast.error(`שגיאה בקבצה: ${newData.error_message || 'שגיאה לא ידועה'}`);
                   break;
               }
             }
