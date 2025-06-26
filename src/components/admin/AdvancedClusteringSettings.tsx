@@ -21,17 +21,19 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface AlgorithmConfig {
+  pca_dimensions: number;
+  consensus_threshold: number;
+  min_group_size: number;
+}
+
 interface ClusteringConfig {
   clustering_min_groups: number;
   clustering_max_groups: number;
   clustering_min_participants: number;
   clustering_cache_ttl_minutes: number;
   clustering_batch_size: number;
-  clustering_algorithm_config: {
-    pca_dimensions: number;
-    consensus_threshold: number;
-    min_group_size: number;
-  };
+  clustering_algorithm_config: AlgorithmConfig;
   min_support_pct: number;
   max_opposition_pct: number;
   min_votes_per_group: number;
@@ -80,13 +82,33 @@ export const AdvancedClusteringSettings: React.FC<{ pollId: string }> = ({ pollI
 
       if (error) throw error;
 
+      // Safely parse the algorithm config with proper type checking
+      let algorithmConfig: AlgorithmConfig = DEFAULT_CONFIG.clustering_algorithm_config;
+      if (data.clustering_algorithm_config) {
+        try {
+          const parsedConfig = typeof data.clustering_algorithm_config === 'string' 
+            ? JSON.parse(data.clustering_algorithm_config) 
+            : data.clustering_algorithm_config;
+          
+          if (parsedConfig && typeof parsedConfig === 'object') {
+            algorithmConfig = {
+              pca_dimensions: parsedConfig.pca_dimensions ?? DEFAULT_CONFIG.clustering_algorithm_config.pca_dimensions,
+              consensus_threshold: parsedConfig.consensus_threshold ?? DEFAULT_CONFIG.clustering_algorithm_config.consensus_threshold,
+              min_group_size: parsedConfig.min_group_size ?? DEFAULT_CONFIG.clustering_algorithm_config.min_group_size
+            };
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse clustering_algorithm_config, using defaults:', parseError);
+        }
+      }
+
       const fetchedConfig: ClusteringConfig = {
         clustering_min_groups: data.clustering_min_groups || DEFAULT_CONFIG.clustering_min_groups,
         clustering_max_groups: data.clustering_max_groups || DEFAULT_CONFIG.clustering_max_groups,
         clustering_min_participants: data.clustering_min_participants || DEFAULT_CONFIG.clustering_min_participants,
         clustering_cache_ttl_minutes: data.clustering_cache_ttl_minutes || DEFAULT_CONFIG.clustering_cache_ttl_minutes,
         clustering_batch_size: data.clustering_batch_size || DEFAULT_CONFIG.clustering_batch_size,
-        clustering_algorithm_config: data.clustering_algorithm_config || DEFAULT_CONFIG.clustering_algorithm_config,
+        clustering_algorithm_config: algorithmConfig,
         min_support_pct: data.min_support_pct || DEFAULT_CONFIG.min_support_pct,
         max_opposition_pct: data.max_opposition_pct || DEFAULT_CONFIG.max_opposition_pct,
         min_votes_per_group: data.min_votes_per_group || DEFAULT_CONFIG.min_votes_per_group
@@ -166,7 +188,10 @@ export const AdvancedClusteringSettings: React.FC<{ pollId: string }> = ({ pollI
         
         <div className="flex gap-2">
           <Button
-            onClick={resetToDefaults}
+            onClick={() => {
+              setConfig(DEFAULT_CONFIG);
+              setHasChanges(true);
+            }}
             variant="outline"
             size="sm"
           >
@@ -176,7 +201,10 @@ export const AdvancedClusteringSettings: React.FC<{ pollId: string }> = ({ pollI
           
           {hasChanges && (
             <Button
-              onClick={resetConfig}
+              onClick={() => {
+                setConfig(originalConfig);
+                setHasChanges(false);
+              }}
               variant="outline"
               size="sm"
             >
