@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +29,16 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   groups,
   groupStats
 }) => {
+  console.log('ResultsDashboard props:', {
+    poll: poll.title,
+    statementsCount: statements.length,
+    consensusPointsCount: consensusPoints.length,
+    groupsCount: groups.length,
+    groupStatsCount: groupStats.length,
+    groups,
+    groupStats
+  });
+
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
   
   // Sort statements: consensus points first, then by score
@@ -37,9 +48,23 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
     return b.score - a.score;
   });
 
+  // Calculate total participants from groups
+  const totalParticipants = groups.reduce((sum, group) => sum + group.member_count, 0);
+
   const getGroupStatsForStatement = (statementId: string, groupId: string) => {
-    return groupStats.find(stat => stat.statement_id === statementId && stat.group_id === groupId);
+    const stat = groupStats.find(stat => stat.statement_id === statementId && stat.group_id === groupId);
+    console.log(`Looking for stats for statement ${statementId} and group ${groupId}:`, stat);
+    return stat;
   };
+
+  // Debug: Show if we have the data we need
+  if (groups.length === 0) {
+    console.warn('No groups found - table will not show group columns');
+  }
+  
+  if (groupStats.length === 0) {
+    console.warn('No group stats found - voting bars will not show');
+  }
 
   return (
     <TooltipProvider>
@@ -75,7 +100,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                 <div className="text-center">
                   <Users className="h-8 w-8 mx-auto mb-2 text-purple-500" />
                   <div className="text-2xl font-bold text-purple-600">
-                    {groups.reduce((sum, group) => sum + group.member_count, 0)}
+                    {totalParticipants}
                   </div>
                   <div className="text-sm text-muted-foreground">משתתפים</div>
                 </div>
@@ -106,6 +131,23 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
               </div>
             </CardContent>
           </Card>
+
+          {/* Debug Information */}
+          {(groups.length === 0 || groupStats.length === 0) && (
+            <Card className="bg-yellow-50 border-yellow-200">
+              <CardContent className="p-4">
+                <div className="text-sm text-yellow-800">
+                  <strong>מידע לפתרון בעיות:</strong>
+                  <ul className="mt-2 space-y-1">
+                    {groups.length === 0 && <li>• לא נמצאו קבוצות דעות</li>}
+                    {groupStats.length === 0 && <li>• לא נמצאו נתונים סטטיסטיים של קבוצות</li>}
+                    <li>• סה"כ הצבעות: {poll.total_votes}</li>
+                    <li>• סה"כ משתתפים: {totalParticipants}</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Statements Table */}
           <Card>
@@ -160,7 +202,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                         {groups.map((group) => {
                           const stat = getGroupStatsForStatement(statement.statement_id, group.group_id);
                           
-                          if (!stat) {
+                          if (!stat || stat.total_votes === 0) {
                             return (
                               <TableCell key={group.group_id} className="text-center">
                                 <div className="text-xs text-muted-foreground">אין נתונים</div>
@@ -173,24 +215,25 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="relative h-6 w-full bg-gray-200 rounded-full overflow-hidden cursor-pointer">
+                                    {/* Support (green) - from right */}
                                     <div 
-                                      className="absolute left-0 top-0 h-full bg-voting-support transition-all"
+                                      className="absolute right-0 top-0 h-full bg-green-500 transition-all"
                                       style={{ 
-                                        left: `${100 - stat.support_pct}%`,
                                         width: `${stat.support_pct}%` 
                                       }}
                                     />
+                                    {/* Oppose (red) - from left */}
                                     <div 
-                                      className="absolute top-0 h-full bg-voting-oppose transition-all"
+                                      className="absolute left-0 top-0 h-full bg-red-500 transition-all"
                                       style={{ 
-                                        left: `${100 - stat.support_pct - stat.oppose_pct}%`,
                                         width: `${stat.oppose_pct}%` 
                                       }}
                                     />
+                                    {/* Unsure (yellow) - in the middle */}
                                     <div 
-                                      className="absolute top-0 h-full bg-voting-unsure transition-all"
+                                      className="absolute top-0 h-full bg-yellow-400 transition-all"
                                       style={{ 
-                                        left: `0%`,
+                                        left: `${stat.oppose_pct}%`,
                                         width: `${stat.unsure_pct}%` 
                                       }}
                                     />
@@ -199,9 +242,9 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                                 <TooltipContent>
                                   <div className="text-sm space-y-1">
                                     <div className="font-medium">{group.name}</div>
-                                    <div className="text-voting-support">תמיכה: {Math.round(stat.support_pct)}%</div>
-                                    <div className="text-voting-oppose">התנגדות: {Math.round(stat.oppose_pct)}%</div>
-                                    <div className="text-voting-unsure">לא בטוח: {Math.round(stat.unsure_pct)}%</div>
+                                    <div className="text-green-600">תמיכה: {Math.round(stat.support_pct)}%</div>
+                                    <div className="text-red-600">התנגדות: {Math.round(stat.oppose_pct)}%</div>
+                                    <div className="text-yellow-600">לא בטוח: {Math.round(stat.unsure_pct)}%</div>
                                     <div className="border-t pt-1 text-muted-foreground">
                                       סה"כ הצבעות: {stat.total_votes}
                                     </div>

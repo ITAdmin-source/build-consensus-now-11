@@ -1,8 +1,9 @@
-
 import { supabase } from './client';
 import { Group, GroupStatementStats, ConsensusPoint } from '@/types/poll';
 
 export const fetchGroupsByPollId = async (pollId: string): Promise<Group[]> => {
+  console.log('Fetching groups for poll:', pollId);
+  
   // First get the groups
   const { data: groupsData, error: groupsError } = await supabase
     .from('polis_groups')
@@ -19,27 +20,35 @@ export const fetchGroupsByPollId = async (pollId: string): Promise<Group[]> => {
     return [];
   }
 
-  // Get member counts for each group
+  console.log('Raw groups data:', groupsData);
+
+  // Get member counts for each group using session_id instead of user_id
   const { data: membershipData, error: membershipError } = await supabase
     .from('polis_user_group_membership')
-    .select('group_id')
+    .select('group_id, session_id')
     .eq('poll_id', pollId);
 
   if (membershipError) {
     console.error('Error fetching group memberships:', membershipError);
   }
 
-  // Count members per group
+  console.log('Raw membership data:', membershipData);
+
+  // Count members per group using session_id
   const memberCounts = (membershipData || []).reduce((acc, membership) => {
-    acc[membership.group_id] = (acc[membership.group_id] || 0) + 1;
+    if (membership.session_id) {
+      acc[membership.group_id] = (acc[membership.group_id] || 0) + 1;
+    }
     return acc;
   }, {} as Record<string, number>);
+
+  console.log('Calculated member counts:', memberCounts);
 
   // Colors for groups - distinct and accessible
   const groupColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
 
   // Transform to match Group interface with calculated member counts
-  return groupsData.map((group, index): Group => ({
+  const transformedGroups = groupsData.map((group, index): Group => ({
     group_id: group.group_id,
     poll_id: group.poll_id || pollId,
     name: `קבוצה ${index + 1}`, // More user-friendly names: "Group 1", "Group 2"
@@ -49,9 +58,14 @@ export const fetchGroupsByPollId = async (pollId: string): Promise<Group[]> => {
     algorithm: group.algorithm || 'k-means',
     created_at: group.created_at || new Date().toISOString()
   }));
+
+  console.log('Transformed groups:', transformedGroups);
+  return transformedGroups;
 };
 
 export const fetchGroupStatsByPollId = async (pollId: string): Promise<GroupStatementStats[]> => {
+  console.log('Fetching group stats for poll:', pollId);
+  
   const { data, error } = await supabase
     .from('polis_group_statement_stats')
     .select('*')
@@ -62,7 +76,9 @@ export const fetchGroupStatsByPollId = async (pollId: string): Promise<GroupStat
     return [];
   }
 
-  return data?.map((stat): GroupStatementStats => ({
+  console.log('Raw group stats data:', data);
+
+  const transformedStats = data?.map((stat): GroupStatementStats => ({
     group_id: stat.group_id,
     statement_id: stat.statement_id,
     poll_id: stat.poll_id || pollId,
@@ -71,6 +87,9 @@ export const fetchGroupStatsByPollId = async (pollId: string): Promise<GroupStat
     unsure_pct: 100 - (stat.support_pct || 0) - (stat.oppose_pct || 0),
     total_votes: stat.total_votes || 0
   })) || [];
+
+  console.log('Transformed group stats:', transformedStats);
+  return transformedStats;
 };
 
 export const fetchConsensusPointsByPollId = async (pollId: string): Promise<ConsensusPoint[]> => {
