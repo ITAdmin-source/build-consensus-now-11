@@ -29,16 +29,6 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   groups,
   groupStats
 }) => {
-  console.log('ResultsDashboard props:', {
-    poll: poll.title,
-    statementsCount: statements.length,
-    consensusPointsCount: consensusPoints.length,
-    groupsCount: groups.length,
-    groupStatsCount: groupStats.length,
-    groups,
-    groupStats
-  });
-
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
   
   // Sort statements: consensus points first, then by score
@@ -52,19 +42,8 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   const totalParticipants = groups.reduce((sum, group) => sum + group.member_count, 0);
 
   const getGroupStatsForStatement = (statementId: string, groupId: string) => {
-    const stat = groupStats.find(stat => stat.statement_id === statementId && stat.group_id === groupId);
-    console.log(`Looking for stats for statement ${statementId} and group ${groupId}:`, stat);
-    return stat;
+    return groupStats.find(stat => stat.statement_id === statementId && stat.group_id === groupId);
   };
-
-  // Debug: Show if we have the data we need
-  if (groups.length === 0) {
-    console.warn('No groups found - table will not show group columns');
-  }
-  
-  if (groupStats.length === 0) {
-    console.warn('No group stats found - voting bars will not show');
-  }
 
   return (
     <TooltipProvider>
@@ -131,23 +110,6 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
               </div>
             </CardContent>
           </Card>
-
-          {/* Debug Information */}
-          {(groups.length === 0 || groupStats.length === 0) && (
-            <Card className="bg-yellow-50 border-yellow-200">
-              <CardContent className="p-4">
-                <div className="text-sm text-yellow-800">
-                  <strong>מידע לפתרון בעיות:</strong>
-                  <ul className="mt-2 space-y-1">
-                    {groups.length === 0 && <li>• לא נמצאו קבוצות דעות</li>}
-                    {groupStats.length === 0 && <li>• לא נמצאו נתונים סטטיסטיים של קבוצות</li>}
-                    <li>• סה"כ הצבעות: {poll.total_votes}</li>
-                    <li>• סה"כ משתתפים: {totalParticipants}</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Statements Table */}
           <Card>
