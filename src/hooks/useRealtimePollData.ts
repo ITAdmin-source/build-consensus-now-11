@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
+import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats, ClusteringJob } from '@/types/poll';
 import { fetchPollBySlug } from '@/integrations/supabase/polls';
 import { fetchStatementsByPollId } from '@/integrations/supabase/statements';
 import { fetchGroupsByPollId, fetchGroupStatsByPollId, fetchConsensusPointsByPollId } from '@/integrations/supabase/groups';
@@ -22,6 +22,8 @@ interface RealtimePollData {
   loading: boolean;
   error: string | null;
   isLive: boolean;
+  clusteringJob: ClusteringJob | null;
+  isClusteringRunning: boolean;
 }
 
 export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): RealtimePollData => {
@@ -34,6 +36,8 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
+  const [clusteringJob, setClusteringJob] = useState<ClusteringJob | null>(null);
+  const [isClusteringRunning, setIsClusteringRunning] = useState(false);
   
   const channelRef = useRef<any>(null);
   const pollIdRef = useRef<string | null>(null);
@@ -41,6 +45,27 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
 
   // Debounced data refetch to prevent excessive API calls
   const debouncedRefetch = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchClusteringJob = async (pollId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('polis_clustering_jobs')
+        .select('*')
+        .eq('poll_id', pollId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data) {
+        setClusteringJob(data);
+        setIsClusteringRunning(data.status === 'running' || data.status === 'pending');
+      } else if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching clustering job:', error);
+      }
+    } catch (error) {
+      console.error('Error fetching clustering job:', error);
+    }
+  };
 
   const refetchPollData = async (pollId: string, skipToast = false) => {
     try {
@@ -66,6 +91,9 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
       setGroups(groupsData);
       setGroupStats(groupStatsData);
       setUserVotes(votesData);
+
+      // Also fetch clustering job status
+      await fetchClusteringJob(pollId);
 
       if (!skipToast) {
         setIsLive(true);
@@ -105,6 +133,9 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
         setGroups(groupsData);
         setGroupStats(groupStatsData);
         setUserVotes(votesData);
+
+        // Fetch initial clustering job status
+        await fetchClusteringJob(pollData.poll_id);
       } catch (error) {
         console.error('Error loading poll data:', error);
         setError('שגיאה בטעינת נתוני הסקר');
@@ -197,6 +228,41 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
           refetchPollData(pollId);
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'polis_clustering_jobs',
+          filter: `poll_id=eq.${pollId}`
+        },
+        (payload) => {
+          console.log('Clustering job change detected:', payload);
+          fetchClusteringJob(pollId);
+          
+          // Show toast for clustering status changes
+          if (payload.eventType === 'UPDATE' && payload.new) {
+            const newStatus = payload.new.status;
+            const oldStatus = payload.old?.status;
+            
+            if (newStatus !== oldStatus) {
+              switch (newStatus) {
+                case 'running':
+                  toast.info('אלגוריתם הקבצה החל לרוץ...');
+                  break;
+                case 'completed':
+                  toast.success(`הקבצה הושלמה! נוצרו ${payload.new.groups_created} קבוצות ונמצאו ${payload.new.consensus_points_found} נקודות הסכמה`);
+                  // Refresh poll data after clustering completes
+                  setTimeout(() => refetchPollData(pollId), 1000);
+                  break;
+                case 'failed':
+                  toast.error(`שגיאה בקבצה: ${payload.new.error_message || 'שגיאה לא ידועה'}`);
+                  break;
+              }
+            }
+          }
+        }
+      )
       .subscribe((status) => {
         console.log('Real-time subscription status:', status);
         if (status === 'SUBSCRIBED') {
@@ -226,6 +292,8 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
     userVotes,
     loading,
     error,
-    isLive
+    isLive,
+    clusteringJob,
+    isClusteringRunning
   };
 };

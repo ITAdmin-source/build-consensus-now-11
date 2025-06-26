@@ -1,3 +1,4 @@
+
 export interface Poll {
   poll_id: string;
   title: string;
@@ -15,7 +16,21 @@ export interface Poll {
   current_consensus_points: number;
   total_statements: number;
   total_votes: number;
-  slug: string; // Add slug field
+  slug: string;
+  // New clustering fields
+  clustering_min_groups?: number;
+  clustering_max_groups?: number;
+  clustering_min_participants?: number;
+  clustering_cache_ttl_minutes?: number;
+  clustering_batch_size?: number;
+  clustering_algorithm_config?: {
+    pca_dimensions: number;
+    consensus_threshold: number;
+    min_group_size: number;
+  };
+  last_clustering_job_id?: string;
+  clustering_status?: 'never_run' | 'pending' | 'running' | 'completed' | 'failed';
+  last_clustered_at?: string;
 }
 
 export interface Statement {
@@ -57,6 +72,11 @@ export interface Group {
   member_count: number;
   algorithm: string;
   created_at: string;
+  // New clustering fields
+  cluster_center?: number[];
+  silhouette_score?: number;
+  stability_score?: number;
+  opinion_space_coords?: Record<string, [number, number]>;
 }
 
 export interface GroupStatementStats {
@@ -67,4 +87,32 @@ export interface GroupStatementStats {
   oppose_pct: number;
   unsure_pct: number;
   total_votes: number;
+}
+
+// New clustering-related types
+export interface ClusteringJob {
+  job_id: string;
+  poll_id: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  algorithm_version: string;
+  total_votes: number;
+  total_participants: number;
+  groups_created?: number;
+  consensus_points_found?: number;
+  processing_time_ms?: number;
+  error_message?: string;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+  created_by?: string;
+}
+
+export interface ClusteringMetric {
+  metric_id: string;
+  job_id: string;
+  poll_id: string;
+  metric_name: string;
+  metric_value: number;
+  metadata?: any;
+  created_at: string;
 }

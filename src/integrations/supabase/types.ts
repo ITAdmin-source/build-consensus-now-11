@@ -94,6 +94,166 @@ export type Database = {
           },
         ]
       }
+      polis_cluster_cache: {
+        Row: {
+          algorithm_version: string
+          cache_id: string
+          cache_key: string
+          cluster_results: Json
+          consensus_results: Json
+          created_at: string | null
+          expires_at: string
+          opinion_space: Json | null
+          participant_count: number
+          poll_id: string
+          updated_at: string | null
+          vote_count: number
+          vote_matrix: Json
+        }
+        Insert: {
+          algorithm_version?: string
+          cache_id?: string
+          cache_key: string
+          cluster_results: Json
+          consensus_results: Json
+          created_at?: string | null
+          expires_at?: string
+          opinion_space?: Json | null
+          participant_count: number
+          poll_id: string
+          updated_at?: string | null
+          vote_count: number
+          vote_matrix: Json
+        }
+        Update: {
+          algorithm_version?: string
+          cache_id?: string
+          cache_key?: string
+          cluster_results?: Json
+          consensus_results?: Json
+          created_at?: string | null
+          expires_at?: string
+          opinion_space?: Json | null
+          participant_count?: number
+          poll_id?: string
+          updated_at?: string | null
+          vote_count?: number
+          vote_matrix?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_cluster_cache_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polis_polls"
+            referencedColumns: ["poll_id"]
+          },
+        ]
+      }
+      polis_clustering_jobs: {
+        Row: {
+          algorithm_version: string
+          completed_at: string | null
+          consensus_points_found: number | null
+          created_at: string | null
+          created_by: string | null
+          error_message: string | null
+          groups_created: number | null
+          job_id: string
+          poll_id: string
+          processing_time_ms: number | null
+          started_at: string | null
+          status: string
+          total_participants: number
+          total_votes: number
+        }
+        Insert: {
+          algorithm_version?: string
+          completed_at?: string | null
+          consensus_points_found?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          groups_created?: number | null
+          job_id?: string
+          poll_id: string
+          processing_time_ms?: number | null
+          started_at?: string | null
+          status?: string
+          total_participants?: number
+          total_votes?: number
+        }
+        Update: {
+          algorithm_version?: string
+          completed_at?: string | null
+          consensus_points_found?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          groups_created?: number | null
+          job_id?: string
+          poll_id?: string
+          processing_time_ms?: number | null
+          started_at?: string | null
+          status?: string
+          total_participants?: number
+          total_votes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_clustering_jobs_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polis_polls"
+            referencedColumns: ["poll_id"]
+          },
+        ]
+      }
+      polis_clustering_metrics: {
+        Row: {
+          created_at: string | null
+          job_id: string
+          metadata: Json | null
+          metric_id: string
+          metric_name: string
+          metric_value: number
+          poll_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          job_id: string
+          metadata?: Json | null
+          metric_id?: string
+          metric_name: string
+          metric_value: number
+          poll_id: string
+        }
+        Update: {
+          created_at?: string | null
+          job_id?: string
+          metadata?: Json | null
+          metric_id?: string
+          metric_name?: string
+          metric_value?: number
+          poll_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_clustering_metrics_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "polis_clustering_jobs"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "polis_clustering_metrics_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polis_polls"
+            referencedColumns: ["poll_id"]
+          },
+        ]
+      }
       polis_consensus_points: {
         Row: {
           detected_at: string | null
@@ -179,21 +339,45 @@ export type Database = {
       polis_groups: {
         Row: {
           algorithm: string | null
+          cluster_center: Json | null
+          color: string | null
           created_at: string | null
+          description: string | null
           group_id: string
+          member_count: number | null
+          name: string | null
+          opinion_space_coords: Json | null
           poll_id: string | null
+          silhouette_score: number | null
+          stability_score: number | null
         }
         Insert: {
           algorithm?: string | null
+          cluster_center?: Json | null
+          color?: string | null
           created_at?: string | null
+          description?: string | null
           group_id?: string
+          member_count?: number | null
+          name?: string | null
+          opinion_space_coords?: Json | null
           poll_id?: string | null
+          silhouette_score?: number | null
+          stability_score?: number | null
         }
         Update: {
           algorithm?: string | null
+          cluster_center?: Json | null
+          color?: string | null
           created_at?: string | null
+          description?: string | null
           group_id?: string
+          member_count?: number | null
+          name?: string | null
+          opinion_space_coords?: Json | null
           poll_id?: string | null
+          silhouette_score?: number | null
+          stability_score?: number | null
         }
         Relationships: [
           {
@@ -225,10 +409,19 @@ export type Database = {
           allow_user_statements: boolean | null
           auto_approve_statements: boolean | null
           category_id: string | null
+          clustering_algorithm_config: Json | null
+          clustering_batch_size: number | null
+          clustering_cache_ttl_minutes: number | null
+          clustering_max_groups: number | null
+          clustering_min_groups: number | null
+          clustering_min_participants: number | null
+          clustering_status: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
           end_time: string | null
+          last_clustered_at: string | null
+          last_clustering_job_id: string | null
           max_opposition_pct: number | null
           min_consensus_points_to_win: number | null
           min_support_pct: number | null
@@ -243,10 +436,19 @@ export type Database = {
           allow_user_statements?: boolean | null
           auto_approve_statements?: boolean | null
           category_id?: string | null
+          clustering_algorithm_config?: Json | null
+          clustering_batch_size?: number | null
+          clustering_cache_ttl_minutes?: number | null
+          clustering_max_groups?: number | null
+          clustering_min_groups?: number | null
+          clustering_min_participants?: number | null
+          clustering_status?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           end_time?: string | null
+          last_clustered_at?: string | null
+          last_clustering_job_id?: string | null
           max_opposition_pct?: number | null
           min_consensus_points_to_win?: number | null
           min_support_pct?: number | null
@@ -261,10 +463,19 @@ export type Database = {
           allow_user_statements?: boolean | null
           auto_approve_statements?: boolean | null
           category_id?: string | null
+          clustering_algorithm_config?: Json | null
+          clustering_batch_size?: number | null
+          clustering_cache_ttl_minutes?: number | null
+          clustering_max_groups?: number | null
+          clustering_min_groups?: number | null
+          clustering_min_participants?: number | null
+          clustering_status?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           end_time?: string | null
+          last_clustered_at?: string | null
+          last_clustering_job_id?: string | null
           max_opposition_pct?: number | null
           min_consensus_points_to_win?: number | null
           min_support_pct?: number | null
@@ -282,6 +493,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "polis_poll_categories"
             referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "polis_polls_last_clustering_job_id_fkey"
+            columns: ["last_clustering_job_id"]
+            isOneToOne: false
+            referencedRelation: "polis_clustering_jobs"
+            referencedColumns: ["job_id"]
           },
         ]
       }
@@ -617,6 +835,10 @@ export type Database = {
       }
       calculate_consensus_points: {
         Args: { poll_id_param: string; cluster_profiles_param: Json }
+        Returns: undefined
+      }
+      cleanup_expired_cluster_cache: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
       current_user_has_role: {
