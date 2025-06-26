@@ -13,10 +13,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, Save, Settings, FileText, RefreshCw, ExternalLink } from 'lucide-react';
+import { ArrowRight, Save, Settings, FileText, RefreshCw, ExternalLink, RotateCcw } from 'lucide-react';
 import { StatementsManagement } from './StatementsManagement';
+import { ConfirmationDialog } from './ConfirmationDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPollById } from '@/integrations/supabase/polls';
+import { resetPollVotes } from '@/integrations/supabase/polls/mutations';
 import { fetchCategories } from '@/integrations/supabase/categories';
 import { supabase } from '@/integrations/supabase/client';
 import { generateSlug, isSlugFormatValid } from '@/utils/slugUtils';
@@ -45,6 +47,7 @@ export const EditPollPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('basic');
+  const [showResetDialog, setShowResetDialog] = useState(false);
   const queryClient = useQueryClient();
 
   const form = useForm<EditPollFormData>({
@@ -86,6 +89,28 @@ export const EditPollPage: React.FC = () => {
       form.setValue('slug', generatedSlug);
     }
   };
+
+  // Reset votes mutation
+  const resetVotesMutation = useMutation({
+    mutationFn: () => resetPollVotes(pollId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['poll', pollId] });
+      queryClient.invalidateQueries({ queryKey: ['polls'] });
+      toast({
+        title: 'הצבעות נמחקו בהצלחה',
+        description: 'כל ההצבעות והקבוצות נמחקו. הסקר מוכן להתחלה חדשה.',
+      });
+      setShowResetDialog(false);
+    },
+    onError: (error) => {
+      console.error('Reset votes error:', error);
+      toast({
+        title: 'שגיאה במחיקת הצבעות',
+        description: error.message || 'אנא נסה שוב מאוחר יותר',
+        variant: 'destructive'
+      });
+    }
+  });
 
   // Update poll mutation
   const updatePollMutation = useMutation({
@@ -243,6 +268,7 @@ export const EditPollPage: React.FC = () => {
   }
 
   const pollUrl = poll.slug ? `/poll/${poll.slug}` : `/poll/${poll.poll_id}`;
+  const hasVotes = poll.total_votes > 0;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -270,16 +296,29 @@ export const EditPollPage: React.FC = () => {
                 {poll.total_votes} הצבעות | {poll.current_consensus_points}/{poll.min_consensus_points_to_win} נק' חיבור
               </span>
             </div>
-            {poll.slug && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => window.open(pollUrl, '_blank')}
-              >
-                <ExternalLink className="h-4 w-4 ml-1" />
-                צפה בסקר
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {hasVotes && poll.status !== 'active' && (
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => setShowResetDialog(true)}
+                  disabled={resetVotesMutation.isPending}
+                >
+                  <RotateCcw className="h-4 w-4 ml-1" />
+                  איפוס הצבעות
+                </Button>
+              )}
+              {poll.slug && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.open(pollUrl, '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4 ml-1" />
+                  צפה בסקר
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -595,6 +634,18 @@ export const EditPollPage: React.FC = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      <ConfirmationDialog
+        open={showResetDialog}
+        onOpenChange={setShowResetDialog}
+        title="איפוס הצבעות בסקר"
+        description={`פעולה זו תמחק את כל ההצבעות (${poll.total_votes} הצבעות), הקבוצות, ונתוני הקבצה בסקר. ההצהרות יישארו ללא שינוי. פעולה זו בלתי הפיכה.`}
+        confirmText="מחק הצבעות"
+        cancelText="ביטול"
+        variant="destructive"
+        onConfirm={handleResetVotes}
+        isLoading={resetVotesMutation.isPending}
+      />
     </div>
   );
 };
