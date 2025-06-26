@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Poll } from '@/types/poll';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClusteringStatus } from '@/components/ClusteringStatus';
 import { LoadTestingPanel } from '@/components/LoadTestingPanel';
-import { AdvancedClusteringSettings } from '@/components/admin/AdvancedClusteringSettings';
+import { AdvancedClusteringSettings } from '@/components/admin/clustering/AdvancedClusteringSettings';
 import { 
   Settings, 
   BarChart3, 
