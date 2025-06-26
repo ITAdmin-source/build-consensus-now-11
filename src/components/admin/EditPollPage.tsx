@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -88,6 +89,11 @@ export const EditPollPage: React.FC = () => {
       const generatedSlug = generateSlug(title);
       form.setValue('slug', generatedSlug);
     }
+  };
+
+  // Add the missing handleResetVotes function
+  const handleResetVotes = () => {
+    resetVotesMutation.mutate();
   };
 
   // Reset votes mutation
