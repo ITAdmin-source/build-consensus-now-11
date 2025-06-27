@@ -239,7 +239,7 @@ serve(async (req) => {
       // PHASE 5: STORE RESULTS WITH VERIFICATION
       console.log('=== PHASE 5: STORING RESULTS ===')
       
-      await storeClusteringResults(supabase, poll_id, clusterResult, job.job_id)
+      await storeClusteringResults(supabase, poll_id, clusterResult, participants, votes, statementIds, job.job_id)
 
       // Verify stored results
       const { data: verifyGroups } = await supabase
@@ -707,7 +707,7 @@ function calculateClusteringMetrics(matrix: number[][], clusters: any[]): Record
   }
 }
 
-async function storeClusteringResults(supabase: any, pollId: string, result: ClusterResult, jobId: string) {
+async function storeClusteringResults(supabase: any, pollId: string, result: ClusterResult, participants: Participant[], votes: Vote[], statementIds: string[], jobId: string) {
   console.log('Storing clustering results in database')
   
   // Clear existing results
@@ -764,6 +764,22 @@ async function storeClusteringResults(supabase: any, pollId: string, result: Clu
     } else {
       console.log(`Inserted ${memberships.length} group memberships`)
     }
+
+    // Calculate and insert group statement statistics
+    console.log('=== CALCULATING GROUP STATEMENT STATISTICS ===')
+    const groupStatistics = calculateGroupStatementStats(insertedGroups, votes, statementIds, participants)
+    
+    if (groupStatistics.length > 0) {
+      const { error: statsError } = await supabase
+        .from('polis_group_statement_stats')
+        .insert(groupStatistics)
+
+      if (statsError) {
+        console.error('Error inserting group statement stats:', statsError)
+      } else {
+        console.log(`Inserted ${groupStatistics.length} group statement statistics`)
+      }
+    }
   }
 
   // Insert consensus points
@@ -803,6 +819,57 @@ async function storeClusteringResults(supabase: any, pollId: string, result: Clu
   }
 
   console.log('Clustering results storage completed')
+}
+
+function calculateGroupStatementStats(groups: any[], votes: Vote[], statementIds: string[], participants: Participant[]): any[] {
+  console.log('Calculating group statement statistics...')
+  const statistics = []
+  
+  // Create a mapping from session_id to group_id
+  const sessionToGroup = new Map<string, string>()
+  groups.forEach(group => {
+    const groupMembers = group.opinion_space_coords ? Object.keys(group.opinion_space_coords) : []
+    groupMembers.forEach(sessionId => {
+      sessionToGroup.set(sessionId, group.group_id)
+    })
+  })
+
+  // For each group and statement, calculate voting statistics
+  for (const group of groups) {
+    for (const statementId of statementIds) {
+      // Get all votes for this statement from group members
+      const groupVotes = votes.filter(vote => 
+        vote.statement_id === statementId && 
+        sessionToGroup.get(vote.session_id || 'anonymous') === group.group_id
+      )
+
+      if (groupVotes.length === 0) continue
+
+      const supportCount = groupVotes.filter(v => v.vote_value === 'support').length
+      const opposeCount = groupVotes.filter(v => v.vote_value === 'oppose').length
+      const unsureCount = groupVotes.filter(v => v.vote_value === 'unsure').length
+      const totalVotes = groupVotes.length
+
+      const supportPct = (supportCount / totalVotes) * 100
+      const opposePct = (opposeCount / totalVotes) * 100
+      const unsurePct = (unsureCount / totalVotes) * 100
+
+      statistics.push({
+        group_id: group.group_id,
+        statement_id: statementId,
+        poll_id: group.poll_id,
+        support_pct: supportPct,
+        oppose_pct: opposePct,
+        unsure_pct: unsurePct,
+        total_votes: totalVotes
+      })
+
+      console.log(`Group ${group.name} on statement ${statementId.slice(0, 8)}: ${supportPct.toFixed(1)}% support, ${opposePct.toFixed(1)}% oppose, ${unsurePct.toFixed(1)}% unsure (${totalVotes} votes)`)
+    }
+  }
+  
+  console.log(`Calculated statistics for ${statistics.length} group-statement combinations`)
+  return statistics
 }
 
 async function updateJobStatus(supabase: any, jobId: string, status: string, updates: any = {}) {
