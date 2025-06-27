@@ -1,4 +1,3 @@
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -57,7 +56,8 @@ serve(async (req) => {
       throw new Error('poll_id is required')
     }
 
-    console.log(`Starting clustering for poll: ${poll_id}`)
+    console.log(`=== CLUSTERING START for poll: ${poll_id} ===`)
+    console.log(`Force recalculate: ${force_recalculate}`)
 
     // Create clustering job
     const { data: job, error: jobError } = await supabase
@@ -70,7 +70,12 @@ serve(async (req) => {
       .select()
       .single()
 
-    if (jobError) throw jobError
+    if (jobError) {
+      console.error('Failed to create clustering job:', jobError)
+      throw jobError
+    }
+
+    console.log(`Created clustering job: ${job.job_id}`)
 
     try {
       // Update poll clustering status
@@ -82,19 +87,79 @@ serve(async (req) => {
         })
         .eq('poll_id', poll_id)
 
-      // Check cache first (unless force recalculate)
+      const startTime = Date.now()
+
+      // PHASE 1: PROPER VOTE COUNTING WITH DETAILED LOGGING
+      console.log('=== PHASE 1: LOADING VOTES AND STATEMENTS ===')
+      
+      const [votesResult, statementsResult] = await Promise.all([
+        supabase
+          .from('polis_votes')
+          .select('session_id, statement_id, vote_value, user_id')
+          .eq('poll_id', poll_id),
+        supabase
+          .from('polis_statements')
+          .select('statement_id')
+          .eq('poll_id', poll_id)
+          .eq('is_approved', true)
+      ])
+
+      if (votesResult.error) {
+        console.error('Error loading votes:', votesResult.error)
+        throw votesResult.error
+      }
+      if (statementsResult.error) {
+        console.error('Error loading statements:', statementsResult.error)
+        throw statementsResult.error
+      }
+
+      const votes: Vote[] = votesResult.data || []
+      const statements = statementsResult.data || []
+      const statementIds = statements.map(s => s.statement_id)
+
+      console.log(`Raw vote data loaded: ${votes.length} votes`)
+      console.log(`Approved statements: ${statementIds.length}`)
+      console.log(`Sample votes:`, votes.slice(0, 3))
+
+      // Count unique participants (prioritize session_id, fallback to user_id)
+      const participantSet = new Set<string>()
+      votes.forEach(vote => {
+        const participantId = vote.session_id || vote.user_id?.toString() || 'anonymous'
+        participantSet.add(participantId)
+      })
+
+      const participantCount = participantSet.size
+      console.log(`Unique participants found: ${participantCount}`)
+      console.log(`Participant IDs:`, Array.from(participantSet))
+
+      // Update job with actual counts
+      await supabase
+        .from('polis_clustering_jobs')
+        .update({
+          total_votes: votes.length,
+          total_participants: participantCount
+        })
+        .eq('job_id', job.job_id)
+
+      // PHASE 2: IMPROVED CACHE LOGIC
+      console.log('=== PHASE 2: CACHE VALIDATION ===')
+      
+      const cacheKey = `votes_${votes.length}_participants_${participantCount}_statements_${statementIds.length}`
+      console.log(`Generated cache key: ${cacheKey}`)
+
       if (!force_recalculate) {
         const { data: cachedResult } = await supabase
           .from('polis_cluster_cache')
           .select('*')
           .eq('poll_id', poll_id)
           .gt('expires_at', new Date().toISOString())
+          .eq('cache_key', cacheKey)
           .order('created_at', { ascending: false })
           .limit(1)
           .single()
 
         if (cachedResult) {
-          console.log('Using cached clustering result')
+          console.log('CACHE HIT: Using cached clustering result')
           await updateJobStatus(supabase, job.job_id, 'completed', {
             processing_time_ms: 0,
             groups_created: cachedResult.cluster_results.groups?.length || 0,
@@ -105,14 +170,21 @@ serve(async (req) => {
             success: true,
             cached: true,
             job_id: job.job_id,
-            result: cachedResult
+            result: cachedResult,
+            debug: {
+              votes_loaded: votes.length,
+              participants_found: participantCount,
+              cache_key: cacheKey
+            }
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           })
+        } else {
+          console.log('CACHE MISS: No valid cache found, proceeding with clustering')
         }
+      } else {
+        console.log('CACHE BYPASS: Force recalculate requested')
       }
-
-      const startTime = Date.now()
 
       // Get poll configuration
       const { data: poll } = await supabase
@@ -129,36 +201,29 @@ serve(async (req) => {
         min_group_size: 2
       }
 
-      // Load votes and statements
-      const [votesResult, statementsResult] = await Promise.all([
-        supabase
-          .from('polis_votes')
-          .select('session_id, statement_id, vote_value')
-          .eq('poll_id', poll_id),
-        supabase
-          .from('polis_statements')
-          .select('statement_id')
-          .eq('poll_id', poll_id)
-          .eq('is_approved', true)
-      ])
+      console.log('Clustering config:', config)
 
-      if (votesResult.error) throw votesResult.error
-      if (statementsResult.error) throw statementsResult.error
-
-      const votes: Vote[] = votesResult.data
-      const statements = statementsResult.data
-      const statementIds = statements.map(s => s.statement_id)
-
-      console.log(`Processing ${votes.length} votes from ${new Set(votes.map(v => v.session_id)).size} participants on ${statementIds.length} statements`)
-
-      // Build participant vote matrix
-      const participants = buildVoteMatrix(votes, statementIds)
-      
-      if (participants.length < poll.clustering_min_participants) {
-        throw new Error(`Not enough participants (${participants.length} < ${poll.clustering_min_participants})`)
+      // Check minimum participants requirement
+      const minParticipants = poll.clustering_min_participants || 2
+      if (participantCount < minParticipants) {
+        console.log(`Insufficient participants: ${participantCount} < ${minParticipants}`)
+        throw new Error(`Not enough participants (${participantCount} < ${minParticipants})`)
       }
 
-      // Perform advanced clustering with pol.is algorithm
+      // PHASE 3: FIXED VOTE MATRIX GENERATION
+      console.log('=== PHASE 3: BUILDING VOTE MATRIX ===')
+      
+      const participants = buildVoteMatrix(votes, statementIds)
+      console.log(`Vote matrix built with ${participants.length} participants`)
+      console.log(`Sample participant votes:`, participants[0]?.votes)
+      
+      if (participants.length === 0) {
+        throw new Error('No valid participants found after matrix generation')
+      }
+
+      // PHASE 4: CLUSTERING WITH DETAILED LOGGING
+      console.log('=== PHASE 4: PERFORMING CLUSTERING ===')
+      
       const clusterResult = await performAdvancedClustering(
         participants,
         statementIds,
@@ -166,11 +231,26 @@ serve(async (req) => {
         config
       )
 
-      // Store results in database
+      console.log(`Clustering completed: ${clusterResult.groups.length} groups created`)
+      clusterResult.groups.forEach((group, i) => {
+        console.log(`Group ${i + 1}: ${group.participants.length} participants`)
+      })
+
+      // PHASE 5: STORE RESULTS WITH VERIFICATION
+      console.log('=== PHASE 5: STORING RESULTS ===')
+      
       await storeClusteringResults(supabase, poll_id, clusterResult, job.job_id)
 
-      // Cache results
-      const cacheKey = generateCacheKey(votes.length, participants.length)
+      // Verify stored results
+      const { data: verifyGroups } = await supabase
+        .from('polis_groups')
+        .select('group_id, member_count')
+        .eq('poll_id', poll_id)
+
+      console.log('Verification - Groups stored:', verifyGroups?.length || 0)
+      verifyGroups?.forEach(g => console.log(`- Group ${g.group_id}: ${g.member_count} members`))
+
+      // Cache results with improved key
       const cacheExpiry = new Date()
       cacheExpiry.setMinutes(cacheExpiry.getMinutes() + (poll.clustering_cache_ttl_minutes || 60))
 
@@ -183,7 +263,7 @@ serve(async (req) => {
           cluster_results: { groups: clusterResult.groups },
           consensus_results: { consensus_points: clusterResult.consensus_points },
           opinion_space: clusterResult.opinion_space,
-          participant_count: participants.length,
+          participant_count: participantCount,
           vote_count: votes.length,
           expires_at: cacheExpiry.toISOString()
         })
@@ -196,7 +276,7 @@ serve(async (req) => {
         groups_created: clusterResult.groups.length,
         consensus_points_found: clusterResult.consensus_points.length,
         total_votes: votes.length,
-        total_participants: participants.length
+        total_participants: participantCount
       })
 
       // Update poll status
@@ -208,7 +288,7 @@ serve(async (req) => {
         })
         .eq('poll_id', poll_id)
 
-      console.log(`Clustering completed in ${processingTime}ms`)
+      console.log(`=== CLUSTERING COMPLETED in ${processingTime}ms ===`)
 
       return new Response(JSON.stringify({
         success: true,
@@ -216,7 +296,13 @@ serve(async (req) => {
         processing_time_ms: processingTime,
         groups_created: clusterResult.groups.length,
         consensus_points_found: clusterResult.consensus_points.length,
-        metrics: clusterResult.metrics
+        metrics: clusterResult.metrics,
+        debug: {
+          votes_loaded: votes.length,
+          participants_found: participantCount,
+          statements_count: statementIds.length,
+          cache_key: cacheKey
+        }
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -251,25 +337,30 @@ serve(async (req) => {
 })
 
 function buildVoteMatrix(votes: Vote[], statementIds: string[]): Participant[] {
+  console.log('Building vote matrix...')
   const participantMap = new Map<string, Participant>()
 
-  // Initialize participants
+  // Initialize participants with proper ID handling
   votes.forEach(vote => {
-    if (!participantMap.has(vote.session_id)) {
-      participantMap.set(vote.session_id, {
-        session_id: vote.session_id,
+    const participantId = vote.session_id || 'anonymous'
+    if (!participantMap.has(participantId)) {
+      participantMap.set(participantId, {
+        session_id: participantId,
         votes: {}
       })
     }
   })
 
+  console.log(`Initialized ${participantMap.size} participants`)
+
   // Fill vote matrix
   votes.forEach(vote => {
-    const participant = participantMap.get(vote.session_id)!
+    const participantId = vote.session_id || 'anonymous'
+    const participant = participantMap.get(participantId)!
     participant.votes[vote.statement_id] = voteToNumeric(vote.vote_value)
   })
 
-  // Fill missing votes with neutral (0) for now - could be improved with weighted averages
+  // Fill missing votes with neutral (0)
   const participants = Array.from(participantMap.values())
   participants.forEach(participant => {
     statementIds.forEach(statementId => {
@@ -279,6 +370,7 @@ function buildVoteMatrix(votes: Vote[], statementIds: string[]): Participant[] {
     })
   })
 
+  console.log(`Vote matrix completed with ${participants.length} participants and ${statementIds.length} statements`)
   return participants
 }
 
@@ -304,12 +396,21 @@ async function performAdvancedClustering(
     statementIds.map(sid => p.votes[sid] || 0)
   )
 
+  console.log(`Matrix dimensions: ${matrix.length} x ${matrix[0]?.length || 0}`)
+
   // Perform PCA-lite for dimensionality reduction
   const opinionSpace = performPCALite(matrix, participants.map(p => p.session_id))
 
   // Dynamic k-means clustering with optimal k selection
-  const optimalK = findOptimalK(matrix, poll.clustering_min_groups, poll.clustering_max_groups)
+  const minK = poll.clustering_min_groups || 2
+  const maxK = Math.min(poll.clustering_max_groups || 5, participants.length - 1)
+  const optimalK = findOptimalK(matrix, minK, maxK)
+  
+  console.log(`Optimal k selected: ${optimalK} (range: ${minK}-${maxK})`)
+  
   const clusters = performKMeansClustering(matrix, optimalK, config.min_group_size)
+
+  console.log(`K-means completed: ${clusters.length} clusters`)
 
   // Assign group metadata
   const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6']
@@ -329,12 +430,15 @@ async function performAdvancedClustering(
     clusters,
     statementIds,
     config.consensus_threshold,
-    poll.min_support_pct,
-    poll.max_opposition_pct
+    poll.min_support_pct || 50,
+    poll.max_opposition_pct || 50
   )
 
   // Calculate clustering metrics
   const metrics = calculateClusteringMetrics(matrix, clusters)
+
+  console.log(`Consensus points found: ${consensusPoints.length}`)
+  console.log(`Clustering metrics:`, metrics)
 
   return {
     groups,
@@ -347,9 +451,13 @@ async function performAdvancedClustering(
 function performPCALite(matrix: number[][], sessionIds: string[]): Record<string, [number, number]> {
   console.log('Performing PCA-lite for opinion space mapping')
   
-  // Simplified PCA - calculate means and basic 2D projection
   const n = matrix.length
-  const m = matrix[0].length
+  const m = matrix[0]?.length || 0
+  
+  if (n === 0 || m === 0) {
+    console.warn('Empty matrix for PCA')
+    return {}
+  }
   
   // Calculate column means
   const means = Array(m).fill(0)
@@ -382,11 +490,18 @@ function performPCALite(matrix: number[][], sessionIds: string[]): Record<string
 function findOptimalK(matrix: number[][], minK: number, maxK: number): number {
   console.log(`Finding optimal k between ${minK} and ${maxK}`)
   
+  if (matrix.length < minK) {
+    console.warn(`Not enough participants for clustering: ${matrix.length} < ${minK}`)
+    return Math.min(2, matrix.length)
+  }
+  
   let bestK = minK
   let bestSilhouette = -1
 
   for (let k = minK; k <= Math.min(maxK, matrix.length - 1); k++) {
     const clusters = performKMeansClustering(matrix, k, 1)
+    if (clusters.length === 0) continue
+    
     const avgSilhouette = clusters.reduce((sum, c) => sum + c.silhouette_score, 0) / clusters.length
     
     if (avgSilhouette > bestSilhouette) {
@@ -403,7 +518,12 @@ function performKMeansClustering(matrix: number[][], k: number, minGroupSize: nu
   console.log(`Performing k-means clustering with k=${k}`)
   
   const n = matrix.length
-  const m = matrix[0].length
+  const m = matrix[0]?.length || 0
+  
+  if (n === 0 || m === 0) {
+    console.warn('Cannot cluster empty matrix')
+    return []
+  }
   
   // Initialize centroids randomly
   let centroids = Array(k).fill(null).map(() => 
@@ -469,6 +589,7 @@ function performKMeansClustering(matrix: number[][], k: number, minGroupSize: nu
     }
   }).filter(cluster => cluster.participants.length >= minGroupSize)
   
+  console.log(`Clustering result: ${clusters.length} valid clusters`)
   return clusters
 }
 
@@ -597,12 +718,14 @@ async function storeClusteringResults(supabase: any, pollId: string, result: Clu
     supabase.from('polis_groups').delete().eq('poll_id', pollId)
   ])
 
+  console.log('Cleared existing clustering data')
+
   // Insert groups
   const { data: insertedGroups } = await supabase
     .from('polis_groups')
     .insert(result.groups.map(group => ({
       poll_id: pollId,
-      algorithm: 'advanced-kmeans-v1',
+      algorithm: 'advanced-kmeans-v2',
       name: group.name,
       description: group.description,
       color: group.color,
@@ -614,6 +737,8 @@ async function storeClusteringResults(supabase: any, pollId: string, result: Clu
       )
     })))
     .select()
+
+  console.log(`Inserted ${insertedGroups?.length || 0} groups`)
 
   // Insert group memberships
   if (insertedGroups) {
@@ -630,19 +755,31 @@ async function storeClusteringResults(supabase: any, pollId: string, result: Clu
       }
     }
     
-    await supabase
+    const { error: membershipError } = await supabase
       .from('polis_user_group_membership')
       .insert(memberships)
+
+    if (membershipError) {
+      console.error('Error inserting memberships:', membershipError)
+    } else {
+      console.log(`Inserted ${memberships.length} group memberships`)
+    }
   }
 
   // Insert consensus points
   if (result.consensus_points.length > 0) {
-    await supabase
+    const { error: consensusError } = await supabase
       .from('polis_consensus_points')
       .insert(result.consensus_points.map(statementId => ({
         statement_id: statementId,
         poll_id: pollId
       })))
+
+    if (consensusError) {
+      console.error('Error inserting consensus points:', consensusError)
+    } else {
+      console.log(`Inserted ${result.consensus_points.length} consensus points`)
+    }
   }
 
   // Store metrics
@@ -654,10 +791,18 @@ async function storeClusteringResults(supabase: any, pollId: string, result: Clu
   }))
 
   if (metricInserts.length > 0) {
-    await supabase
+    const { error: metricsError } = await supabase
       .from('polis_clustering_metrics')
       .insert(metricInserts)
+
+    if (metricsError) {
+      console.error('Error storing metrics:', metricsError)
+    } else {
+      console.log(`Stored ${metricInserts.length} clustering metrics`)
+    }
   }
+
+  console.log('Clustering results storage completed')
 }
 
 async function updateJobStatus(supabase: any, jobId: string, status: string, updates: any = {}) {
@@ -669,8 +814,4 @@ async function updateJobStatus(supabase: any, jobId: string, status: string, upd
       ...updates
     })
     .eq('job_id', jobId)
-}
-
-function generateCacheKey(voteCount: number, participantCount: number): string {
-  return `votes_${voteCount}_participants_${participantCount}_${Date.now()}`
 }
