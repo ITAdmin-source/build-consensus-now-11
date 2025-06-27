@@ -295,6 +295,7 @@ export type Database = {
           statement_id: string
           support_pct: number | null
           total_votes: number | null
+          unsure_pct: number | null
         }
         Insert: {
           group_id: string
@@ -303,6 +304,7 @@ export type Database = {
           statement_id: string
           support_pct?: number | null
           total_votes?: number | null
+          unsure_pct?: number | null
         }
         Update: {
           group_id?: string
@@ -311,6 +313,7 @@ export type Database = {
           statement_id?: string
           support_pct?: number | null
           total_votes?: number | null
+          unsure_pct?: number | null
         }
         Relationships: [
           {
