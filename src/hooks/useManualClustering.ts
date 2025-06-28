@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -16,9 +17,12 @@ export const useManualClustering = () => {
     try {
       console.log(`Triggering clustering for poll ${pollId} (force: ${forceRecalculate})`);
       
-      // Call the database function that will trigger the microservice
-      const { error } = await supabase.rpc('trigger_clustering_and_consensus', {
-        poll_id_param: pollId
+      // Call the Edge Function directly
+      const { data, error } = await supabase.functions.invoke('clustering-processor', {
+        body: {
+          poll_id: pollId,
+          force_recalculate: forceRecalculate
+        }
       });
 
       if (error) {
@@ -27,10 +31,13 @@ export const useManualClustering = () => {
         return;
       }
 
-      toast.success('הקיבוץ הופעל בהצלחה');
+      console.log('Clustering response:', data);
       
-      // The clustering will happen asynchronously via the microservice
-      // The UI will be updated via real-time subscriptions
+      if (data?.success) {
+        toast.success(`הקיבוץ הופעל בהצלחה! נוצרו ${data.groups_created} קבוצות ונמצאו ${data.consensus_points_found} נקודות הסכמה`);
+      } else {
+        toast.error('שגיאה בעיבוד הקיבוץ');
+      }
       
     } catch (error) {
       console.error('Error in manual clustering:', error);
