@@ -6,19 +6,13 @@ import { toast } from 'sonner';
 export const useManualClustering = () => {
   const [isRunning, setIsRunning] = useState(false);
 
-  const triggerClustering = async (pollId: string, forceRecalculate = false) => {
-    if (isRunning) {
-      toast.error('קיבוץ כבר רץ, אנא המתן');
-      return;
-    }
-
+  const triggerClustering = async (pollId: string, forceRecalculate: boolean = true) => {
     setIsRunning(true);
     
     try {
-      console.log(`Triggering clustering for poll ${pollId} (force: ${forceRecalculate})`);
+      console.log(`Manually triggering clustering for poll: ${pollId}`);
       
-      // Call the Edge Function directly
-      const { data, error } = await supabase.functions.invoke('clustering-processor', {
+      const { data, error } = await supabase.functions.invoke('clustering-engine', {
         body: {
           poll_id: pollId,
           force_recalculate: forceRecalculate
@@ -26,27 +20,33 @@ export const useManualClustering = () => {
       });
 
       if (error) {
-        console.error('Error triggering clustering:', error);
-        toast.error('שגיאה בהפעלת הקיבוץ');
-        return;
+        console.error('Clustering error:', error);
+        throw error;
       }
 
-      console.log('Clustering response:', data);
-      
-      if (data?.success) {
-        toast.success(`הקיבוץ הופעל בהצלחה! נוצרו ${data.groups_created} קבוצות ונמצאו ${data.consensus_points_found} נקודות הסכמה`);
+      if (data.success) {
+        const message = data.cached 
+          ? 'נעשה שימוש בתוצאות קיימות של הקבצה'
+          : `הקבצה הושלמה בהצלחה! נוצרו ${data.groups_created} קבוצות ונמצאו ${data.consensus_points_found} נקודות הסכמה`;
+        
+        toast.success(message);
+        
+        // Log debug information
+        if (data.debug) {
+          console.log('Clustering debug info:', data.debug);
+        }
+        
+        return data;
       } else {
-        toast.error('שגיאה בעיבוד הקיבוץ');
+        throw new Error(data.error || 'שגיאה בתהליך הקבצה');
       }
-      
     } catch (error) {
-      console.error('Error in manual clustering:', error);
-      toast.error('שגיאה בהפעלת הקיבוץ');
+      console.error('Manual clustering error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'שגיאה בהפעלת אלגוריתם הקבצה';
+      toast.error(`שגיאה בקבצה: ${errorMessage}`);
+      throw error;
     } finally {
-      // Keep the loading state for a bit to give user feedback
-      setTimeout(() => {
-        setIsRunning(false);
-      }, 2000);
+      setIsRunning(false);
     }
   };
 

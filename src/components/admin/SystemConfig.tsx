@@ -5,7 +5,6 @@ import { useToast } from '@/hooks/use-toast';
 import { getSystemSetting } from '@/integrations/supabase/settings';
 import { GeneralSettings } from './settings/GeneralSettings';
 import { CategoriesManagement } from './settings/CategoriesManagement';
-import { MicroserviceSettings } from './MicroserviceSettings';
 
 export const SystemConfig: React.FC = () => {
   const { toast } = useToast();
@@ -47,10 +46,9 @@ export const SystemConfig: React.FC = () => {
 
   return (
     <Tabs defaultValue="general" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="general" className="hebrew-text">הגדרות כלליות</TabsTrigger>
         <TabsTrigger value="categories" className="hebrew-text">ניהול קטגוריות</TabsTrigger>
-        <TabsTrigger value="microservice" className="hebrew-text">מיקרו-שירות</TabsTrigger>
       </TabsList>
 
       <TabsContent value="general" className="space-y-6">
@@ -62,10 +60,6 @@ export const SystemConfig: React.FC = () => {
 
       <TabsContent value="categories" className="space-y-6">
         <CategoriesManagement />
-      </TabsContent>
-
-      <TabsContent value="microservice" className="space-y-6">
-        <MicroserviceSettings />
       </TabsContent>
     </Tabs>
   );
