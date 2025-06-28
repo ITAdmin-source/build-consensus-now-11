@@ -254,6 +254,45 @@ export type Database = {
           },
         ]
       }
+      polis_clustering_queue: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          max_retries: number | null
+          poll_id: string
+          priority: number | null
+          queue_id: string
+          retry_count: number | null
+          started_at: string | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          max_retries?: number | null
+          poll_id: string
+          priority?: number | null
+          queue_id?: string
+          retry_count?: number | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          max_retries?: number | null
+          poll_id?: string
+          priority?: number | null
+          queue_id?: string
+          retry_count?: number | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       polis_consensus_points: {
         Row: {
           detected_at: string | null
@@ -295,6 +334,7 @@ export type Database = {
           statement_id: string
           support_pct: number | null
           total_votes: number | null
+          unsure_pct: number | null
         }
         Insert: {
           group_id: string
@@ -303,6 +343,7 @@ export type Database = {
           statement_id: string
           support_pct?: number | null
           total_votes?: number | null
+          unsure_pct?: number | null
         }
         Update: {
           group_id?: string
@@ -311,6 +352,7 @@ export type Database = {
           statement_id?: string
           support_pct?: number | null
           total_votes?: number | null
+          unsure_pct?: number | null
         }
         Relationships: [
           {
