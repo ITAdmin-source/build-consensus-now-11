@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,10 +15,13 @@ import {
   Settings,
   Database,
   Link,
-  Key
+  Key,
+  Rocket,
+  HelpCircle
 } from 'lucide-react';
 import { getSystemSetting, updateSystemSetting } from '@/integrations/supabase/settings';
 import { toast } from 'sonner';
+import { DeploymentGuide } from './DeploymentGuide';
 
 interface MicroserviceStatus {
   status: 'healthy' | 'unhealthy' | 'unknown';
@@ -179,15 +181,28 @@ export const MicroserviceSettings: React.FC = () => {
           <Server className="h-6 w-6" />
           מיקרו-שירות קיבוץ
         </h2>
-        {getStatusBadge()}
+        <div className="flex items-center gap-2">
+          {getStatusBadge()}
+          {status.status === 'unhealthy' && (
+            <Badge variant="outline" className="text-orange-600">
+              <HelpCircle className="h-3 w-3 ml-1" />
+              נדרש פריסה
+            </Badge>
+          )}
+        </div>
       </div>
 
-      <Tabs defaultValue="config" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="deployment" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="deployment">פריסה</TabsTrigger>
           <TabsTrigger value="config">הגדרות</TabsTrigger>
           <TabsTrigger value="status">סטטוס</TabsTrigger>
           <TabsTrigger value="queue">תור עבודות</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="deployment" className="space-y-4">
+          <DeploymentGuide />
+        </TabsContent>
 
         <TabsContent value="config" className="space-y-4">
           <Card>
@@ -207,11 +222,11 @@ export const MicroserviceSettings: React.FC = () => {
                   id="service-url"
                   value={serviceUrl}
                   onChange={(e) => setServiceUrl(e.target.value)}
-                  placeholder="http://localhost:8000"
+                  placeholder="https://your-app.railway.app"
                   dir="ltr"
                 />
                 <p className="text-sm text-muted-foreground">
-                  כתובת המיקרו-שירות לעיבוד קיבוץ
+                  כתובת המיקרו-שירות המפוריס (לא localhost!)
                 </p>
               </div>
 
@@ -229,7 +244,7 @@ export const MicroserviceSettings: React.FC = () => {
                   dir="ltr"
                 />
                 <p className="text-sm text-muted-foreground">
-                  טוקן לאימות עם המיקרו-שירות
+                  טוקן זהה למשתנה הסביבה CLUSTERING_TOKEN
                 </p>
               </div>
 
@@ -260,6 +275,20 @@ export const MicroserviceSettings: React.FC = () => {
                   בדוק חיבור
                 </Button>
               </div>
+
+              {status.status === 'unhealthy' && (
+                <div className="p-4 bg-orange-50 border border-orange-200 rounded-md">
+                  <div className="flex items-start gap-2">
+                    <Rocket className="h-5 w-5 text-orange-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-orange-900">נדרש פריסה</h4>
+                      <p className="text-sm text-orange-800 mt-1">
+                        המיקרו-שירות עדיין לא פרוס. עבור לטאב "פריסה" להתחלה.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
