@@ -1,4 +1,6 @@
 
+import seedrandom from 'https://esm.sh/seedrandom@3.0.5';
+
 export function findOptimalK(matrix: number[][], minK: number, maxK: number): number {
   console.log(`Finding optimal k between ${minK} and ${maxK}`)
   
@@ -26,17 +28,20 @@ export function findOptimalK(matrix: number[][], minK: number, maxK: number): nu
   return bestK
 }
 
-export function initializeCentroidsPlusPlus(matrix: number[][], k: number): number[][] {
+export function initializeCentroidsPlusPlus(matrix: number[][], k: number, seed?: string): number[][] {
+  // Initialize seeded random number generator if seed is provided
+  const rng = seed ? seedrandom(seed) : Math.random;
+  
   const centroids: number[][] = [];
   // 1) Choose first centroid at random
-  centroids.push(matrix[Math.floor(Math.random() * matrix.length)]);
+  centroids.push(matrix[Math.floor(rng() * matrix.length)]);
   // 2) Choose each subsequent centroid with probability ∝ squared distance
   while (centroids.length < k) {
     const distances = matrix.map(pt =>
       Math.min(...centroids.map(c => euclideanDistance(pt, c))) ** 2
     );
     const sum = distances.reduce((a, b) => a + b, 0);
-    let r = Math.random() * sum;
+    let r = rng() * sum;
     for (let i = 0; i < matrix.length; i++) {
       r -= distances[i];
       if (r <= 0) {
@@ -48,7 +53,7 @@ export function initializeCentroidsPlusPlus(matrix: number[][], k: number): numb
   return centroids;
 }
 
-export function performKMeansClustering(matrix: number[][], k: number, minGroupSize: number) {
+export function performKMeansClustering(matrix: number[][], k: number, minGroupSize: number, seed?: string) {
   console.log(`Performing k-means clustering with k=${k}`)
   
   const n = matrix.length
@@ -60,7 +65,7 @@ export function performKMeansClustering(matrix: number[][], k: number, minGroupS
   }
 
   // Initialize centroids with k-means++ for better seeding
-  let centroids = initializeCentroidsPlusPlus(matrix, k);
+  let centroids = initializeCentroidsPlusPlus(matrix, k, seed);
   
   let assignments = Array(n).fill(0)
   let iterations = 0

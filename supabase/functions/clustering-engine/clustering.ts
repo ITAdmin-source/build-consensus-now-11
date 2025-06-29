@@ -30,12 +30,17 @@ export async function performAdvancedClustering(
   
   console.log(`Optimal k selected: ${optimalK} (range: ${minK}-${maxK})`)
   
+  // Use deterministic seed for reproducible clustering results (optional)
+  const clusteringSeed = poll.clustering_seed || poll.poll_id;
+  
   // run k-means several times and pick the best by silhouette
   let bestClusters: any[] = []
   let bestSil = -Infinity
   const restarts = 3
   for (let i = 0; i < restarts; i++) {
-    const trial = performKMeansClustering(matrix, optimalK, config.min_group_size)
+    // Use different seeds for each restart to explore different solutions
+    const restartSeed = clusteringSeed ? `${clusteringSeed}-${i}` : undefined;
+    const trial = performKMeansClustering(matrix, optimalK, config.min_group_size, restartSeed)
     const sil = calculateClusteringMetrics(matrix, trial).silhouette_score
     console.log(`Restart ${i+1}/${restarts}: silhouette ${sil}`)
     if (sil > bestSil) {
