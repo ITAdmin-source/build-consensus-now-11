@@ -413,7 +413,7 @@ async function performAdvancedClustering(
 
   console.log(`Matrix dimensions: ${matrix.length} x ${matrix[0]?.length || 0}`)
 
-  // Perform PCA-lite for dimensionality reduction
+  // Perform PCA for dimensionality reduction
   const opinionSpace = performPCA(matrix, participants.map(p => p.session_id))
 
   // Dynamic k-means clustering with optimal k selection
