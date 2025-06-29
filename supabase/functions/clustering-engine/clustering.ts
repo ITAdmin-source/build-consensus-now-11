@@ -4,6 +4,7 @@ import { performPCA } from './pca.ts';
 import { findOptimalK, performKMeansClustering } from './kmeans.ts';
 import { detectAdvancedConsensus } from './consensus.ts';
 import { calculateClusteringMetrics } from './metrics.ts';
+import seedrandom from 'https://esm.sh/seedrandom@3.0.5';
 
 export async function performAdvancedClustering(
   participants: Participant[],
