@@ -149,9 +149,6 @@ serve(async (req) => {
       // PHASE 2: IMPROVED CACHE LOGIC
       console.log('=== PHASE 2: CACHE VALIDATION ===')
       
-//      const cacheKey = `votes_${votes.length}_participants_${participantCount}_statements_${statementIds.length}`
-//      console.log(`Generated cache key: ${cacheKey}`)
-
       // build an MD5 key based on every vote record
       const voteString = votes
         .map(v => `${v.session_id}|${v.statement_id}|${v.vote_value}`)
