@@ -114,7 +114,6 @@ const PollPage = () => {
         onViewResults={handleViewResults}
         onBackToHome={handleBackToHome}
         onSubmitStatement={handleSubmitStatement}
-        isLive={isLive}
       />
     );
   }
@@ -146,7 +145,6 @@ const PollPage = () => {
       onViewResults={handleViewResults}
       onBackToHome={handleBackToHome}
       onSubmitStatement={handleSubmitStatement}
-      isLive={isLive}
     />
   );
 };
