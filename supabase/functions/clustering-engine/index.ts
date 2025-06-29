@@ -2,7 +2,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { crypto } from 'https://deno.land/std@0.168.0/crypto/mod.ts'
-import { Vote, Participant, ClusteringConfig } from './types.ts'
+import { Vote, Participant, ClusteringConfig, ClusteringState } from './types.ts'
 import { buildVoteMatrix } from './vote-matrix.ts'
 import { performAdvancedClustering } from './clustering.ts'
 import { storeClusteringResults } from './storage.ts'
@@ -33,6 +33,23 @@ serve(async (req) => {
 
     console.log(`=== CLUSTERING START for poll: ${poll_id} ===`)
     console.log(`Force recalculate: ${force_recalculate}`)
+
+    // Load clustering state from KV store
+    let clusteringState: ClusteringState = {};
+    try {
+      const { data: stateData } = await supabase
+        .from('polis_kv_store')
+        .select('value')
+        .eq('key', 'clusteringState')
+        .single();
+      
+      if (stateData?.value) {
+        clusteringState = JSON.parse(stateData.value);
+        console.log('Loaded clustering state from KV store');
+      }
+    } catch (error) {
+      console.log('No existing clustering state found, using empty state');
+    }
 
     // Create clustering job
     const { data: job, error: jobError } = await supabase
@@ -216,13 +233,28 @@ serve(async (req) => {
         participants,
         statementIds,
         poll,
-        config
+        config,
+        clusteringState
       )
 
       console.log(`Clustering completed: ${clusterResult.groups.length} groups created`)
       clusterResult.groups.forEach((group, i) => {
         console.log(`Group ${i + 1}: ${group.participants.length} participants`)
       })
+
+      // Save updated clustering state to KV store
+      try {
+        await supabase
+          .from('polis_kv_store')
+          .upsert({
+            key: 'clusteringState',
+            value: JSON.stringify(clusteringState),
+            updated_at: new Date().toISOString()
+          });
+        console.log('Saved clustering state to KV store');
+      } catch (error) {
+        console.warn('Failed to save clustering state:', error);
+      }
 
       // PHASE 5: STORE RESULTS WITH VERIFICATION
       console.log('=== PHASE 5: STORING RESULTS ===')

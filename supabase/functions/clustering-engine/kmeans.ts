@@ -1,7 +1,6 @@
-
 import seedrandom from 'https://esm.sh/seedrandom@3.0.5';
 
-export function findOptimalK(matrix: number[][], minK: number, maxK: number): number {
+export function findOptimalK(matrix: number[][], minK: number, maxK: number, rng: () => number = Math.random): number {
   console.log(`Finding optimal k between ${minK} and ${maxK}`)
   
   if (matrix.length < minK) {
@@ -13,7 +12,7 @@ export function findOptimalK(matrix: number[][], minK: number, maxK: number): nu
   let bestSilhouette = -1
 
   for (let k = minK; k <= Math.min(maxK, matrix.length - 1); k++) {
-    const clusters = performKMeansClustering(matrix, k, 1, () => rng())
+    const clusters = performKMeansClustering(matrix, k, 1, rng)
     if (clusters.length === 0) continue
     
     const avgSilhouette = clusters.reduce((sum, c) => sum + c.silhouette_score, 0) / clusters.length
@@ -28,10 +27,7 @@ export function findOptimalK(matrix: number[][], minK: number, maxK: number): nu
   return bestK
 }
 
-export function initializeCentroidsPlusPlus(matrix: number[][], k: number, seed?: string): number[][] {
-  // Initialize seeded random number generator if seed is provided
-  const rng = seed ? seedrandom(seed) : Math.random;
-  
+export function initializeCentroidsPlusPlus(matrix: number[][], k: number, rng: () => number = Math.random): number[][] {
   const centroids: number[][] = [];
   // 1) Choose first centroid at random
   centroids.push(matrix[Math.floor(rng() * matrix.length)]);
@@ -57,9 +53,8 @@ export function performKMeansClustering(
   matrix: number[][],
   k: number,
   minGroupSize: number,
-  random: () => number) {
+  random: () => number = Math.random) {
 
-  
   console.log(`Performing k-means clustering with k=${k}`)
   
   const n = matrix.length

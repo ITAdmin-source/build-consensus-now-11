@@ -1,7 +1,6 @@
 
-import { Participant, ClusteringConfig, ClusterResult } from './types.ts';
-//import { performPCA } from './pca.ts';
-import { ClusteringState } from './types.ts';
+import { Participant, ClusteringConfig, ClusterResult, ClusteringState } from './types.ts';
+import { Matrix } from 'https://esm.sh/ml-matrix@6.10.4';
 import { findOptimalK, performKMeansClustering } from './kmeans.ts';
 import { detectAdvancedConsensus } from './consensus.ts';
 import { calculateClusteringMetrics } from './metrics.ts';
@@ -17,8 +16,10 @@ export async function performAdvancedClustering(
 
   console.log('Performing advanced clustering with pol.is algorithm')
 
-  // 1) seedable RNG
-  const rng = seedrandom(poll.random_seed || 'fixed-seed-123');
+  // 1) seedable RNG using poll-specific seed
+  const seed = poll.random_seed || poll.poll_id;
+  const rng = seedrandom(seed);
+  console.log(`Using RNG seed: ${seed}`);
   
   // Convert to matrix format for mathematical operations
   const matrix = participants.map(p => 
@@ -27,13 +28,14 @@ export async function performAdvancedClustering(
 
   console.log(`Matrix dimensions: ${matrix.length} x ${matrix[0]?.length || 0}`)
 
-
   // 2) Incremental PCA (recompute only when many new rows arrive)
   let components: [number[], number[]];
   const delta = participants.length - (state.prevParticipantCount || 0);
   if (state.prevComponents && delta < (poll.pca_update_interval || 10)) {
     components = state.prevComponents;
+    console.log('Using cached PCA components');
   } else {
+    console.log('Computing new PCA components');
     // exactly your existing eigen-decomp from pca.ts
     const dataMatrix = new Matrix(matrix);
     const means = dataMatrix.mean('column');
@@ -73,7 +75,7 @@ export async function performAdvancedClustering(
   // 4) Candidate K + smoothing
   const minK = poll.clustering_min_groups || 2;
   const maxK = Math.min(poll.clustering_max_groups || 5, participants.length - 1);
-  const rawCandidateK = findOptimalK(matrix, minK, maxK);
+  const rawCandidateK = findOptimalK(matrix, minK, maxK, () => rng());
   const thresh = config.k_switch_threshold || 4;
   if (rawCandidateK === state.prevK) {
     state.consecutiveKcount = (state.consecutiveKcount || 0) + 1;
@@ -83,7 +85,9 @@ export async function performAdvancedClustering(
   }
   const optimalK = state.consecutiveKcount! >= thresh
     ? state.prevK!
-    : (state.prevK!);
+    : rawCandidateK;
+
+  console.log(`Using optimal K: ${optimalK} (consecutive count: ${state.consecutiveKcount})`);
 
   // 5) Meta-cluster microCenters → final clusters
   const metaClusters = performKMeansClustering(
@@ -116,7 +120,7 @@ export async function performAdvancedClustering(
   // Advanced consensus detection
   const consensusPoints = detectAdvancedConsensus(
     matrix,
-    clusters,
+    metaClusters,
     statementIds,
     config.consensus_threshold,
     poll.min_support_pct || 50,
@@ -124,7 +128,7 @@ export async function performAdvancedClustering(
   )
 
   // Calculate clustering metrics
-  const metrics = calculateClusteringMetrics(matrix, clusters)
+  const metrics = calculateClusteringMetrics(matrix, metaClusters)
 
   console.log(`Consensus points found: ${consensusPoints.length}`)
   console.log(`Clustering metrics:`, metrics)

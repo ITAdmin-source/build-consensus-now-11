@@ -15,6 +15,15 @@ export interface ClusteringConfig {
   pca_dimensions: number;
   consensus_threshold: number;
   min_group_size: number;
+  micro_k?: number;
+  k_switch_threshold?: number;
+}
+
+export interface ClusteringState {
+  prevComponents?: [number[], number[]];
+  prevParticipantCount?: number;
+  prevK?: number;
+  consecutiveKcount?: number;
 }
 
 export interface ClusterResult {
