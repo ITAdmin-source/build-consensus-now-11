@@ -17,8 +17,8 @@ export const useManualClustering = () => {
     try {
       console.log(`Triggering clustering for poll ${pollId} (force: ${forceRecalculate})`);
       
-      // Call the Edge Function directly
-      const { data, error } = await supabase.functions.invoke('clustering-processor', {
+      // Call the advanced clustering engine
+      const { data, error } = await supabase.functions.invoke('clustering-engine', {
         body: {
           poll_id: pollId,
           force_recalculate: forceRecalculate
@@ -34,7 +34,10 @@ export const useManualClustering = () => {
       console.log('Clustering response:', data);
       
       if (data?.success) {
-        toast.success(`הקיבוץ הופעל בהצלחה! נוצרו ${data.groups_created} קבוצות ונמצאו ${data.consensus_points_found} נקודות הסכמה`);
+        const message = data.cached 
+          ? 'נעשה שימוש בתוצאות קיימות של הקבצה'
+          : `הקבצה הושלמה בהצלחה! נוצרו ${data.groups_created} קבוצות ונמצאו ${data.consensus_points_found} נקודות הסכמה`;
+        toast.success(message);
       } else {
         toast.error('שגיאה בעיבוד הקיבוץ');
       }

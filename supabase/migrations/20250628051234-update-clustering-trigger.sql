@@ -1,5 +1,5 @@
 
--- Update the clustering trigger to call the Edge Function instead of external microservice
+-- Update the clustering trigger to call the advanced clustering-engine
 CREATE OR REPLACE FUNCTION trigger_clustering_and_consensus(poll_id_param uuid)
 RETURNS void
 LANGUAGE plpgsql
@@ -45,9 +45,9 @@ BEGIN
   SET clustering_status = 'pending'
   WHERE poll_id = poll_id_param;
 
-  -- Call the clustering Edge Function
+  -- Call the advanced clustering-engine Edge Function
   PERFORM net.http_post(
-    url := 'https://reuddlnprvkpgiirxqhr.supabase.co/functions/v1/clustering-processor',
+    url := 'https://reuddlnprvkpgiirxqhr.supabase.co/functions/v1/clustering-engine',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJldWRkbG5wcnZrcGdpaXJ4cWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3Mjk5MDUsImV4cCI6MjA2MzMwNTkwNX0.50JCjMuJ6WRQcrNjojqlpYUqdlVOVaDIgoI3lp1nBEs'
@@ -59,9 +59,9 @@ BEGIN
   );
 
   -- Log for debugging
-  RAISE NOTICE 'Triggered clustering Edge Function for poll %', poll_id_param;
+  RAISE NOTICE 'Triggered advanced clustering-engine for poll %', poll_id_param;
   
 EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE 'Error calling clustering Edge Function: %', SQLERRM;
+  RAISE NOTICE 'Error calling clustering-engine: %', SQLERRM;
 END;
 $$;
