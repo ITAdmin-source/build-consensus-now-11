@@ -514,6 +514,30 @@ function findOptimalK(matrix: number[][], minK: number, maxK: number): number {
   return bestK
 }
 
+/** K-means++ centroid initialization */
+function initializeCentroidsPlusPlus(matrix: number[][], k: number): number[][] {
+  const centroids: number[][] = [];
+  // 1) Choose first centroid at random
+  centroids.push(matrix[Math.floor(Math.random() * matrix.length)]);
+  // 2) Choose each subsequent centroid with probability ∝ squared distance
+  while (centroids.length < k) {
+    const distances = matrix.map(pt =>
+      Math.min(...centroids.map(c => euclideanDistance(pt, c))) ** 2
+    );
+    const sum = distances.reduce((a, b) => a + b, 0);
+    let r = Math.random() * sum;
+    for (let i = 0; i < matrix.length; i++) {
+      r -= distances[i];
+      if (r <= 0) {
+        centroids.push(matrix[i]);
+        break;
+      }
+    }
+  }
+  return centroids;
+}
+
+
 function performKMeansClustering(matrix: number[][], k: number, minGroupSize: number) {
   console.log(`Performing k-means clustering with k=${k}`)
   
@@ -524,11 +548,15 @@ function performKMeansClustering(matrix: number[][], k: number, minGroupSize: nu
     console.warn('Cannot cluster empty matrix')
     return []
   }
-  
+
+  {/*
   // Initialize centroids randomly
   let centroids = Array(k).fill(null).map(() => 
     Array(m).fill(0).map(() => Math.random() * 2 - 1)
-  )
+  )*/}
+
+  // Initialize centroids with k-means++ for better seeding
+  let centroids = initializeCentroidsPlusPlus(matrix, k);
   
   let assignments = Array(n).fill(0)
   let iterations = 0
