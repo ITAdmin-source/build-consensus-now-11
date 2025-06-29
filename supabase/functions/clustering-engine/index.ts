@@ -149,9 +149,18 @@ serve(async (req) => {
       // PHASE 2: IMPROVED CACHE LOGIC
       console.log('=== PHASE 2: CACHE VALIDATION ===')
       
-      const cacheKey = `votes_${votes.length}_participants_${participantCount}_statements_${statementIds.length}`
-      console.log(`Generated cache key: ${cacheKey}`)
+//      const cacheKey = `votes_${votes.length}_participants_${participantCount}_statements_${statementIds.length}`
+//      console.log(`Generated cache key: ${cacheKey}`)
 
+      // build an MD5 key based on every vote record
+      const voteString = votes
+        .map(v => `${v.session_id}|${v.statement_id}|${v.vote_value}`)
+        .sort()
+        .join('\\n')
+      const digest = createHash('md5').update(voteString).toString()
+      const cacheKey = `votes_md5_${digest}`
+      console.log(`Generated cache key (MD5): ${cacheKey}`)
+      
       if (!force_recalculate) {
         const { data: cachedResult } = await supabase
           .from('polis_cluster_cache')
