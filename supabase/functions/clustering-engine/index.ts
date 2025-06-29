@@ -5,6 +5,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { createHash } from 'https://deno.land/std@0.168.0/hash/mod.ts'
 
+import numeric from 'https://esm.sh/numeric@1.2.6';
+
+
+
 // ── MODULE-SCOPE Supabase CLIENT ──
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -410,7 +414,7 @@ async function performAdvancedClustering(
   console.log(`Matrix dimensions: ${matrix.length} x ${matrix[0]?.length || 0}`)
 
   // Perform PCA-lite for dimensionality reduction
-  const opinionSpace = performPCALite(matrix, participants.map(p => p.session_id))
+  const opinionSpace = performPCA(matrix, participants.map(p => p.session_id))
 
   // Dynamic k-means clustering with optimal k selection
   const minK = poll.clustering_min_groups || 2
@@ -476,6 +480,25 @@ async function performAdvancedClustering(
     metrics
   }
 }
+
+function performPCA(matrix: number[][], sessionIds: string[]) {
+  // transpose
+  const M = numeric.transpose(matrix);
+  // covariance
+  const cov = numeric.div(numeric.dot(M, matrix), matrix.length - 1);
+  // eigen-decomposition
+  const E = numeric.eig(cov).E;   // columns are eigenvectors
+  const comp1 = E.map((row: number[]) => row[0]);
+  const comp2 = E.map((row: number[]) => row[1]);
+  const opinionSpace: Record<string,[number,number]> = {};
+  matrix.forEach((row, i) => {
+    const x = numeric.dot(row, comp1);
+    const y = numeric.dot(row, comp2);
+    opinionSpace[sessionIds[i]] = [x, y];
+  });
+  return opinionSpace;
+}
+
 
 function performPCALite(matrix: number[][], sessionIds: string[]): Record<string, [number, number]> {
   console.log('Performing PCA-lite for opinion space mapping')
