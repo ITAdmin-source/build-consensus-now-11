@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ParticipantsChart } from '@/components/ParticipantsChart';
 import { 
   Star, 
   Trophy, 
@@ -223,6 +223,9 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
               </div>
             </CardContent>
           </Card>
+
+          {/* Participants Visualization Chart */}
+          <ParticipantsChart groups={groups} />
         </div>
       </div>
     </TooltipProvider>
