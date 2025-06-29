@@ -13,7 +13,7 @@ export function findOptimalK(matrix: number[][], minK: number, maxK: number): nu
   let bestSilhouette = -1
 
   for (let k = minK; k <= Math.min(maxK, matrix.length - 1); k++) {
-    const clusters = performKMeansClustering(matrix, k, 1)
+    const clusters = performKMeansClustering(matrix, k, 1, () => rng())
     if (clusters.length === 0) continue
     
     const avgSilhouette = clusters.reduce((sum, c) => sum + c.silhouette_score, 0) / clusters.length
@@ -53,7 +53,13 @@ export function initializeCentroidsPlusPlus(matrix: number[][], k: number, seed?
   return centroids;
 }
 
-export function performKMeansClustering(matrix: number[][], k: number, minGroupSize: number, seed?: string) {
+export function performKMeansClustering(
+  matrix: number[][],
+  k: number,
+  minGroupSize: number,
+  random: () => number) {
+
+  
   console.log(`Performing k-means clustering with k=${k}`)
   
   const n = matrix.length
@@ -65,7 +71,7 @@ export function performKMeansClustering(matrix: number[][], k: number, minGroupS
   }
 
   // Initialize centroids with k-means++ for better seeding
-  let centroids = initializeCentroidsPlusPlus(matrix, k, seed);
+  let centroids = initializeCentroidsPlusPlus(matrix, k, random);
   
   let assignments = Array(n).fill(0)
   let iterations = 0
