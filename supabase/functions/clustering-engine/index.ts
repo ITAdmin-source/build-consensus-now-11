@@ -1,13 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { createHash } from 'https://deno.land/std@0.168.0/hash/mod.ts'
-
+import { crypto } from 'https://deno.land/std@0.168.0/crypto/mod.ts'
 import numeric from 'https://esm.sh/numeric@1.2.6';
-
-
 
 // ── MODULE-SCOPE Supabase CLIENT ──
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -158,7 +152,14 @@ serve(async (req) => {
         .map(v => `${v.session_id}|${v.statement_id}|${v.vote_value}`)
         .sort()
         .join('\\n')
-      const digest = createHash('md5').update(voteString).toString()
+      
+      // Use Deno's built-in crypto API for MD5
+      const encoder = new TextEncoder()
+      const data = encoder.encode(voteString)
+      const hashBuffer = await crypto.subtle.digest('MD5', data)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const digest = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+      
       const cacheKey = `votes_md5_${digest}`
       console.log(`Generated cache key (MD5): ${cacheKey}`)
       
@@ -439,10 +440,6 @@ async function performAdvancedClustering(
   console.log(`Selected best clustering after ${restarts} restarts (silhouette=${bestSil})`)
   const clusters = bestClusters
   
-
-
-
-  
   console.log(`K-means completed: ${clusters.length} clusters`)
 
   // Assign group metadata
@@ -498,7 +495,6 @@ function performPCA(matrix: number[][], sessionIds: string[]) {
   });
   return opinionSpace;
 }
-
 
 function performPCALite(matrix: number[][], sessionIds: string[]): Record<string, [number, number]> {
   console.log('Performing PCA-lite for opinion space mapping')
@@ -589,7 +585,6 @@ function initializeCentroidsPlusPlus(matrix: number[][], k: number): number[][] 
   return centroids;
 }
 
-
 function performKMeansClustering(matrix: number[][], k: number, minGroupSize: number) {
   console.log(`Performing k-means clustering with k=${k}`)
   
@@ -600,12 +595,6 @@ function performKMeansClustering(matrix: number[][], k: number, minGroupSize: nu
     console.warn('Cannot cluster empty matrix')
     return []
   }
-
-  {/*
-  // Initialize centroids randomly
-  let centroids = Array(k).fill(null).map(() => 
-    Array(m).fill(0).map(() => Math.random() * 2 - 1)
-  )*/}
 
   // Initialize centroids with k-means++ for better seeding
   let centroids = initializeCentroidsPlusPlus(matrix, k);
