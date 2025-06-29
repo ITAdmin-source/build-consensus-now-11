@@ -419,8 +419,28 @@ async function performAdvancedClustering(
   
   console.log(`Optimal k selected: ${optimalK} (range: ${minK}-${maxK})`)
   
-  const clusters = performKMeansClustering(matrix, optimalK, config.min_group_size)
+//  const clusters = performKMeansClustering(matrix, optimalK, config.min_group_size)
 
+  // run k-means several times and pick the best by silhouette
+  let bestClusters: any[] = []
+  let bestSil = -Infinity
+  const restarts = 3
+  for (let i = 0; i < restarts; i++) {
+    const trial = performKMeansClustering(matrix, optimalK, config.min_group_size)
+    const sil = calculateClusteringMetrics(matrix, trial).silhouette_score
+    console.log(`Restart ${i+1}/${restarts}: silhouette ${sil}`)
+    if (sil > bestSil) {
+      bestSil = sil
+      bestClusters = trial
+    }
+  }
+  console.log(`Selected best clustering after ${restarts} restarts (silhouette=${bestSil})`)
+  const clusters = bestClusters
+  
+
+
+
+  
   console.log(`K-means completed: ${clusters.length} clusters`)
 
   // Assign group metadata
