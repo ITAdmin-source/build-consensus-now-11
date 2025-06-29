@@ -419,8 +419,6 @@ async function performAdvancedClustering(
   
   console.log(`Optimal k selected: ${optimalK} (range: ${minK}-${maxK})`)
   
-//  const clusters = performKMeansClustering(matrix, optimalK, config.min_group_size)
-
   // run k-means several times and pick the best by silhouette
   let bestClusters: any[] = []
   let bestSil = -Infinity
