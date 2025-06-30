@@ -28,7 +28,6 @@ export const transformPollData = (
     topic: poll.topic || '',
     description: poll.description || '',
     category: poll.polis_poll_categories?.name || 'כללי',
-    category_id: poll.category_id,
     slug: poll.slug || '',
     end_time: poll.end_time,
     time_left: Math.max(0, timeLeft),
