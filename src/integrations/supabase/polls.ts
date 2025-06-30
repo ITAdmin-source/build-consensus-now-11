@@ -55,7 +55,7 @@ export const fetchActivePolls = async () => {
     // Get votes counts for all polls using the poll_id column
     const { data: votesData, error: votesError } = await supabase
       .from('polis_votes')
-      .select('poll_id')
+      .select('poll_id, session_id, user_id')
       .in('poll_id', pollIds);
 
     if (votesError) {
@@ -78,31 +78,58 @@ export const fetchActivePolls = async () => {
       return acc;
     }, {} as Record<string, number>) || {};
 
+    // Calculate unique participants for each poll
+    const participantsCounts = votesData?.reduce((acc, vote) => {
+      if (!acc[vote.poll_id]) {
+        acc[vote.poll_id] = new Set();
+      }
+      const participantId = vote.session_id || vote.user_id;
+      if (participantId) {
+        acc[vote.poll_id].add(participantId);
+      }
+      return acc;
+    }, {} as Record<string, Set<string>>) || {};
+
+    const participantsCountsNumbers = Object.keys(participantsCounts).reduce((acc, pollId) => {
+      acc[pollId] = participantsCounts[pollId].size;
+      return acc;
+    }, {} as Record<string, number>);
+
     console.log('Consensus counts:', consensusCounts);
     console.log('Statements counts:', statementsCounts);
     console.log('Votes counts:', votesCounts);
 
     // Transform the data to match our Poll interface
-    const transformedPolls = pollsData.map((poll): Poll => ({
-      poll_id: poll.poll_id,
-      title: poll.title,
-      topic: poll.topic || '',
-      description: poll.description || '',
-      // Ensure we properly get the category name from the joined table
-      category: poll.polis_poll_categories?.name || 'ללא קטגוריה',
-      end_time: poll.end_time,
-      min_consensus_points_to_win: poll.min_consensus_points_to_win || 3,
-      allow_user_statements: poll.allow_user_statements || false,
-      auto_approve_statements: poll.auto_approve_statements || false,
-      status: poll.status,
-      min_support_pct: poll.min_support_pct || 50,
-      max_opposition_pct: poll.max_opposition_pct || 50,
-      min_votes_per_group: poll.min_votes_per_group || 1,
-      current_consensus_points: consensusCounts[poll.poll_id] || 0,
-      total_statements: statementsCounts[poll.poll_id] || 0,
-      total_votes: votesCounts[poll.poll_id] || 0,
-      slug: poll.slug || ''
-    }));
+    const transformedPolls = pollsData.map((poll): Poll => {
+      const timeLeft = poll.end_time ? new Date(poll.end_time).getTime() - Date.now() : 0;
+      const isExpired = timeLeft <= 0;
+
+      return {
+        poll_id: poll.poll_id,
+        title: poll.title,
+        topic: poll.topic || '',
+        description: poll.description || '',
+        // Ensure we properly get the category name from the joined table
+        category: poll.polis_poll_categories?.name || 'ללא קטגוריה',
+        end_time: poll.end_time,
+        time_left: Math.max(0, timeLeft),
+        is_expired: isExpired,
+        min_consensus_points_to_win: poll.min_consensus_points_to_win || 3,
+        current_consensus_points: consensusCounts[poll.poll_id] || 0,
+        total_statements: statementsCounts[poll.poll_id] || 0,
+        total_votes: votesCounts[poll.poll_id] || 0,
+        total_participants: participantsCountsNumbers[poll.poll_id] || 0,
+        allow_user_statements: poll.allow_user_statements || false,
+        auto_approve_statements: poll.auto_approve_statements || false,
+        status: poll.status,
+        min_support_pct: poll.min_support_pct || 50,
+        max_opposition_pct: poll.max_opposition_pct || 50,
+        min_votes_per_group: poll.min_votes_per_group || 1,
+        slug: poll.slug || '',
+        created_at: poll.created_at || new Date().toISOString(),
+        created_by: poll.created_by
+      };
+    });
 
     console.log('Transformed polls:', transformedPolls);
     return transformedPolls;
@@ -148,9 +175,23 @@ export const fetchPollById = async (pollId: string) => {
         .eq('is_approved', true),
       supabase
         .from('polis_votes')
-        .select('vote_id')
+        .select('vote_id, session_id, user_id')
         .eq('poll_id', pollId)
     ]);
+
+    // Calculate unique participants
+    const uniqueParticipants = new Set();
+    if (votesData.data) {
+      votesData.data.forEach(vote => {
+        const participantId = vote.session_id || vote.user_id;
+        if (participantId) {
+          uniqueParticipants.add(participantId);
+        }
+      });
+    }
+
+    const timeLeft = data.end_time ? new Date(data.end_time).getTime() - Date.now() : 0;
+    const isExpired = timeLeft <= 0;
 
     const transformedPoll: Poll = {
       poll_id: data.poll_id,
@@ -159,17 +200,22 @@ export const fetchPollById = async (pollId: string) => {
       description: data.description || '',
       category: data.polis_poll_categories?.name || 'כללי',
       end_time: data.end_time,
+      time_left: Math.max(0, timeLeft),
+      is_expired: isExpired,
       min_consensus_points_to_win: data.min_consensus_points_to_win || 3,
+      current_consensus_points: consensusData.data?.length || 0,
+      total_statements: statementsData.data?.length || 0,
+      total_votes: votesData.data?.length || 0,
+      total_participants: uniqueParticipants.size,
       allow_user_statements: data.allow_user_statements || false,
       auto_approve_statements: data.auto_approve_statements || false,
       status: data.status,
       min_support_pct: data.min_support_pct || 50,
       max_opposition_pct: data.max_opposition_pct || 50,
       min_votes_per_group: data.min_votes_per_group || 1,
-      current_consensus_points: consensusData.data?.length || 0,
-      total_statements: statementsData.data?.length || 0,
-      total_votes: votesData.data?.length || 0,
-      slug: data.slug || '' // Add slug field
+      slug: data.slug || '',
+      created_at: data.created_at || new Date().toISOString(),
+      created_by: data.created_by
     };
 
     console.log('Transformed poll:', transformedPoll);
@@ -217,9 +263,23 @@ export const fetchPollBySlug = async (slug: string) => {
         .eq('is_approved', true),
       supabase
         .from('polis_votes')
-        .select('vote_id')
+        .select('vote_id, session_id, user_id')
         .eq('poll_id', data.poll_id)
     ]);
+
+    // Calculate unique participants
+    const uniqueParticipants = new Set();
+    if (votesData.data) {
+      votesData.data.forEach(vote => {
+        const participantId = vote.session_id || vote.user_id;
+        if (participantId) {
+          uniqueParticipants.add(participantId);
+        }
+      });
+    }
+
+    const timeLeft = data.end_time ? new Date(data.end_time).getTime() - Date.now() : 0;
+    const isExpired = timeLeft <= 0;
 
     const transformedPoll: Poll = {
       poll_id: data.poll_id,
@@ -228,17 +288,22 @@ export const fetchPollBySlug = async (slug: string) => {
       description: data.description || '',
       category: data.polis_poll_categories?.name || 'כללי',
       end_time: data.end_time,
+      time_left: Math.max(0, timeLeft),
+      is_expired: isExpired,
       min_consensus_points_to_win: data.min_consensus_points_to_win || 3,
+      current_consensus_points: consensusData.data?.length || 0,
+      total_statements: statementsData.data?.length || 0,
+      total_votes: votesData.data?.length || 0,
+      total_participants: uniqueParticipants.size,
       allow_user_statements: data.allow_user_statements || false,
       auto_approve_statements: data.auto_approve_statements || false,
       status: data.status,
       min_support_pct: data.min_support_pct || 50,
       max_opposition_pct: data.max_opposition_pct || 50,
       min_votes_per_group: data.min_votes_per_group || 1,
-      current_consensus_points: consensusData.data?.length || 0,
-      total_statements: statementsData.data?.length || 0,
-      total_votes: votesData.data?.length || 0,
-      slug: data.slug || ''
+      slug: data.slug || '',
+      created_at: data.created_at || new Date().toISOString(),
+      created_by: data.created_by
     };
 
     console.log('Transformed poll by slug:', transformedPoll);
@@ -293,7 +358,7 @@ export const fetchAllPolls = async () => {
     // Get votes counts for all polls
     const { data: votesData } = await supabase
       .from('polis_votes')
-      .select('poll_id')
+      .select('poll_id, session_id, user_id')
       .in('poll_id', pollIds);
 
     // Count occurrences for each poll
@@ -312,26 +377,53 @@ export const fetchAllPolls = async () => {
       return acc;
     }, {} as Record<string, number>) || {};
 
+    // Calculate unique participants for each poll
+    const participantsCounts = votesData?.reduce((acc, vote) => {
+      if (!acc[vote.poll_id]) {
+        acc[vote.poll_id] = new Set();
+      }
+      const participantId = vote.session_id || vote.user_id;
+      if (participantId) {
+        acc[vote.poll_id].add(participantId);
+      }
+      return acc;
+    }, {} as Record<string, Set<string>>) || {};
+
+    const participantsCountsNumbers = Object.keys(participantsCounts).reduce((acc, pollId) => {
+      acc[pollId] = participantsCounts[pollId].size;
+      return acc;
+    }, {} as Record<string, number>);
+
     // Transform the data to match our Poll interface
-    const transformedPolls = pollsData.map((poll): Poll => ({
-      poll_id: poll.poll_id,
-      title: poll.title,
-      topic: poll.topic || '',
-      description: poll.description || '',
-      category: poll.polis_poll_categories?.name || 'כללי',
-      end_time: poll.end_time,
-      min_consensus_points_to_win: poll.min_consensus_points_to_win || 3,
-      allow_user_statements: poll.allow_user_statements || false,
-      auto_approve_statements: poll.auto_approve_statements || false,
-      status: poll.status,
-      min_support_pct: poll.min_support_pct || 50,
-      max_opposition_pct: poll.max_opposition_pct || 50,
-      min_votes_per_group: poll.min_votes_per_group || 1,
-      current_consensus_points: consensusCounts[poll.poll_id] || 0,
-      total_statements: statementsCounts[poll.poll_id] || 0,
-      total_votes: votesCounts[poll.poll_id] || 0,
-      slug: poll.slug || '' // Add slug field
-    }));
+    const transformedPolls = pollsData.map((poll): Poll => {
+      const timeLeft = poll.end_time ? new Date(poll.end_time).getTime() - Date.now() : 0;
+      const isExpired = timeLeft <= 0;
+
+      return {
+        poll_id: poll.poll_id,
+        title: poll.title,
+        topic: poll.topic || '',
+        description: poll.description || '',
+        category: poll.polis_poll_categories?.name || 'כללי',
+        end_time: poll.end_time,
+        time_left: Math.max(0, timeLeft),
+        is_expired: isExpired,
+        min_consensus_points_to_win: poll.min_consensus_points_to_win || 3,
+        current_consensus_points: consensusCounts[poll.poll_id] || 0,
+        total_statements: statementsCounts[poll.poll_id] || 0,
+        total_votes: votesCounts[poll.poll_id] || 0,
+        total_participants: participantsCountsNumbers[poll.poll_id] || 0,
+        allow_user_statements: poll.allow_user_statements || false,
+        auto_approve_statements: poll.auto_approve_statements || false,
+        status: poll.status,
+        min_support_pct: poll.min_support_pct || 50,
+        max_opposition_pct: poll.max_opposition_pct || 50,
+        min_votes_per_group: poll.min_votes_per_group || 1,
+        slug: poll.slug || '',
+        created_at: poll.created_at || new Date().toISOString(),
+        created_by: poll.created_by
+      };
+    });
 
     console.log('All transformed polls:', transformedPolls);
     return transformedPolls;
