@@ -6,17 +6,22 @@ export interface Poll {
   description: string;
   category: string;
   end_time: string;
+  time_left: number;
+  is_expired: boolean;
   min_consensus_points_to_win: number;
+  current_consensus_points: number;
+  total_statements: number;
+  total_votes: number;
+  total_participants: number;
   allow_user_statements: boolean;
   auto_approve_statements: boolean;
   status: 'draft' | 'active' | 'closed';
   min_support_pct: number;
   max_opposition_pct: number;
   min_votes_per_group: number;
-  current_consensus_points: number;
-  total_statements: number;
-  total_votes: number;
   slug: string;
+  created_at: string;
+  created_by: string | null;
   // New clustering fields
   clustering_min_groups?: number;
   clustering_max_groups?: number;
