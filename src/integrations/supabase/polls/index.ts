@@ -31,29 +31,29 @@ export const fetchActivePolls = async (): Promise<Poll[]> => {
     const pollIds = pollsData.map(poll => poll.poll_id);
     console.log('Poll IDs:', pollIds);
 
-    // Get counts for all polls
+    // Get counts for all polls including participants
     const [consensusCounts, statementsCounts, votesCounts] = await Promise.all([
       getConsensusPointsCounts(pollIds),
       getStatementsCounts(pollIds),
       getVotesCounts(pollIds)
     ]);
 
-    console.log('Consensus counts:', consensusCounts);
-    console.log('Statements counts:', statementsCounts);
-    console.log('Votes counts:', votesCounts);
-
-    // Transform the data to match our Poll interface
-    const transformedPolls = pollsData.map((poll) => 
-      transformPollData(
-        poll,
-        consensusCounts[poll.poll_id] || 0,
-        statementsCounts[poll.poll_id] || 0,
-        votesCounts[poll.poll_id] || 0
-      )
+    // Get participant counts for each poll
+    const pollsWithParticipants = await Promise.all(
+      pollsData.map(async (poll) => {
+        const stats = await getPollStatistics(poll.poll_id);
+        return transformPollData(
+          poll,
+          consensusCounts[poll.poll_id] || 0,
+          statementsCounts[poll.poll_id] || 0,
+          votesCounts[poll.poll_id] || 0,
+          stats.participantsCount
+        );
+      })
     );
 
-    console.log('Transformed polls:', transformedPolls);
-    return transformedPolls;
+    console.log('Transformed polls with participants:', pollsWithParticipants);
+    return pollsWithParticipants;
   } catch (error) {
     console.error('Error in fetchActivePolls:', error);
     throw error;
@@ -76,10 +76,10 @@ export const fetchPollById = async (pollId: string): Promise<Poll | null> => {
       return null;
     }
 
-    // Get additional statistics
-    const { consensusCount, statementsCount, votesCount } = await getPollStatistics(data.poll_id);
+    // Get additional statistics including participants
+    const { consensusCount, statementsCount, votesCount, participantsCount } = await getPollStatistics(data.poll_id);
 
-    const transformedPoll = transformPollData(data, consensusCount, statementsCount, votesCount);
+    const transformedPoll = transformPollData(data, consensusCount, statementsCount, votesCount, participantsCount);
 
     console.log('Transformed poll:', transformedPoll);
     return transformedPoll;
@@ -105,10 +105,10 @@ export const fetchPollBySlug = async (slug: string): Promise<Poll | null> => {
       return null;
     }
 
-    // Get additional statistics
-    const { consensusCount, statementsCount, votesCount } = await getPollStatistics(data.poll_id);
+    // Get additional statistics including participants
+    const { consensusCount, statementsCount, votesCount, participantsCount } = await getPollStatistics(data.poll_id);
 
-    const transformedPoll = transformPollData(data, consensusCount, statementsCount, votesCount);
+    const transformedPoll = transformPollData(data, consensusCount, statementsCount, votesCount, participantsCount);
 
     console.log('Transformed poll by slug:', transformedPoll);
     return transformedPoll;
@@ -145,18 +145,22 @@ export const fetchAllPolls = async (): Promise<Poll[]> => {
       getVotesCounts(pollIds)
     ]);
 
-    // Transform the data to match our Poll interface
-    const transformedPolls = pollsData.map((poll) => 
-      transformPollData(
-        poll,
-        consensusCounts[poll.poll_id] || 0,
-        statementsCounts[poll.poll_id] || 0,
-        votesCounts[poll.poll_id] || 0
-      )
+    // Get participant counts for each poll
+    const pollsWithParticipants = await Promise.all(
+      pollsData.map(async (poll) => {
+        const stats = await getPollStatistics(poll.poll_id);
+        return transformPollData(
+          poll,
+          consensusCounts[poll.poll_id] || 0,
+          statementsCounts[poll.poll_id] || 0,
+          votesCounts[poll.poll_id] || 0,
+          stats.participantsCount
+        );
+      })
     );
 
-    console.log('All transformed polls:', transformedPolls);
-    return transformedPolls;
+    console.log('All transformed polls with participants:', pollsWithParticipants);
+    return pollsWithParticipants;
   } catch (error) {
     console.error('Error in fetchAllPolls:', error);
     throw error;

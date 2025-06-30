@@ -18,19 +18,21 @@ export const fetchGroupsByPollId = async (pollId: string): Promise<Group[]> => {
     return [];
   }
 
-  // Get member counts for each group using session_id instead of user_id
+  // Get member counts for each group (both session_id and user_id)
   const { data: membershipData, error: membershipError } = await supabase
     .from('polis_user_group_membership')
-    .select('group_id, session_id')
+    .select('group_id, session_id, user_id')
     .eq('poll_id', pollId);
 
   if (membershipError) {
     console.error('Error fetching group memberships:', membershipError);
   }
 
-  // Count members per group using session_id
+  // Count members per group using both session_id and user_id
   const memberCounts = (membershipData || []).reduce((acc, membership) => {
-    if (membership.session_id) {
+    // Count if either session_id or user_id is present
+    const participantId = membership.session_id || membership.user_id;
+    if (participantId) {
       acc[membership.group_id] = (acc[membership.group_id] || 0) + 1;
     }
     return acc;

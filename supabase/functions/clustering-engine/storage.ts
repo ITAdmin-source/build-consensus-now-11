@@ -49,10 +49,14 @@ export async function storeClusteringResults(
       const group = result.groups[i]
       const dbGroup = insertedGroups[i]
       for (const sessionId of group.participants) {
+        // Find the original vote to determine if this is a session_id or user_id
+        const originalVote = votes.find(v => v.session_id === sessionId || v.user_id === sessionId);
+        
         memberships.push({
           poll_id: pollId,
           group_id: dbGroup.group_id,
-          session_id: sessionId
+          session_id: originalVote?.session_id || null,
+          user_id: originalVote?.user_id || null
         })
       }
     }
@@ -127,12 +131,12 @@ export function calculateGroupStatementStats(groups: any[], votes: Vote[], state
   console.log('Calculating group statement statistics...')
   const statistics = []
   
-  // Create a mapping from session_id to group_id
-  const sessionToGroup = new Map<string, string>()
+  // Create a mapping from participant ID to group_id (handle both session_id and user_id)
+  const participantToGroup = new Map<string, string>()
   groups.forEach(group => {
     const groupMembers = group.opinion_space_coords ? Object.keys(group.opinion_space_coords) : []
-    groupMembers.forEach(sessionId => {
-      sessionToGroup.set(sessionId, group.group_id)
+    groupMembers.forEach(participantId => {
+      participantToGroup.set(participantId, group.group_id)
     })
   })
 
@@ -140,10 +144,12 @@ export function calculateGroupStatementStats(groups: any[], votes: Vote[], state
   for (const group of groups) {
     for (const statementId of statementIds) {
       // Get all votes for this statement from group members
-      const groupVotes = votes.filter(vote => 
-        vote.statement_id === statementId && 
-        sessionToGroup.get(vote.session_id || 'anonymous') === group.group_id
-      )
+      // Handle both session_id and user_id based votes
+      const groupVotes = votes.filter(vote => {
+        const participantId = vote.session_id || vote.user_id || 'anonymous'
+        return vote.statement_id === statementId && 
+               participantToGroup.get(participantId) === group.group_id
+      })
 
       if (groupVotes.length === 0) continue
 

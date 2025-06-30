@@ -81,7 +81,7 @@ export const getVotesCounts = async (pollIds: string[]) => {
 };
 
 export const getPollStatistics = async (pollId: string) => {
-  const [consensusData, statementsData, votesData] = await Promise.all([
+  const [consensusData, statementsData, votesData, participantsData] = await Promise.all([
     supabase
       .from('polis_consensus_points')
       .select('statement_id')
@@ -94,12 +94,30 @@ export const getPollStatistics = async (pollId: string) => {
     supabase
       .from('polis_votes')
       .select('vote_id')
+      .eq('poll_id', pollId),
+    // Count unique participants (both session_id and user_id)
+    supabase
+      .from('polis_votes')
+      .select('session_id, user_id')
       .eq('poll_id', pollId)
   ]);
+
+  // Calculate unique participants properly
+  const uniqueParticipants = new Set();
+  if (participantsData.data) {
+    participantsData.data.forEach(vote => {
+      // Use session_id if available, otherwise use user_id
+      const participantId = vote.session_id || vote.user_id;
+      if (participantId) {
+        uniqueParticipants.add(participantId);
+      }
+    });
+  }
 
   return {
     consensusCount: consensusData.data?.length || 0,
     statementsCount: statementsData.data?.length || 0,
-    votesCount: votesData.data?.length || 0
+    votesCount: votesData.data?.length || 0,
+    participantsCount: uniqueParticipants.size
   };
 };

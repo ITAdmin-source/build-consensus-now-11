@@ -5,9 +5,10 @@ export function buildVoteMatrix(votes: Vote[], statementIds: string[]): Particip
   console.log('Building vote matrix...')
   const participantMap = new Map<string, Participant>()
 
-  // Initialize participants with proper ID handling
+  // Initialize participants with proper ID handling (both session_id and user_id)
   votes.forEach(vote => {
-    const participantId = vote.session_id || 'anonymous'
+    // Use session_id if available, otherwise use user_id, fallback to 'anonymous'
+    const participantId = vote.session_id || vote.user_id?.toString() || 'anonymous'
     if (!participantMap.has(participantId)) {
       participantMap.set(participantId, {
         session_id: participantId,
@@ -20,7 +21,7 @@ export function buildVoteMatrix(votes: Vote[], statementIds: string[]): Particip
 
   // Fill vote matrix
   votes.forEach(vote => {
-    const participantId = vote.session_id || 'anonymous'
+    const participantId = vote.session_id || vote.user_id?.toString() || 'anonymous'
     const participant = participantMap.get(participantId)!
     participant.votes[vote.statement_id] = voteToNumeric(vote.vote_value)
   })
