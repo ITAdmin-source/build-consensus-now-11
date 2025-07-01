@@ -1,5 +1,4 @@
 
-
 import { supabase } from '../client';
 
 interface ResetPollResponse {
@@ -33,8 +32,8 @@ export const resetPollVotes = async (pollId: string) => {
 
     console.log('Reset poll data response:', data);
 
-    // Type assertion to handle the JSON response
-    const response = data as ResetPollResponse;
+    // Type assertion to handle the JSON response - first convert to unknown, then to our type
+    const response = data as unknown as ResetPollResponse;
 
     // Check if the function returned an error
     if (response && !response.success) {
@@ -53,4 +52,3 @@ export const resetPollVotes = async (pollId: string) => {
     throw error;
   }
 };
-
