@@ -1,5 +1,13 @@
 
+
 import { supabase } from '../client';
+
+interface ResetPollResponse {
+  success: boolean;
+  error?: string;
+  total_deleted?: number;
+  message?: string;
+}
 
 export const resetPollVotes = async (pollId: string) => {
   try {
@@ -25,20 +33,24 @@ export const resetPollVotes = async (pollId: string) => {
 
     console.log('Reset poll data response:', data);
 
+    // Type assertion to handle the JSON response
+    const response = data as ResetPollResponse;
+
     // Check if the function returned an error
-    if (data && !data.success) {
-      console.error('Function returned error:', data.error);
-      throw new Error(data.error);
+    if (response && !response.success) {
+      console.error('Function returned error:', response.error);
+      throw new Error(response.error);
     }
 
     console.log('Successfully reset all data for poll:', pollId);
-    if (data && data.total_deleted) {
-      console.log('Total records deleted:', data.total_deleted);
+    if (response && response.total_deleted) {
+      console.log('Total records deleted:', response.total_deleted);
     }
     
-    return { success: true, data };
+    return { success: true, data: response };
   } catch (error) {
     console.error('Error in resetPollVotes:', error);
     throw error;
   }
 };
+
