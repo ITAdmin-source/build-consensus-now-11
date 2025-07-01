@@ -973,6 +973,10 @@ export type Database = {
         Args: { _user_id: string; _removed_by: string }
         Returns: Json
       }
+      reset_poll_data: {
+        Args: { poll_id_param: string }
+        Returns: undefined
+      }
       trigger_clustering_and_consensus: {
         Args: { poll_id_param: string }
         Returns: undefined
