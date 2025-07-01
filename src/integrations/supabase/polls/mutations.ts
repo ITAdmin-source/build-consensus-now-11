@@ -13,7 +13,7 @@ export const resetPollVotes = async (pollId: string) => {
 
     console.log('Authenticated user:', user.id);
 
-    // Use a database transaction to ensure all operations succeed or fail together
+    // Call the database function that returns JSON with success/error info
     const { data, error } = await supabase.rpc('reset_poll_data', {
       poll_id_param: pollId
     });
@@ -23,8 +23,20 @@ export const resetPollVotes = async (pollId: string) => {
       throw error;
     }
 
+    console.log('Reset poll data response:', data);
+
+    // Check if the function returned an error
+    if (data && !data.success) {
+      console.error('Function returned error:', data.error);
+      throw new Error(data.error);
+    }
+
     console.log('Successfully reset all data for poll:', pollId);
-    return { success: true };
+    if (data && data.total_deleted) {
+      console.log('Total records deleted:', data.total_deleted);
+    }
+    
+    return { success: true, data };
   } catch (error) {
     console.error('Error in resetPollVotes:', error);
     throw error;
