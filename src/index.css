@@ -132,7 +132,7 @@
   }
 
   .vote-button {
-    @apply px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105;
+    @apply px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95;
   }
 
   .consensus-point {
@@ -141,5 +141,30 @@
 
   .timer-urgent {
     @apply text-red-500 animate-bounce-gentle;
+  }
+
+  /* Enhanced voting animations */
+  .vote-feedback {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .vote-feedback:active {
+    @apply scale-95 brightness-110;
+  }
+
+  .statement-transition-enter {
+    @apply opacity-0 transform translate-y-4 scale-95;
+  }
+
+  .statement-transition-enter-active {
+    @apply opacity-100 transform translate-y-0 scale-100 transition-all duration-300 ease-out;
+  }
+
+  .statement-transition-exit {
+    @apply opacity-100 transform translate-y-0 scale-100;
+  }
+
+  .statement-transition-exit-active {
+    @apply opacity-0 transform -translate-y-4 scale-95 transition-all duration-200 ease-in;
   }
 }

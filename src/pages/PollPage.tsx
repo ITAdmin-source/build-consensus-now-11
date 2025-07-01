@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { VotingPage } from '@/components/VotingPage';
 import { ResultsPage } from '@/components/ResultsPage';
@@ -7,7 +6,7 @@ import { submitVote } from '@/integrations/supabase/votes';
 import { submitUserStatement } from '@/integrations/supabase/statements';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { getUnvotedStatements, getNextStatementToVote } from '@/utils/statementUtils';
+import { StatementManager } from '@/utils/optimizedStatementUtils';
 import { useRealtimePollData } from '@/hooks/useRealtimePollData';
 
 const PollPage = () => {
@@ -15,8 +14,9 @@ const PollPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [currentView, setCurrentView] = useState<'voting' | 'results'>('voting');
+  const [isVoting, setIsVoting] = useState(false);
   
-  // Use the real-time hook instead of manual data loading
+  // Use the real-time hook
   const {
     poll,
     statements,
@@ -29,18 +29,32 @@ const PollPage = () => {
     isLive
   } = useRealtimePollData({ slug: slug || '' });
 
-  // Computed values for filtered statements
-  const unvotedStatements = getUnvotedStatements(statements, userVotes);
-  const currentStatement = getNextStatementToVote(statements, userVotes);
+  // Memoized statement manager for optimized performance
+  const statementManager = useMemo(() => {
+    if (statements.length === 0) return null;
+    return new StatementManager(statements, userVotes);
+  }, [statements, userVotes]);
+
+  const currentTransition = statementManager?.getCurrentTransition() || {
+    current: null,
+    next: null,
+    hasMore: false
+  };
 
   const handleVote = async (statementId: string, vote: string) => {
+    setIsVoting(true);
+    
     try {
       await submitVote(statementId, vote as 'support' | 'oppose' | 'unsure');
-      // Note: userVotes will be updated automatically via real-time subscription
       toast.success('ההצבעה נשמרה בהצלחה');
     } catch (error) {
       console.error('Error submitting vote:', error);
       toast.error('שגיאה בשמירת ההצבעה');
+    } finally {
+      // Add a small delay for smooth transition
+      setTimeout(() => {
+        setIsVoting(false);
+      }, 300);
     }
   };
 
@@ -76,7 +90,7 @@ const PollPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center animate-fade-in">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-lg hebrew-text">טוען סקר...</p>
         </div>
@@ -87,7 +101,7 @@ const PollPage = () => {
   if (error || !poll) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center animate-fade-in">
           <h1 className="text-2xl font-bold text-red-600 mb-4 hebrew-text">
             {error || 'סקר לא נמצא'}
           </h1>
@@ -106,14 +120,15 @@ const PollPage = () => {
     return (
       <VotingPage
         poll={poll}
-        currentStatement={currentStatement}
-        unvotedStatements={unvotedStatements}
+        currentStatement={currentTransition.current}
+        unvotedStatements={statements.filter(s => !userVotes[s.statement_id])}
         totalStatements={statements.length}
         userVoteCount={Object.keys(userVotes).length}
         onVote={handleVote}
         onViewResults={handleViewResults}
         onBackToHome={handleBackToHome}
         onSubmitStatement={handleSubmitStatement}
+        isVoting={isVoting}
       />
     );
   }
@@ -133,18 +148,19 @@ const PollPage = () => {
     );
   }
 
-  // Default to voting page
+  // Default fallback
   return (
     <VotingPage
       poll={poll}
-      currentStatement={currentStatement}
-      unvotedStatements={unvotedStatements}
+      currentStatement={currentTransition.current}
+      unvotedStatements={statements.filter(s => !userVotes[s.statement_id])}
       totalStatements={statements.length}
       userVoteCount={Object.keys(userVotes).length}
       onVote={handleVote}
       onViewResults={handleViewResults}
       onBackToHome={handleBackToHome}
       onSubmitStatement={handleSubmitStatement}
+      isVoting={isVoting}
     />
   );
 };

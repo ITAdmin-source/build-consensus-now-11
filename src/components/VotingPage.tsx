@@ -3,7 +3,7 @@ import React from 'react';
 import { NavigationHeader } from '@/components/NavigationHeader';
 import { PollHeader } from '@/components/PollHeader';
 import { VotingProgress } from '@/components/VotingProgress';
-import { VotingInterface } from '@/components/VotingInterface';
+import { OptimizedVotingInterface } from '@/components/OptimizedVotingInterface';
 import { Poll, Statement } from '@/types/poll';
 
 interface VotingPageProps {
@@ -16,6 +16,7 @@ interface VotingPageProps {
   onViewResults: () => void;
   onBackToHome: () => void;
   onSubmitStatement: (content: string, contentType: string) => void;
+  isVoting?: boolean;
 }
 
 export const VotingPage: React.FC<VotingPageProps> = ({
@@ -27,14 +28,15 @@ export const VotingPage: React.FC<VotingPageProps> = ({
   onVote,
   onViewResults,
   onBackToHome,
-  onSubmitStatement
+  onSubmitStatement,
+  isVoting = false
 }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <NavigationHeader currentPage="voting" />
       
       <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <div className="mb-4">
+        <div className="mb-4 animate-fade-in">
           <PollHeader
             poll={poll}
             currentPage="voting"
@@ -42,23 +44,28 @@ export const VotingPage: React.FC<VotingPageProps> = ({
           />
         </div>
         
-        <VotingProgress
-          poll={poll}
-          userVoteCount={userVoteCount}
-          totalStatements={totalStatements}
-          remainingStatements={unvotedStatements.length}
-        />
+        <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <VotingProgress
+            poll={poll}
+            userVoteCount={userVoteCount}
+            totalStatements={totalStatements}
+            remainingStatements={unvotedStatements.length}
+          />
+        </div>
         
-        <VotingInterface
-          poll={poll}
-          statement={currentStatement}
-          userVoteCount={userVoteCount}
-          totalStatements={totalStatements}
-          remainingStatements={unvotedStatements.length}
-          onVote={onVote}
-          onViewResults={onViewResults}
-          onSubmitStatement={onSubmitStatement}
-        />
+        <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <OptimizedVotingInterface
+            poll={poll}
+            statement={currentStatement}
+            userVoteCount={userVoteCount}
+            totalStatements={totalStatements}
+            remainingStatements={unvotedStatements.length}
+            onVote={onVote}
+            onViewResults={onViewResults}
+            onSubmitStatement={onSubmitStatement}
+            isVoting={isVoting}
+          />
+        </div>
       </div>
     </div>
   );
