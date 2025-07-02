@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -274,7 +273,6 @@ export const EditPollPage: React.FC = () => {
   }
 
   const pollUrl = poll.slug ? `/poll/${poll.slug}` : `/poll/${poll.poll_id}`;
-  const hasVotes = poll.total_votes > 0;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -303,17 +301,15 @@ export const EditPollPage: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {hasVotes && poll.status !== 'active' && (
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => setShowResetDialog(true)}
-                  disabled={resetVotesMutation.isPending}
-                >
-                  <RotateCcw className="h-4 w-4 ml-1" />
-                  איפוס הצבעות
-                </Button>
-              )}
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={() => setShowResetDialog(true)}
+                disabled={resetVotesMutation.isPending}
+              >
+                <RotateCcw className="h-4 w-4 ml-1" />
+                איפוס הצבעות
+              </Button>
               {poll.slug && (
                 <Button 
                   variant="outline" 
