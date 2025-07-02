@@ -177,11 +177,11 @@ export const getUnvotedStatements = (
   return statements.filter(statement => !userVotes[statement.statement_id]);
 };
 
-export const getNextStatementToVote = (
+export const getNextStatementToVote = async (
   statements: Statement[],
   userVotes: Record<string, string>
-): Statement | null => {
+): Promise<Statement | null> => {
   const manager = new StatementManager(statements, userVotes);
-  const transition = manager.getCurrentTransition();
-  return transition instanceof Promise ? null : transition.current;
+  const transition = await manager.getCurrentTransition();
+  return transition.current;
 };

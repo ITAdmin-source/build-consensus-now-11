@@ -4,7 +4,7 @@ import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats, Clustering
 import { fetchPollBySlug } from '@/integrations/supabase/polls';
 import { fetchStatementsByPollId } from '@/integrations/supabase/statements';
 import { fetchGroupsByPollId, fetchGroupStatsByPollId, fetchConsensusPointsByPollId } from '@/integrations/supabase/groups';
-import { fetchUserVotes } from '@/integrations/supabase/votes';
+import { getUserVotes } from '@/integrations/supabase/votes';
 import { toast } from 'sonner';
 
 interface UseRealtimePollDataProps {
@@ -82,7 +82,7 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
         fetchConsensusPointsByPollId(pollId),
         fetchGroupsByPollId(pollId),
         fetchGroupStatsByPollId(pollId),
-        fetchUserVotes(pollId)
+        getUserVotes(pollId)
       ]);
 
       if (pollData) setPoll(pollData);
@@ -124,7 +124,7 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
           fetchConsensusPointsByPollId(pollData.poll_id),
           fetchGroupsByPollId(pollData.poll_id),
           fetchGroupStatsByPollId(pollData.poll_id),
-          fetchUserVotes(pollData.poll_id)
+          getUserVotes(pollData.poll_id)
         ]);
 
         setPoll(pollData);
