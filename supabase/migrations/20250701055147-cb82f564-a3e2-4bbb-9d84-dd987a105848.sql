@@ -61,28 +61,38 @@ BEGIN
   GET DIAGNOSTICS affected_rows = ROW_COUNT;
   total_deleted := total_deleted + affected_rows;
 
-  -- 7. Delete clustering jobs
-  DELETE FROM polis_clustering_jobs WHERE poll_id = poll_id_param;
-  GET DIAGNOSTICS affected_rows = ROW_COUNT;
-  total_deleted := total_deleted + affected_rows;
-
-  -- 8. Delete clustering queue entries
+  -- 7. Delete clustering queue entries
   DELETE FROM polis_clustering_queue WHERE poll_id = poll_id_param;
   GET DIAGNOSTICS affected_rows = ROW_COUNT;
   total_deleted := total_deleted + affected_rows;
 
-  -- 9. Delete votes (main data)
+  -- 8. Delete votes (main data)
   DELETE FROM polis_votes WHERE poll_id = poll_id_param;
   GET DIAGNOSTICS affected_rows = ROW_COUNT;
   total_deleted := total_deleted + affected_rows;
 
-  -- 10. Update poll metadata to reset clustering status
+  -- 9. Delete statement weights
+  DELETE FROM polis_statement_weights WHERE poll_id = poll_id_param;
+  GET DIAGNOSTICS affected_rows = ROW_COUNT;
+  total_deleted := total_deleted + affected_rows;
+
+  -- 10. Delete participant vectors
+  DELETE FROM polis_participant_vectors WHERE poll_id = poll_id_param;
+  GET DIAGNOSTICS affected_rows = ROW_COUNT;
+  total_deleted := total_deleted + affected_rows;
+
+  -- 11. Update poll metadata to clear clustering job reference BEFORE deleting jobs
   UPDATE polis_polls
   SET 
     clustering_status = 'never_run',
     last_clustered_at = NULL,
     last_clustering_job_id = NULL
   WHERE poll_id = poll_id_param;
+
+  -- 12. Now delete clustering jobs (after clearing the foreign key reference)
+  DELETE FROM polis_clustering_jobs WHERE poll_id = poll_id_param;
+  GET DIAGNOSTICS affected_rows = ROW_COUNT;
+  total_deleted := total_deleted + affected_rows;
 
   RETURN json_build_object(
     'success', true,
