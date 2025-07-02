@@ -431,6 +431,44 @@ export type Database = {
           },
         ]
       }
+      polis_participant_vectors: {
+        Row: {
+          cluster_affinity: Json
+          last_updated: string
+          opinion_vector: Json
+          participant_id: string
+          poll_id: string
+          vector_id: string
+          vote_count: number
+        }
+        Insert: {
+          cluster_affinity?: Json
+          last_updated?: string
+          opinion_vector?: Json
+          participant_id: string
+          poll_id: string
+          vector_id?: string
+          vote_count?: number
+        }
+        Update: {
+          cluster_affinity?: Json
+          last_updated?: string
+          opinion_vector?: Json
+          participant_id?: string
+          poll_id?: string
+          vector_id?: string
+          vote_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_participant_vectors_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polis_polls"
+            referencedColumns: ["poll_id"]
+          },
+        ]
+      }
       polis_poll_categories: {
         Row: {
           category_id: string
@@ -542,6 +580,60 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "polis_clustering_jobs"
             referencedColumns: ["job_id"]
+          },
+        ]
+      }
+      polis_statement_weights: {
+        Row: {
+          calculated_at: string
+          combined_weight: number
+          consensus_potential: number
+          expires_at: string
+          pass_rate_penalty: number
+          poll_id: string
+          predictiveness: number
+          recency: number
+          statement_id: string
+          weight_id: string
+        }
+        Insert: {
+          calculated_at?: string
+          combined_weight?: number
+          consensus_potential?: number
+          expires_at?: string
+          pass_rate_penalty?: number
+          poll_id: string
+          predictiveness?: number
+          recency?: number
+          statement_id: string
+          weight_id?: string
+        }
+        Update: {
+          calculated_at?: string
+          combined_weight?: number
+          consensus_potential?: number
+          expires_at?: string
+          pass_rate_penalty?: number
+          poll_id?: string
+          predictiveness?: number
+          recency?: number
+          statement_id?: string
+          weight_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polis_statement_weights_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polis_polls"
+            referencedColumns: ["poll_id"]
+          },
+          {
+            foreignKeyName: "polis_statement_weights_statement_id_fkey"
+            columns: ["statement_id"]
+            isOneToOne: false
+            referencedRelation: "polis_statements"
+            referencedColumns: ["statement_id"]
           },
         ]
       }
@@ -880,6 +972,10 @@ export type Database = {
         Returns: undefined
       }
       cleanup_expired_cluster_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_statement_weights: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

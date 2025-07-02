@@ -1,150 +1,140 @@
 
 import { supabase } from './client';
-import { SessionManager } from '@/utils/sessionManager';
 
-export const submitVote = async (
-  statementId: string,
-  voteValue: 'support' | 'oppose' | 'unsure'
-) => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    // Get session ID for anonymous users or as fallback
-    const sessionId = SessionManager.getSessionId();
-    console.log('Submitting vote:', {
-      statementId,
-      voteValue,
-      user: user ? 'authenticated' : 'anonymous',
-      sessionId: user ? 'N/A' : sessionId
-    });
-    
-    // First, get the poll_id for this statement
-    const { data: statementData, error: statementError } = await supabase
-      .from('polis_statements')
-      .select('poll_id')
-      .eq('statement_id', statementId)
-      .single();
+export const submitVote = async (statementId: string, voteValue: 'support' | 'oppose' | 'unsure') => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // Get or create session ID for anonymous users
+  let sessionId = sessionStorage.getItem('session_id');
+  if (!sessionId) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem('session_id', sessionId);
+  }
 
-    if (statementError) {
-      console.error('Error fetching statement poll_id:', statementError);
-      throw statementError;
-    }
+  // Get statement details to find poll_id
+  const { data: statement, error: statementError } = await supabase
+    .from('polis_statements')
+    .select('poll_id')
+    .eq('statement_id', statementId)
+    .single();
 
-    const pollId = statementData.poll_id;
+  if (statementError) {
+    throw statementError;
+  }
 
-    // Determine if we should use user_id or session_id
-    const voteData = user 
-      ? { 
-          user_id: user.id, 
-          statement_id: statementId, 
-          vote_value: voteValue,
-          poll_id: pollId,
-          session_id: null // Explicitly set to null for authenticated users
-        }
-      : { 
-          session_id: sessionId, 
-          statement_id: statementId, 
-          vote_value: voteValue,
-          poll_id: pollId,
-          user_id: null // Explicitly set to null for anonymous users
-        };
+  const voteData = {
+    statement_id: statementId,
+    poll_id: statement.poll_id,
+    vote_value: voteValue,
+    user_id: user?.id || null,
+    session_id: user ? null : sessionId,
+  };
 
-    console.log('Vote data to insert:', voteData);
+  const { error } = await supabase
+    .from('polis_votes')
+    .insert(voteData);
 
-    // Check if user/session has already voted on this statement
-    const existingVoteQuery = user
-      ? supabase
-          .from('polis_votes')
-          .select('vote_id')
-          .eq('user_id', user.id)
-          .eq('statement_id', statementId)
-      : supabase
-          .from('polis_votes')
-          .select('vote_id')
-          .eq('session_id', sessionId)
-          .eq('statement_id', statementId);
-
-    const { data: existingVote, error: checkError } = await existingVoteQuery.maybeSingle();
-    
-    if (checkError) {
-      console.error('Error checking existing vote:', checkError);
-      throw checkError;
-    }
-
-    if (existingVote) {
-      console.log('Updating existing vote:', existingVote.vote_id);
-      // Update existing vote
-      const { error } = await supabase
-        .from('polis_votes')
-        .update({ vote_value: voteValue })
-        .eq('vote_id', existingVote.vote_id);
-
-      if (error) {
-        console.error('Error updating vote:', error);
-        throw error;
-      }
-      
-      console.log('Vote updated successfully');
-    } else {
-      console.log('Inserting new vote');
-      // Insert new vote
-      const { data: insertedVote, error } = await supabase
-        .from('polis_votes')
-        .insert(voteData)
-        .select();
-
-      if (error) {
-        console.error('Error submitting vote:', error);
-        console.error('Vote data that failed:', voteData);
-        throw error;
-      }
-      
-      console.log('Vote inserted successfully:', insertedVote);
-    }
-  } catch (error) {
-    console.error('Error in submitVote:', error);
+  if (error) {
     throw error;
+  }
+
+  // Optionally update participant vector for routing
+  try {
+    await updateParticipantVector(
+      statement.poll_id, 
+      user?.id || sessionId, 
+      statementId, 
+      voteValue
+    );
+  } catch (vectorError) {
+    // Don't fail the vote if vector update fails
+    console.warn('Failed to update participant vector:', vectorError);
   }
 };
 
-export const fetchUserVotes = async (pollId: string) => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    const sessionId = SessionManager.getSessionId();
+/**
+ * Update participant opinion vector for improved routing
+ */
+async function updateParticipantVector(
+  pollId: string, 
+  participantId: string, 
+  statementId: string, 
+  voteValue: 'support' | 'oppose' | 'unsure'
+) {
+  // Check if routing is enabled
+  const { data: routingEnabled } = await supabase
+    .from('polis_system_settings')
+    .select('setting_value')
+    .eq('setting_key', 'statement_routing_enabled')
+    .single();
+
+  if (!routingEnabled || routingEnabled.setting_value !== 'true') {
+    return; // Skip vector updates if routing is disabled
+  }
+
+  // Get current participant vector
+  const { data: existingVector } = await supabase
+    .from('polis_participant_vectors')
+    .select('*')
+    .eq('poll_id', pollId)
+    .eq('participant_id', participantId)
+    .single();
+
+  // Convert vote to numeric value for vector
+  const voteNumeric = voteValue === 'support' ? 1 : voteValue === 'oppose' ? -1 : 0;
+
+  if (existingVector) {
+    // Update existing vector
+    const currentVector = existingVector.opinion_vector as number[] || [];
+    const updatedVector = [...currentVector, voteNumeric];
     
-    console.log('Fetching user votes for poll:', pollId, 'user:', user ? 'authenticated' : 'anonymous');
-    
-    // Query votes based on whether user is authenticated or not
-    const votesQuery = user
-      ? supabase
-          .from('polis_votes')
-          .select('statement_id, vote_value')
-          .eq('user_id', user.id)
-          .eq('poll_id', pollId)
-      : supabase
-          .from('polis_votes')
-          .select('statement_id, vote_value')
-          .eq('session_id', sessionId)
-          .eq('poll_id', pollId);
+    await supabase
+      .from('polis_participant_vectors')
+      .update({
+        opinion_vector: updatedVector,
+        vote_count: existingVector.vote_count + 1,
+        last_updated: new Date().toISOString()
+      })
+      .eq('vector_id', existingVector.vector_id);
+  } else {
+    // Create new vector
+    await supabase
+      .from('polis_participant_vectors')
+      .insert({
+        poll_id: pollId,
+        participant_id: participantId,
+        opinion_vector: [voteNumeric],
+        vote_count: 1
+      });
+  }
+}
 
-    const { data, error } = await votesQuery;
+export const getUserVotes = async (pollId: string) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  const sessionId = sessionStorage.getItem('session_id');
 
-    if (error) {
-      console.error('Error fetching user votes:', error);
-      return {};
-    }
+  let query = supabase
+    .from('polis_votes')
+    .select('statement_id, vote_value')
+    .eq('poll_id', pollId);
 
-    console.log('Fetched votes:', data);
-
-    // Transform to Record<string, string> format
-    const votes: Record<string, string> = {};
-    data?.forEach(vote => {
-      votes[vote.statement_id] = vote.vote_value;
-    });
-
-    return votes;
-  } catch (error) {
-    console.error('Error in fetchUserVotes:', error);
+  if (user) {
+    query = query.eq('user_id', user.id);
+  } else if (sessionId) {
+    query = query.eq('session_id', sessionId);
+  } else {
     return {};
   }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching user votes:', error);
+    return {};
+  }
+
+  return data?.reduce((acc, vote) => {
+    acc[vote.statement_id] = vote.vote_value;
+    return acc;
+  }, {} as Record<string, string>) || {};
 };

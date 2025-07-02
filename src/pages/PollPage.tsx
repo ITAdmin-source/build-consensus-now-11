@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { VotingPage } from '@/components/VotingPage';
 import { ResultsPage } from '@/components/ResultsPage';
@@ -6,7 +7,7 @@ import { submitVote } from '@/integrations/supabase/votes';
 import { submitUserStatement } from '@/integrations/supabase/statements';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { StatementManager } from '@/utils/optimizedStatementUtils';
+import { StatementManager, StatementTransition } from '@/utils/optimizedStatementUtils';
 import { useRealtimePollData } from '@/hooks/useRealtimePollData';
 
 const PollPage = () => {
@@ -15,6 +16,11 @@ const PollPage = () => {
   const { user } = useAuth();
   const [currentView, setCurrentView] = useState<'voting' | 'results'>('voting');
   const [isVoting, setIsVoting] = useState(false);
+  const [currentTransition, setCurrentTransition] = useState<StatementTransition>({
+    current: null,
+    next: null,
+    hasMore: false
+  });
   
   // Use the real-time hook
   const {
@@ -29,23 +35,69 @@ const PollPage = () => {
     isLive
   } = useRealtimePollData({ slug: slug || '' });
 
-  // Memoized statement manager for optimized performance
+  // Enhanced statement manager with routing capabilities
   const statementManager = useMemo(() => {
     if (statements.length === 0) return null;
-    return new StatementManager(statements, userVotes);
-  }, [statements, userVotes]);
+    
+    // Get participant ID (session ID or user ID)
+    const participantId = user?.id || sessionStorage.getItem('session_id') || 'anonymous';
+    
+    const manager = new StatementManager(
+      statements, 
+      userVotes, 
+      poll?.poll_id,
+      participantId
+    );
+    
+    // Enable routing based on system settings (could be configured per poll)
+    // For now, we'll enable it by default for testing
+    manager.setRoutingEnabled(true);
+    
+    return manager;
+  }, [statements, userVotes, poll?.poll_id, user?.id]);
 
-  const currentTransition = statementManager?.getCurrentTransition() || {
-    current: null,
-    next: null,
-    hasMore: false
-  };
+  // Update current transition when statement manager changes
+  useEffect(() => {
+    if (statementManager) {
+      const updateTransition = async () => {
+        try {
+          const transition = await statementManager.getCurrentTransition();
+          setCurrentTransition(transition);
+        } catch (error) {
+          console.error('Failed to get weighted statement, using fallback:', error);
+          // Fallback to simple transition
+          const fallbackTransition = statementManager.getCurrentTransition();
+          if (fallbackTransition instanceof Promise) {
+            fallbackTransition.then(setCurrentTransition);
+          } else {
+            setCurrentTransition(fallbackTransition);
+          }
+        }
+      };
+      
+      updateTransition();
+    }
+  }, [statementManager]);
 
   const handleVote = async (statementId: string, vote: string) => {
     setIsVoting(true);
     
     try {
       await submitVote(statementId, vote as 'support' | 'oppose' | 'unsure');
+      
+      // Update statement manager optimistically
+      if (statementManager) {
+        const nextTransition = statementManager.moveToNext(statementId, vote);
+        
+        // For weighted routing, we need to fetch the next statement
+        if (nextTransition.current === null && nextTransition.hasMore) {
+          const freshTransition = await statementManager.getCurrentTransition();
+          setCurrentTransition(freshTransition);
+        } else {
+          setCurrentTransition(nextTransition);
+        }
+      }
+      
       toast.success('ההצבעה נשמרה בהצלחה');
     } catch (error) {
       console.error('Error submitting vote:', error);
