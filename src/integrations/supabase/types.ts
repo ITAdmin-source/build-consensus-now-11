@@ -9,6 +9,295 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      consensus_documents: {
+        Row: {
+          created_at: string
+          file_path: string | null
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          name: string
+          original_filename: string | null
+          process_id: string
+          size: string
+          storage_path: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          name: string
+          original_filename?: string | null
+          process_id: string
+          size: string
+          storage_path?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          name?: string
+          original_filename?: string | null
+          process_id?: string
+          size?: string
+          storage_path?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consensus_documents_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consensus_external_links: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          process_id: string
+          sort_order: number
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          process_id: string
+          sort_order: number
+          url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          process_id?: string
+          sort_order?: number
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consensus_external_links_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consensus_process_posts: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          display_date: string | null
+          id: string
+          is_published: boolean
+          post_type: string
+          process_id: string
+          published_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          display_date?: string | null
+          id?: string
+          is_published?: boolean
+          post_type?: string
+          process_id: string
+          published_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          display_date?: string | null
+          id?: string
+          is_published?: boolean
+          post_type?: string
+          process_id?: string
+          published_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consensus_process_posts_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consensus_processes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          documents: number
+          id: string
+          participants: number
+          progress: number
+          slug: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          documents?: number
+          id?: string
+          participants?: number
+          progress?: number
+          slug?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          documents?: number
+          id?: string
+          participants?: number
+          progress?: number
+          slug?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      consensus_team_members: {
+        Row: {
+          avatar: string | null
+          created_at: string
+          id: string
+          name: string
+          process_id: string
+          role: string
+        }
+        Insert: {
+          avatar?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          process_id: string
+          role: string
+        }
+        Update: {
+          avatar?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          process_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consensus_team_members_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consensus_timeline_phases: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          period_data: Json
+          period_type: string
+          phase: string
+          process_id: string
+          sort_order: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          period_data?: Json
+          period_type: string
+          phase: string
+          process_id: string
+          sort_order?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          period_data?: Json
+          period_type?: string
+          phase?: string
+          process_id?: string
+          sort_order?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consensus_timeline_phases_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consensus_user_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ideas: {
         Row: {
           appearances: number
@@ -989,6 +1278,10 @@ export type Database = {
       }
       generate_slug: {
         Args: { input_text: string }
+        Returns: string
+      }
+      generate_slug_from_title: {
+        Args: { title_text: string }
         Returns: string
       }
       get_all_users_with_roles: {
