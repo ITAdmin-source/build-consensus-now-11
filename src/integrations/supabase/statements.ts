@@ -54,6 +54,7 @@ export const fetchStatementsByPollId = async (pollId: string) => {
         poll_id: statement.poll_id,
         content_type: statement.content_type || 'text',
         content: statement.content,
+        more_info: statement.more_info || undefined, // Include the new more_info field
         is_user_suggested: statement.is_user_suggested || false,
         is_approved: statement.is_approved || false,
         is_consensus_point: (statement.polis_consensus_points?.length || 0) > 0,
@@ -73,7 +74,8 @@ export const fetchStatementsByPollId = async (pollId: string) => {
 export const submitUserStatement = async (
   pollId: string, 
   content: string, 
-  contentType: string = 'text'
+  contentType: string = 'text',
+  moreInfo?: string // Add optional moreInfo parameter
 ) => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -88,6 +90,7 @@ export const submitUserStatement = async (
         poll_id: pollId,
         content,
         content_type: contentType as 'text' | 'image' | 'audio' | 'video',
+        more_info: moreInfo || null, // Include more_info in the insert
         created_by_user_id: user.id,
         is_user_suggested: true,
         is_approved: false // Will need admin approval

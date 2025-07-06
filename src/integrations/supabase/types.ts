@@ -934,6 +934,7 @@ export type Database = {
           created_by_user_id: string | null
           is_approved: boolean | null
           is_user_suggested: boolean | null
+          more_info: string | null
           poll_id: string | null
           statement_id: string
         }
@@ -946,6 +947,7 @@ export type Database = {
           created_by_user_id?: string | null
           is_approved?: boolean | null
           is_user_suggested?: boolean | null
+          more_info?: string | null
           poll_id?: string | null
           statement_id?: string
         }
@@ -958,6 +960,7 @@ export type Database = {
           created_by_user_id?: string | null
           is_approved?: boolean | null
           is_user_suggested?: boolean | null
+          more_info?: string | null
           poll_id?: string | null
           statement_id?: string
         }

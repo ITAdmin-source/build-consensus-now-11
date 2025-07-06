@@ -4,6 +4,7 @@ import { Poll, Statement } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserStatementForm } from '@/components/UserStatementForm';
+import { StatementInfo } from '@/components/StatementInfo';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, HelpCircle, LogIn } from 'lucide-react';
@@ -112,9 +113,16 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
         
         <Card className={`poll-card transition-all duration-300 ${pendingVote ? 'scale-[0.98] opacity-80' : 'scale-100 opacity-100'} animate-scale-in`}>
           <CardHeader className="text-center pb-4">
-            <CardTitle className="text-2xl font-bold hebrew-text leading-relaxed mb-4">
-              {statement.content}
-            </CardTitle>
+            <div className="flex items-start justify-between mb-4">
+              <CardTitle className="text-2xl font-bold hebrew-text leading-relaxed flex-1 text-right">
+                {statement.content}
+              </CardTitle>
+              {statement.more_info && (
+                <div className="mr-2 flex-shrink-0">
+                  <StatementInfo moreInfo={statement.more_info} />
+                </div>
+              )}
+            </div>
           </CardHeader>
           
           <CardContent>

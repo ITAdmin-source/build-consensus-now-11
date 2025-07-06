@@ -1,4 +1,3 @@
-
 export interface Poll {
   poll_id: string;
   title: string;
@@ -43,6 +42,7 @@ export interface Statement {
   poll_id: string;
   content_type: 'text' | 'image' | 'audio' | 'video';
   content: string;
+  more_info?: string; // New optional field for additional information
   is_user_suggested: boolean;
   is_approved: boolean;
   is_consensus_point: boolean;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Check, X, Eye, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, X, Eye, AlertTriangle, Info } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchStatementsByPollId, submitUserStatement } from '@/integrations/supabase/statements';
 import { fetchPendingStatements, approveStatement, rejectStatement } from '@/integrations/supabase/admin';
@@ -23,6 +22,7 @@ interface StatementsManagementProps {
 
 export const StatementsManagement: React.FC<StatementsManagementProps> = ({ pollId }) => {
   const [newStatement, setNewStatement] = useState('');
+  const [newStatementMoreInfo, setNewStatementMoreInfo] = useState('');
   const [newStatementType, setNewStatementType] = useState<'text' | 'image' | 'audio' | 'video'>('text');
   const [selectedStatements, setSelectedStatements] = useState<string[]>([]);
   const [editingStatement, setEditingStatement] = useState<Statement | null>(null);
@@ -71,6 +71,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
         .insert({
           poll_id: pollId,
           content: content.trim(),
+          more_info: newStatementMoreInfo.trim() || null,
           content_type: newStatementType,
           created_by_user_id: user.id,
           is_user_suggested: false,
@@ -93,6 +94,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['statements', pollId] });
       setNewStatement('');
+      setNewStatementMoreInfo('');
       toast({
         title: 'הצהרה נוצרה',
         description: 'הצהרה חדשה נוספה לסקר',
@@ -201,8 +203,8 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
 
   // Update statement mutation
   const updateStatementMutation = useMutation({
-    mutationFn: async ({ statementId, content }: { statementId: string; content: string }) => {
-      console.log('Updating statement:', { statementId, content });
+    mutationFn: async ({ statementId, content, moreInfo }: { statementId: string; content: string; moreInfo?: string }) => {
+      console.log('Updating statement:', { statementId, content, moreInfo });
       
       if (!user) {
         throw new Error('User must be authenticated to update statements');
@@ -218,7 +220,10 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
 
       const { data, error } = await supabase
         .from('polis_statements')
-        .update({ content: content.trim() })
+        .update({ 
+          content: content.trim(),
+          more_info: moreInfo?.trim() || null
+        })
         .eq('statement_id', statementId)
         .select();
       
@@ -292,7 +297,8 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
     
     updateStatementMutation.mutate({
       statementId: editingStatement.statement_id,
-      content: editingStatement.content
+      content: editingStatement.content,
+      moreInfo: editingStatement.more_info
     });
   };
 
@@ -320,37 +326,55 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
           <CardTitle className="hebrew-text">יצירת הצהרה חדשה</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-1">
-              <Select value={newStatementType} onValueChange={(value: any) => setNewStatementType(value)}>
-                <SelectTrigger className="hebrew-text">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="text" className="hebrew-text">טקסט</SelectItem>
-                  <SelectItem value="image" className="hebrew-text">תמונה</SelectItem>
-                  <SelectItem value="audio" className="hebrew-text">שמע</SelectItem>
-                  <SelectItem value="video" className="hebrew-text">וידאו</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="md:col-span-1">
+                <Select value={newStatementType} onValueChange={(value: any) => setNewStatementType(value)}>
+                  <SelectTrigger className="hebrew-text">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text" className="hebrew-text">טקסט</SelectItem>
+                    <SelectItem value="image" className="hebrew-text">תמונה</SelectItem>
+                    <SelectItem value="audio" className="hebrew-text">שמע</SelectItem>
+                    <SelectItem value="video" className="hebrew-text">וידאו</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-2">
+                <Textarea
+                  value={newStatement}
+                  onChange={(e) => setNewStatement(e.target.value)}
+                  placeholder="הקלד את תוכן הההצהרה..."
+                  className="hebrew-text text-right"
+                />
+              </div>
+              <div>
+                <Button 
+                  onClick={handleCreateStatement} 
+                  className="w-full"
+                  disabled={createStatementMutation.isPending || !newStatement.trim()}
+                >
+                  <Plus className="h-4 w-4 ml-1" />
+                  {createStatementMutation.isPending ? 'מוסיף...' : 'הוסף הצהרה'}
+                </Button>
+              </div>
             </div>
-            <div className="md:col-span-2">
-              <Textarea
-                value={newStatement}
-                onChange={(e) => setNewStatement(e.target.value)}
-                placeholder="הקלד את תוכן הההצהרה..."
-                className="hebrew-text text-right"
-              />
-            </div>
+            {/* More Info field */}
             <div>
-              <Button 
-                onClick={handleCreateStatement} 
-                className="w-full"
-                disabled={createStatementMutation.isPending || !newStatement.trim()}
-              >
-                <Plus className="h-4 w-4 ml-1" />
-                {createStatementMutation.isPending ? 'מוסיף...' : 'הוסף הצהרה'}
-              </Button>
+              <label className="block text-sm font-medium text-gray-700 mb-2 hebrew-text">
+                מידע נוסף (אופציונלי)
+              </label>
+              <Textarea
+                value={newStatementMoreInfo}
+                onChange={(e) => setNewStatementMoreInfo(e.target.value)}
+                placeholder="הוסף מידע נוסף שיעזור למשתתפים להחליט כיצד להצביע..."
+                className="hebrew-text text-right min-h-[100px]"
+                rows={4}
+              />
+              <p className="text-xs text-gray-500 mt-1 hebrew-text">
+                מידע זה יוצג למשתתפים בלחיצה על סמל המידע ליד ההצהרה
+              </p>
             </div>
           </div>
         </CardContent>
@@ -381,6 +405,12 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
                   <div key={statement.statement_id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex-1">
                       <p className="hebrew-text text-right">{statement.content}</p>
+                      {statement.more_info && (
+                        <div className="mt-2 p-2 bg-blue-50 rounded border-r-4 border-blue-200">
+                          <p className="text-xs font-medium text-blue-800 hebrew-text mb-1">מידע נוסף:</p>
+                          <p className="text-sm text-blue-700 hebrew-text">{statement.more_info}</p>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant="outline" className="text-xs">
                           {statement.content_type === 'text' ? 'טקסט' : statement.content_type}
@@ -435,6 +465,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
               <TableRow>
                 <TableHead className="w-12"></TableHead>
                 <TableHead className="hebrew-text text-right">תוכן</TableHead>
+                <TableHead className="hebrew-text text-center">מידע נוסף</TableHead>
                 <TableHead className="hebrew-text text-center">סוג</TableHead>
                 <TableHead className="hebrew-text text-center">תמיכה</TableHead>
                 <TableHead className="hebrew-text text-center">התנגדות</TableHead>
@@ -462,6 +493,13 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
                   </TableCell>
                   <TableCell className="hebrew-text text-right max-w-xs">
                     <div className="truncate">{statement.content}</div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {statement.more_info ? (
+                      <Info className="h-4 w-4 text-blue-600 mx-auto" />
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     <Badge variant="outline" className="text-xs">
@@ -512,19 +550,38 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
       {/* Edit Statement Dialog */}
       {editingStatement && (
         <Dialog open={!!editingStatement} onOpenChange={() => setEditingStatement(null)}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle className="hebrew-text">עריכת הצהרה</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <Textarea
-                value={editingStatement.content}
-                onChange={(e) => setEditingStatement({
-                  ...editingStatement,
-                  content: e.target.value
-                })}
-                className="hebrew-text text-right"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 hebrew-text">תוכן ההצהרה</label>
+                <Textarea
+                  value={editingStatement.content}
+                  onChange={(e) => setEditingStatement({
+                    ...editingStatement,
+                    content: e.target.value
+                  })}
+                  className="hebrew-text text-right"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 hebrew-text">מידע נוסף (אופציונלי)</label>
+                <Textarea
+                  value={editingStatement.more_info || ''}
+                  onChange={(e) => setEditingStatement({
+                    ...editingStatement,
+                    more_info: e.target.value
+                  })}
+                  placeholder="הוסף מידע נוסף שיעזור למשתתפים להחליט כיצד להצביע..."
+                  className="hebrew-text text-right min-h-[100px]"
+                  rows={4}
+                />
+                <p className="text-xs text-gray-500 mt-1 hebrew-text">
+                  מידע זה יוצג למשתתפים בלחיצה על סמל המידע ליד ההצהרה
+                </p>
+              </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setEditingStatement(null)}>
                   ביטול
