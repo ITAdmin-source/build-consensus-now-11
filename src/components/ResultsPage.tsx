@@ -4,7 +4,7 @@ import { NavigationHeader } from '@/components/NavigationHeader';
 import { PollHeader } from '@/components/PollHeader';
 import { ResultsDashboard } from '@/components/ResultsDashboard';
 import { LiveIndicator } from '@/components/LiveIndicator';
-import { useManualClustering } from '@/hooks/useManualClustering';
+import { useSmartClustering } from '@/hooks/useSmartClustering';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
@@ -30,11 +30,14 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   onNavigateToVoting,
   isLive = false
 }) => {
-  const { triggerClustering, isRunning } = useManualClustering();
+  const { manualTrigger, isRunning, isChecking } = useSmartClustering({
+    pollId: poll.poll_id,
+    autoTrigger: true // Enable auto-clustering when visiting results page
+  });
 
   const handleManualClustering = async () => {
     try {
-      await triggerClustering(poll.poll_id, true);
+      await manualTrigger(true); // Force recalculation
       // The real-time system will automatically update the UI
     } catch (error) {
       console.error('Manual clustering failed:', error);
@@ -57,13 +60,13 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
           <div className="flex items-center gap-2">
             <Button
               onClick={handleManualClustering}
-              disabled={isRunning}
+              disabled={isRunning || isChecking}
               variant="outline"
               size="sm"
               className="hebrew-text"
             >
-              <RefreshCw className={`h-4 w-4 ml-2 ${isRunning ? 'animate-spin' : ''}`} />
-              {isRunning ? 'מעבד...' : 'רענן קבצה'}
+              <RefreshCw className={`h-4 w-4 ml-2 ${(isRunning || isChecking) ? 'animate-spin' : ''}`} />
+              {isRunning ? 'מעבד...' : isChecking ? 'בודק...' : 'רענן קבצה'}
             </Button>
             <LiveIndicator isLive={isLive} className="mr-2" />
           </div>
