@@ -51,11 +51,13 @@ export const fetchGroupsByPollId = async (pollId: string): Promise<Group[]> => {
     member_count: memberCounts[group.group_id] || 0,
     algorithm: group.algorithm || 'k-means',
     created_at: group.created_at || new Date().toISOString(),
-    // Map clustering-related fields from database
-    cluster_center: group.cluster_center || undefined,
-    silhouette_score: group.silhouette_score || undefined,
-    stability_score: group.stability_score || undefined,
-    opinion_space_coords: group.opinion_space_coords || undefined
+    // Map clustering-related fields from database with proper type casting
+    cluster_center: Array.isArray(group.cluster_center) ? group.cluster_center as number[] : undefined,
+    silhouette_score: typeof group.silhouette_score === 'number' ? group.silhouette_score : undefined,
+    stability_score: typeof group.stability_score === 'number' ? group.stability_score : undefined,
+    opinion_space_coords: (group.opinion_space_coords && typeof group.opinion_space_coords === 'object' && !Array.isArray(group.opinion_space_coords)) 
+      ? group.opinion_space_coords as Record<string, [number, number]> 
+      : undefined
   }));
 
   return transformedGroups;
