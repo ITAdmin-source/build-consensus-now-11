@@ -50,7 +50,12 @@ export const fetchGroupsByPollId = async (pollId: string): Promise<Group[]> => {
     color: groupColors[index % groupColors.length], // Cycle through distinct colors
     member_count: memberCounts[group.group_id] || 0,
     algorithm: group.algorithm || 'k-means',
-    created_at: group.created_at || new Date().toISOString()
+    created_at: group.created_at || new Date().toISOString(),
+    // Map clustering-related fields from database
+    cluster_center: group.cluster_center || undefined,
+    silhouette_score: group.silhouette_score || undefined,
+    stability_score: group.stability_score || undefined,
+    opinion_space_coords: group.opinion_space_coords || undefined
   }));
 
   return transformedGroups;
