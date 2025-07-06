@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Brain, RefreshCw, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { ClusteringJob } from '@/types/poll';
-import { useClusteringEngine } from '@/hooks/useClusteringEngine';
+import { useManualClustering } from '@/hooks/useManualClustering';
 import { formatDistanceToNow } from 'date-fns';
 import { he } from 'date-fns/locale';
 
@@ -23,7 +23,7 @@ export const ClusteringStatus: React.FC<ClusteringStatusProps> = ({
   isRunning,
   className = ''
 }) => {
-  const { triggerClustering, isRunning: isTriggering } = useClusteringEngine({ pollId });
+  const { triggerClustering, isRunning: isTriggering } = useManualClustering();
 
   const getStatusBadge = () => {
     if (!clusteringJob) {
@@ -71,7 +71,7 @@ export const ClusteringStatus: React.FC<ClusteringStatusProps> = ({
 
   const handleTriggerClustering = async () => {
     try {
-      await triggerClustering(false);
+      await triggerClustering(pollId, false);
     } catch (error) {
       // Error is already handled in the hook
     }
@@ -79,7 +79,7 @@ export const ClusteringStatus: React.FC<ClusteringStatusProps> = ({
 
   const handleForceReclustering = async () => {
     try {
-      await triggerClustering(true);
+      await triggerClustering(pollId, true);
     } catch (error) {
       // Error is already handled in the hook
     }
