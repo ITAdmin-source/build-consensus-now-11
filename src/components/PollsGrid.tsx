@@ -51,13 +51,13 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
       {/* Gaming Header */}
       <div className="text-center mb-12">
         <div className="flex justify-center items-center gap-4 mb-6">
-          <div className="w-12 h-12 bg-gradient-to-r from-[#1a305b] to-[#ec0081] rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 bg-[#66c8ca] rounded-full flex items-center justify-center">
             <Gamepad2 className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold hebrew-text bg-gradient-to-r from-[#1a305b] via-[#ec0081] to-[#66c8ca] bg-clip-text text-transparent">
+          <h2 className="text-3xl md:text-4xl font-bold hebrew-text text-[#66c8ca]">
             🎮 משחקים פעילים 🏆
           </h2>
-          <div className="w-12 h-12 bg-gradient-to-r from-[#ec0081] to-[#66c8ca] rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 bg-[#66c8ca] rounded-full flex items-center justify-center">
             <Zap className="h-6 w-6 text-white animate-pulse" />
           </div>
         </div>
@@ -78,8 +78,8 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
                   variant={selectedCategory === category ? "default" : "outline"}
                   className={`cursor-pointer px-4 py-2 text-sm font-medium hebrew-text transition-all duration-300 ${
                     selectedCategory === category
-                      ? 'bg-gradient-to-r from-[#1a305b] to-[#ec0081] text-white shadow-lg scale-105'
-                      : 'hover:bg-gradient-to-r hover:from-[#1a305b] hover:to-[#ec0081] hover:text-white hover:scale-105'
+                      ? 'bg-[#66c8ca] text-white shadow-lg scale-105 border-[#66c8ca]'
+                      : 'hover:bg-[#66c8ca] hover:text-white hover:scale-105 border-[#66c8ca]/30'
                   }`}
                   onClick={() => setSelectedCategory(category)}
                 >

@@ -18,33 +18,33 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ polls }) => {
       icon: Gamepad2,
       value: activeGames,
       label: 'משחקים פעילים',
-      color: 'from-[#1a305b] to-blue-600',
+      color: '#1a305b',
       bgColor: 'bg-blue-50',
-      iconColor: 'text-[#1a305b]'
+      borderColor: 'border-[#1a305b]/20'
     },
     {
       icon: Star,
       value: totalVictoryPoints,
       label: 'נקודות זכייה',
-      color: 'from-[#66c8ca] to-teal-600',
+      color: '#66c8ca',
       bgColor: 'bg-teal-50',
-      iconColor: 'text-[#66c8ca]'
+      borderColor: 'border-[#66c8ca]/20'
     },
     {
       icon: Medal,
       value: totalMoves,
       label: 'מהלכים',
-      color: 'from-[#ec0081] to-pink-600',
+      color: '#ec0081',
       bgColor: 'bg-pink-50',
-      iconColor: 'text-[#ec0081]'
+      borderColor: 'border-[#ec0081]/20'
     },
     {
       icon: Trophy,
       value: collectiveWins,
       label: 'ניצחונות קבוצתיים',
-      color: 'from-orange-500 to-yellow-600',
+      color: '#f59e0b',
       bgColor: 'bg-orange-50',
-      iconColor: 'text-orange-600'
+      borderColor: 'border-orange-300'
     }
   ];
 
@@ -57,12 +57,12 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ polls }) => {
             return (
               <div 
                 key={index}
-                className={`${stat.bgColor} rounded-xl p-6 text-center transform transition-all duration-300 hover:scale-105 hover:shadow-lg border border-gray-100`}
+                className={`${stat.bgColor} rounded-xl p-6 text-center transform transition-all duration-300 hover:scale-105 hover:shadow-lg border-2 ${stat.borderColor}`}
               >
-                <div className={`w-12 h-12 mx-auto mb-3 ${stat.bgColor} rounded-full flex items-center justify-center shadow-lg`}>
-                  <IconComponent className={`h-6 w-6 ${stat.iconColor}`} />
+                <div className={`w-12 h-12 mx-auto mb-3 ${stat.bgColor} rounded-full flex items-center justify-center shadow-lg border ${stat.borderColor}`}>
+                  <IconComponent className="h-6 w-6" style={{ color: stat.color }} />
                 </div>
-                <div className={`text-2xl md:text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mb-1`}>
+                <div className="text-2xl md:text-3xl font-bold mb-1" style={{ color: stat.color }}>
                   {stat.value.toLocaleString()}
                 </div>
                 <div className="text-xs md:text-sm text-gray-600 font-medium hebrew-text">

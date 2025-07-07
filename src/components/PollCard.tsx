@@ -26,12 +26,12 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
   return (
     <Card className="poll-card hebrew-text relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-2 border-gray-100 hover:border-[#ec0081]/30">
       {/* Gaming accent line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1a305b] via-[#ec0081] to-[#66c8ca]"></div>
+      <div className="absolute top-0 left-0 right-0 h-1 bg-[#ec0081]"></div>
       
       {/* Victory indicator */}
       {isWinning && (
         <div className="absolute top-4 left-4 z-10">
-          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 animate-pulse-slow">
+          <div className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 animate-pulse-slow">
             <Trophy className="h-3 w-3" />
             ניצחון!
           </div>
@@ -42,7 +42,7 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
         <div className="flex justify-between items-start mb-3">
           <Badge 
             variant="secondary" 
-            className="text-xs bg-gradient-to-r from-[#66c8ca]/20 to-[#1a305b]/20 text-[#1a305b] border border-[#66c8ca]/30"
+            className="text-xs bg-[#66c8ca]/20 text-[#66c8ca] border border-[#66c8ca]/30"
           >
             🎮 {poll.category || 'אתגר כללי'}
           </Badge>
@@ -51,7 +51,7 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
             <CountdownTimer endTime={poll.end_time} className="text-sm font-semibold" />
           </div>
         </div>
-        <CardTitle className="text-xl font-bold text-right leading-relaxed group-hover:text-[#1a305b] transition-colors">
+        <CardTitle className="text-xl font-bold text-right leading-relaxed group-hover:text-[#ec0081] transition-colors">
           {poll.title}
         </CardTitle>
         <p className="text-gray-600 text-right text-sm leading-relaxed">
@@ -75,12 +75,16 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
                 נקודות זכייה
               </span>
             </div>
-            <Progress 
-              value={progressPercentage} 
-              className="h-4 rounded-full bg-gray-100 overflow-hidden"
-            />
-            <div className="h-3 bg-gradient-to-r from-[#1a305b] via-[#ec0081] to-[#66c8ca] rounded-full transform -translate-y-7 opacity-80" 
-                 style={{ width: `${Math.min(progressPercentage, 100)}%` }}></div>
+            <div className="relative">
+              <Progress 
+                value={progressPercentage} 
+                className="h-4 rounded-full bg-gray-100"
+              />
+              <div 
+                className="absolute top-0 left-0 h-4 bg-[#ec0081] rounded-full transition-all duration-300" 
+                style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+              />
+            </div>
             
             {isWinning && (
               <div className="flex items-center gap-2 text-orange-600 text-sm font-bold animate-bounce-gentle">
@@ -105,7 +109,7 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
           {/* Play Button */}
           <Button 
             onClick={handleJoinPoll}
-            className="w-full py-4 text-lg font-bold bg-gradient-to-r from-[#1a305b] via-[#ec0081] to-[#66c8ca] hover:shadow-xl transform transition-all duration-300 hover:scale-105 active:scale-95 group-hover:animate-pulse-slow rounded-full"
+            className="w-full py-4 text-lg font-bold bg-[#ec0081] hover:bg-[#ec0081]/90 hover:shadow-xl transform transition-all duration-300 hover:scale-105 active:scale-95 rounded-full text-white"
             disabled={poll.status === 'closed'}
           >
             {poll.status === 'closed' ? (

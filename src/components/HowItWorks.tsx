@@ -13,24 +13,27 @@ export const HowItWorks: React.FC = () => {
       step: '1',
       title: 'בחרו את המיקום שלכם',
       description: 'קראו הצהרות בנושא וציינו: תומכים 👍, מתנגדים 👎, או לא בטוחים 🤔',
-      color: 'from-[#1a305b] to-blue-600',
-      bgColor: 'bg-blue-50'
+      color: '#1a305b',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-[#1a305b]/20'
     },
     {
       icon: Target,
       step: '2', 
       title: 'מצאו נקודות זכייה',
       description: 'המערכת מזהה הצהרות שזוכות לתמיכה רחבה מכל הקבוצות - אלו נקודות הזכייה!',
-      color: 'from-[#66c8ca] to-teal-600',
-      bgColor: 'bg-teal-50'
+      color: '#66c8ca',
+      bgColor: 'bg-teal-50',
+      borderColor: 'border-[#66c8ca]/20'
     },
     {
       icon: Trophy,
       step: '3',
       title: 'זכו יחד!',
       description: 'כשמוצאים מספיק נקודות זכייה לפני שהזמן נגמר - כולם מנצחים במשחק!',
-      color: 'from-[#ec0081] to-pink-600',
-      bgColor: 'bg-pink-50'
+      color: '#ec0081',
+      bgColor: 'bg-pink-50',
+      borderColor: 'border-[#ec0081]/20'
     }
   ];
 
@@ -39,10 +42,10 @@ export const HowItWorks: React.FC = () => {
       <CardContent className="p-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-[#1a305b] to-[#ec0081] rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#1a305b] rounded-full flex items-center justify-center">
               <Zap className="h-6 w-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold hebrew-text bg-gradient-to-r from-[#1a305b] to-[#ec0081] bg-clip-text text-transparent">
+            <h3 className="text-2xl font-bold hebrew-text text-[#1a305b]">
               חוקי המשחק
             </h3>
           </div>
@@ -73,17 +76,17 @@ export const HowItWorks: React.FC = () => {
               return (
                 <div 
                   key={index}
-                  className={`${rule.bgColor} rounded-2xl p-6 text-center space-y-4 transform transition-all duration-300 hover:scale-105 hover:shadow-lg border border-gray-200`}
+                  className={`${rule.bgColor} rounded-2xl p-6 text-center space-y-4 transform transition-all duration-300 hover:scale-105 hover:shadow-lg border-2 ${rule.borderColor}`}
                 >
                   <div className="relative">
-                    <div className={`w-16 h-16 mx-auto bg-gradient-to-r ${rule.color} rounded-full flex items-center justify-center shadow-lg`}>
+                    <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: rule.color }}>
                       <IconComponent className="h-8 w-8 text-white" />
                     </div>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center text-sm font-bold shadow-md">
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center text-sm font-bold shadow-md" style={{ color: rule.color }}>
                       {rule.step}
                     </div>
                   </div>
-                  <h4 className={`text-lg font-bold hebrew-text bg-gradient-to-r ${rule.color} bg-clip-text text-transparent`}>
+                  <h4 className="text-lg font-bold hebrew-text" style={{ color: rule.color }}>
                     {rule.title}
                   </h4>
                   <p className="text-sm text-gray-700 hebrew-text leading-relaxed">
