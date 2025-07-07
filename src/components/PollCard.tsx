@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Users, Target, Star, Copy, ExternalLink } from 'lucide-react';
+import { Users, Target, Star, Gamepad2, Trophy, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PollCardProps {
@@ -23,67 +23,102 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
     onJoinPoll(poll.slug || poll.poll_id);
   };
 
-  // Debug logging to see what category value we're getting
-  console.log('Poll category:', poll.category, 'for poll:', poll.title);
-
   return (
-    <Card className="poll-card hebrew-text">
-      <CardHeader className="pb-4">
-        <div className="flex justify-between items-start mb-2">
-          <Badge variant="secondary" className="text-xs">
-            {poll.category || 'ללא קטגוריה'}
-          </Badge>
-          <CountdownTimer endTime={poll.end_time} className="text-sm" />
+    <Card className="poll-card hebrew-text relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-2 border-gray-100 hover:border-[#ec0081]/30">
+      {/* Gaming accent line */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1a305b] via-[#ec0081] to-[#66c8ca]"></div>
+      
+      {/* Victory indicator */}
+      {isWinning && (
+        <div className="absolute top-4 left-4 z-10">
+          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 animate-pulse-slow">
+            <Trophy className="h-3 w-3" />
+            ניצחון!
+          </div>
         </div>
-        <CardTitle className="text-xl font-bold text-right leading-relaxed">
+      )}
+
+      <CardHeader className="pb-4">
+        <div className="flex justify-between items-start mb-3">
+          <Badge 
+            variant="secondary" 
+            className="text-xs bg-gradient-to-r from-[#66c8ca]/20 to-[#1a305b]/20 text-[#1a305b] border border-[#66c8ca]/30"
+          >
+            🎮 {poll.category || 'אתגר כללי'}
+          </Badge>
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-[#ec0081] animate-pulse" />
+            <CountdownTimer endTime={poll.end_time} className="text-sm font-semibold" />
+          </div>
+        </div>
+        <CardTitle className="text-xl font-bold text-right leading-relaxed group-hover:text-[#1a305b] transition-colors">
           {poll.title}
         </CardTitle>
-        <p className="text-muted-foreground text-right text-sm leading-relaxed">
+        <p className="text-gray-600 text-right text-sm leading-relaxed">
           {poll.description}
         </p>
       </CardHeader>
       
       <CardContent>
-        <div className="space-y-4">
-          {/* Progress Section */}
-          <div className="space-y-2">
+        <div className="space-y-5">
+          {/* Victory Progress Section */}
+          <div className="space-y-3">
             <div className="flex justify-between items-center text-sm">
-              <span className="flex items-center gap-1">
-                <Target className="h-4 w-4" />
-                {poll.current_consensus_points}/{poll.min_consensus_points_to_win}
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-[#66c8ca]" />
+                <span className="font-semibold">
+                  {poll.current_consensus_points}/{poll.min_consensus_points_to_win}
+                </span>
+              </div>
+              <span className="text-gray-600 flex items-center gap-1">
+                <Trophy className="h-4 w-4" />
+                נקודות זכייה
               </span>
-              <span className="text-muted-foreground">נקודות חיבור</span>
             </div>
             <Progress 
               value={progressPercentage} 
-              className="h-3 consensus-gradient"
+              className="h-4 rounded-full bg-gray-100 overflow-hidden"
             />
+            <div className="h-3 bg-gradient-to-r from-[#1a305b] via-[#ec0081] to-[#66c8ca] rounded-full transform -translate-y-7 opacity-80" 
+                 style={{ width: `${Math.min(progressPercentage, 100)}%` }}></div>
+            
             {isWinning && (
-              <div className="flex items-center gap-2 text-consensus-600 text-sm font-semibold">
+              <div className="flex items-center gap-2 text-orange-600 text-sm font-bold animate-bounce-gentle">
                 <Star className="h-4 w-4 fill-current" />
-                <span>ניצחון קבוצתי!</span>
+                <span>🏆 ניצחון קבוצתי מושג!</span>
               </div>
             )}
           </div>
 
-          {/* Stats */}
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              <span>{poll.total_votes} הצבעות</span>
+          {/* Gaming Stats */}
+          <div className="flex justify-between items-center p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <Users className="h-4 w-4 text-[#1a305b]" />
+              <span className="font-medium">{poll.total_votes} מהלכים</span>
             </div>
-            <div>
-              <span>{poll.total_statements} הצהרות</span>
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <Gamepad2 className="h-4 w-4 text-[#ec0081]" />
+              <span className="font-medium">{poll.total_statements} הצהרות</span>
             </div>
           </div>
 
-          {/* Action Button */}
+          {/* Play Button */}
           <Button 
             onClick={handleJoinPoll}
-            className="w-full vote-button bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            className="w-full py-4 text-lg font-bold bg-gradient-to-r from-[#1a305b] via-[#ec0081] to-[#66c8ca] hover:shadow-xl transform transition-all duration-300 hover:scale-105 active:scale-95 group-hover:animate-pulse-slow rounded-full"
             disabled={poll.status === 'closed'}
           >
-            {poll.status === 'closed' ? 'הסקר נסגר' : 'הצטרף לסקר'}
+            {poll.status === 'closed' ? (
+              <>
+                <Trophy className="h-5 w-5 ml-2" />
+                המשחק הסתיים
+              </>
+            ) : (
+              <>
+                <Gamepad2 className="h-5 w-5 ml-2" />
+                🎯 שחק עכשיו!
+              </>
+            )}
           </Button>
         </div>
       </CardContent>

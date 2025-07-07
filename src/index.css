@@ -111,14 +111,14 @@
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1a305b 0%, #ec0081 50%, #66c8ca 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .consensus-gradient {
-    background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #8b5cf6 100%);
+    background: linear-gradient(135deg, #1a305b 0%, #ec0081 50%, #66c8ca 100%);
   }
 
   .voting-gradient {
@@ -128,24 +128,24 @@
 
 @layer components {
   .poll-card {
-    @apply bg-white rounded-xl shadow-lg border border-gray-100 p-6 transition-all duration-300 hover:shadow-xl hover:scale-[1.02];
+    @apply bg-white rounded-2xl shadow-lg border-2 border-gray-100 transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-[#ec0081]/30;
   }
 
   .vote-button {
-    @apply px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95;
+    @apply px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95;
   }
 
   .consensus-point {
-    @apply bg-gradient-to-r from-consensus-50 to-consensus-100 border border-consensus-500 rounded-lg p-4 animate-pulse-slow;
+    @apply bg-gradient-to-r from-[#66c8ca]/10 to-[#1a305b]/10 border-2 border-[#66c8ca]/30 rounded-xl p-4 animate-pulse-slow;
   }
 
   .timer-urgent {
-    @apply text-red-500 animate-bounce-gentle;
+    @apply text-[#ec0081] animate-bounce-gentle font-bold;
   }
 
-  /* Enhanced voting animations */
+  /* Enhanced gaming animations */
   .vote-feedback {
-    @apply transition-all duration-200 ease-out;
+    @apply transition-all duration-300 ease-out;
   }
 
   .vote-feedback:active {
@@ -166,5 +166,14 @@
 
   .statement-transition-exit-active {
     @apply opacity-0 transform -translate-y-4 scale-95 transition-all duration-200 ease-in;
+  }
+
+  /* Gaming-specific enhancements */
+  .game-card-glow {
+    @apply shadow-2xl hover:shadow-[0_0_30px_rgba(236,0,129,0.3)] transition-shadow duration-500;
+  }
+
+  .victory-pulse {
+    @apply animate-pulse-slow shadow-[0_0_20px_rgba(255,215,0,0.6)];
   }
 }
