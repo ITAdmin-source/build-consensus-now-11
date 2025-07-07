@@ -1,9 +1,11 @@
 
+
 import { Poll } from '@/types/poll';
 import { 
   fetchActivePolls as fetchActivePollsQuery,
   fetchAllPolls as fetchAllPollsQuery,
-  fetchPollBySlug as fetchPollBySlugQuery
+  fetchPollBySlug as fetchPollBySlugQuery,
+  fetchPollById as fetchPollByIdQuery
 } from './queries';
 
 export const fetchActivePolls = async (): Promise<Poll[]> => {
@@ -19,7 +21,7 @@ export const fetchActivePolls = async (): Promise<Poll[]> => {
 export const fetchPollById = async (pollId: string): Promise<Poll | null> => {
   try {
     console.log('Fetching poll by ID:', pollId);
-    return await fetchPollBySlugQuery(pollId); // For now, use slug query as fallback
+    return await fetchPollByIdQuery(pollId);
   } catch (error) {
     console.error('Error in fetchPollById:', error);
     throw error;
