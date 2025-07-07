@@ -75,6 +75,34 @@ export const fetchAllPolls = async (): Promise<Poll[]> => {
   return transformedPolls;
 };
 
+export const fetchPollById = async (pollId: string): Promise<Poll | null> => {
+  const { data: poll, error } = await supabase
+    .from('polis_polls')
+    .select(`
+      *,
+      polis_poll_categories(name),
+      polis_rounds(round_id, title, start_time, end_time, publish_status)
+    `)
+    .eq('poll_id', pollId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching poll by ID:', error);
+    return null;
+  }
+
+  if (!poll) return null;
+
+  const [consensusCount, statementsCount, votesCount, participantsCount] = await Promise.all([
+    getConsensusPointsCount(poll.poll_id),
+    getStatementsCount(poll.poll_id),
+    getVotesCount(poll.poll_id),
+    getParticipantsCount(poll.poll_id),
+  ]);
+
+  return transformPollData(poll, consensusCount, statementsCount, votesCount, participantsCount);
+};
+
 export const fetchPollBySlug = async (slug: string): Promise<Poll | null> => {
   const { data: poll, error } = await supabase
     .from('polis_polls')
@@ -150,3 +178,4 @@ async function getParticipantsCount(pollId: string): Promise<number> {
 
   return uniqueParticipants.size;
 }
+

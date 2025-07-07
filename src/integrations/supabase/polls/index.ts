@@ -19,8 +19,7 @@ export const fetchActivePolls = async (): Promise<Poll[]> => {
 export const fetchPollById = async (pollId: string): Promise<Poll | null> => {
   try {
     console.log('Fetching poll by ID:', pollId);
-    // This function would need to be implemented in queries.ts if needed
-    return null;
+    return await fetchPollBySlugQuery(pollId); // For now, use slug query as fallback
   } catch (error) {
     console.error('Error in fetchPollById:', error);
     throw error;
@@ -49,3 +48,4 @@ export const fetchAllPolls = async (): Promise<Poll[]> => {
 
 // Re-export types for convenience
 export type { CreatePollData } from './types';
+
