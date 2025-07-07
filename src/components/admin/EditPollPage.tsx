@@ -216,10 +216,10 @@ export const EditPollPage: React.FC = () => {
       
       console.log('Found category:', category, 'ID:', categoryId);
 
-      // Format datetime for datetime-local input
+      // Format datetime for datetime-local input - use round end_time
       let formattedEndTime = '';
-      if (poll.end_time) {
-        const date = new Date(poll.end_time);
+      if (poll.round?.end_time) {
+        const date = new Date(poll.round.end_time);
         if (!isNaN(date.getTime())) {
           formattedEndTime = date.toISOString().slice(0, 16);
         }
