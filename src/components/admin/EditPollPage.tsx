@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -20,6 +21,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPollById } from '@/integrations/supabase/polls';
 import { resetPollVotes } from '@/integrations/supabase/polls/mutations';
 import { fetchCategories } from '@/integrations/supabase/categories';
+import { fetchAllRounds } from '@/integrations/supabase/rounds';
 import { supabase } from '@/integrations/supabase/client';
 import { generateSlug, isSlugFormatValid } from '@/utils/slugUtils';
 import type { Poll } from '@/types/poll';
@@ -30,7 +32,7 @@ const editPollSchema = z.object({
   description: z.string().min(10, 'תיאור חייב להכיל לפחות 10 תווים').max(500, 'תיאור ארוך מדי'),
   category_id: z.string().min(1, 'קטגוריה נדרשת'),
   slug: z.string().min(1, 'כתובת URL נדרשת').max(100, 'כתובת URL ארוכה מדי'),
-  end_time: z.string().min(1, 'זמן סיום נדרש'),
+  round_id: z.string().min(1, 'בחירת סיבוב נדרשת'),
   min_consensus_points_to_win: z.number().min(1, 'מינימום נקודת חיבור אחת').max(20, 'מקסימום 20 נקודות חיבור'),
   allow_user_statements: z.boolean(),
   auto_approve_statements: z.boolean(),
@@ -58,7 +60,7 @@ export const EditPollPage: React.FC = () => {
       description: '',
       category_id: '',
       slug: '',
-      end_time: '',
+      round_id: '',
       min_consensus_points_to_win: 5,
       allow_user_statements: true,
       auto_approve_statements: false,
@@ -73,6 +75,12 @@ export const EditPollPage: React.FC = () => {
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: fetchCategories
+  });
+
+  // Fetch rounds from database
+  const { data: rounds, isLoading: roundsLoading } = useQuery({
+    queryKey: ['rounds'],
+    queryFn: fetchAllRounds
   });
 
   // Fetch poll data
@@ -133,7 +141,7 @@ export const EditPollPage: React.FC = () => {
       }
 
       // Validate required fields
-      if (!data.title || !data.topic || !data.description || !data.category_id || !data.slug) {
+      if (!data.title || !data.topic || !data.description || !data.category_id || !data.slug || !data.round_id) {
         throw new Error('Missing required fields');
       }
 
@@ -143,16 +151,7 @@ export const EditPollPage: React.FC = () => {
         throw new Error(slugValidation.error);
       }
 
-      // Convert datetime-local to ISO string if needed
-      let endTime = data.end_time;
-      if (endTime && !endTime.includes('T')) {
-        endTime = data.end_time + ':00';
-      }
-      if (endTime && !endTime.includes('Z') && !endTime.includes('+')) {
-        endTime = new Date(endTime).toISOString();
-      }
-
-      console.log('Processed end_time:', endTime);
+      console.log('Updating poll with round_id:', data.round_id);
 
       // Remove .single() to avoid the JSON object error
       const { data: updatedPoll, error } = await supabase
@@ -163,7 +162,7 @@ export const EditPollPage: React.FC = () => {
           description: data.description.trim(),
           category_id: data.category_id,
           slug: data.slug.trim(),
-          end_time: endTime,
+          round_id: data.round_id,
           min_consensus_points_to_win: data.min_consensus_points_to_win,
           allow_user_statements: data.allow_user_statements,
           auto_approve_statements: data.auto_approve_statements,
@@ -207,7 +206,7 @@ export const EditPollPage: React.FC = () => {
 
   // Update form values when poll data is loaded
   useEffect(() => {
-    if (poll && categories) {
+    if (poll && categories && rounds) {
       console.log('Setting form values from poll:', poll);
       
       // Find category_id by name
@@ -216,22 +215,13 @@ export const EditPollPage: React.FC = () => {
       
       console.log('Found category:', category, 'ID:', categoryId);
 
-      // Format datetime for datetime-local input - use round end_time
-      let formattedEndTime = '';
-      if (poll.round?.end_time) {
-        const date = new Date(poll.round.end_time);
-        if (!isNaN(date.getTime())) {
-          formattedEndTime = date.toISOString().slice(0, 16);
-        }
-      }
-
       form.reset({
         title: poll.title || '',
         topic: poll.topic || '',
         description: poll.description || '',
         category_id: categoryId,
         slug: poll.slug || '',
-        end_time: formattedEndTime,
+        round_id: poll.round_id || '',
         min_consensus_points_to_win: poll.min_consensus_points_to_win || 5,
         allow_user_statements: poll.allow_user_statements ?? true,
         auto_approve_statements: poll.auto_approve_statements ?? false,
@@ -241,14 +231,14 @@ export const EditPollPage: React.FC = () => {
         status: poll.status || 'draft'
       });
     }
-  }, [poll, categories, form]);
+  }, [poll, categories, rounds, form]);
 
   const onSubmit = async (data: EditPollFormData) => {
     console.log('Form submitted with data:', data);
     updatePollMutation.mutate(data);
   };
 
-  if (isLoading || categoriesLoading) {
+  if (isLoading || categoriesLoading || roundsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -432,6 +422,31 @@ export const EditPollPage: React.FC = () => {
 
                       <FormField
                         control={form.control}
+                        name="round_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="hebrew-text">סיבוב</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="hebrew-text">
+                                  <SelectValue placeholder="בחר סיבוב" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {rounds?.map((round) => (
+                                  <SelectItem key={round.round_id} value={round.round_id} className="hebrew-text">
+                                    {round.title}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
                         name="status"
                         render={({ field }) => (
                           <FormItem>
@@ -471,20 +486,6 @@ export const EditPollPage: React.FC = () => {
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold hebrew-text">הגדרות סקר</h3>
                       
-                      <FormField
-                        control={form.control}
-                        name="end_time"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="hebrew-text">זמן סיום</FormLabel>
-                            <FormControl>
-                              <Input type="datetime-local" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
                       <FormField
                         control={form.control}
                         name="min_consensus_points_to_win"
