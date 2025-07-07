@@ -1,123 +1,152 @@
 
 import { supabase } from '../client';
+import { transformPollData } from './transformers';
+import { Poll } from '@/types/poll';
 
-export const getPollsWithCategories = async (status?: 'active') => {
-  let query = supabase
+export const fetchActivePolls = async (): Promise<Poll[]> => {
+  const { data: polls, error } = await supabase
     .from('polis_polls')
     .select(`
       *,
-      polis_poll_categories(name)
+      polis_poll_categories(name),
+      polis_rounds(round_id, title, start_time, end_time, publish_status)
+    `)
+    .eq('status', 'active')
+    .eq('polis_rounds.publish_status', 'published'); // Only include polls from published rounds
+
+  if (error) {
+    console.error('Error fetching active polls:', error);
+    throw error;
+  }
+
+  if (!polls) return [];
+
+  // Transform polls with additional data
+  const transformedPolls = await Promise.all(
+    polls.map(async (poll) => {
+      const [consensusCount, statementsCount, votesCount, participantsCount] = await Promise.all([
+        getConsensusPointsCount(poll.poll_id),
+        getStatementsCount(poll.poll_id),
+        getVotesCount(poll.poll_id),
+        getParticipantsCount(poll.poll_id),
+      ]);
+
+      return transformPollData(poll, consensusCount, statementsCount, votesCount, participantsCount);
+    })
+  );
+
+  // Filter out polls from inactive rounds
+  return transformedPolls.filter(poll => 
+    poll.round?.active_status === 'active' || poll.round?.active_status === 'pending'
+  );
+};
+
+export const fetchAllPolls = async (): Promise<Poll[]> => {
+  const { data: polls, error } = await supabase
+    .from('polis_polls')
+    .select(`
+      *,
+      polis_poll_categories(name),
+      polis_rounds(round_id, title, start_time, end_time, publish_status)
     `)
     .order('created_at', { ascending: false });
 
-  if (status) {
-    query = query.eq('status', status);
+  if (error) {
+    console.error('Error fetching all polls:', error);
+    throw error;
   }
 
-  return query;
+  if (!polls) return [];
+
+  // Transform polls with additional data
+  const transformedPolls = await Promise.all(
+    polls.map(async (poll) => {
+      const [consensusCount, statementsCount, votesCount, participantsCount] = await Promise.all([
+        getConsensusPointsCount(poll.poll_id),
+        getStatementsCount(poll.poll_id),
+        getVotesCount(poll.poll_id),
+        getParticipantsCount(poll.poll_id),
+      ]);
+
+      return transformPollData(poll, consensusCount, statementsCount, votesCount, participantsCount);
+    })
+  );
+
+  return transformedPolls;
 };
 
-export const getPollByField = async (field: 'poll_id' | 'slug', value: string) => {
-  return supabase
+export const fetchPollBySlug = async (slug: string): Promise<Poll | null> => {
+  const { data: poll, error } = await supabase
     .from('polis_polls')
     .select(`
       *,
-      polis_poll_categories(name)
+      polis_poll_categories(name),
+      polis_rounds(round_id, title, start_time, end_time, publish_status)
     `)
-    .eq(field, value)
+    .eq('slug', slug)
     .single();
-};
-
-export const getConsensusPointsCounts = async (pollIds: string[]) => {
-  const { data, error } = await supabase
-    .from('polis_consensus_points')
-    .select('poll_id')
-    .in('poll_id', pollIds);
 
   if (error) {
-    console.error('Error fetching consensus points:', error);
-    return {};
+    console.error('Error fetching poll by slug:', error);
+    return null;
   }
 
-  return data?.reduce((acc, item) => {
-    acc[item.poll_id] = (acc[item.poll_id] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>) || {};
-};
+  if (!poll) return null;
 
-export const getStatementsCounts = async (pollIds: string[]) => {
-  const { data, error } = await supabase
-    .from('polis_statements')
-    .select('poll_id')
-    .in('poll_id', pollIds)
-    .eq('is_approved', true);
-
-  if (error) {
-    console.error('Error fetching statements:', error);
-    return {};
-  }
-
-  return data?.reduce((acc, item) => {
-    acc[item.poll_id] = (acc[item.poll_id] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>) || {};
-};
-
-export const getVotesCounts = async (pollIds: string[]) => {
-  const { data, error } = await supabase
-    .from('polis_votes')
-    .select('poll_id')
-    .in('poll_id', pollIds);
-
-  if (error) {
-    console.error('Error fetching votes:', error);
-    return {};
-  }
-
-  return data?.reduce((acc, vote) => {
-    acc[vote.poll_id] = (acc[vote.poll_id] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>) || {};
-};
-
-export const getPollStatistics = async (pollId: string) => {
-  const [consensusData, statementsData, votesData, participantsData] = await Promise.all([
-    supabase
-      .from('polis_consensus_points')
-      .select('statement_id')
-      .eq('poll_id', pollId),
-    supabase
-      .from('polis_statements')
-      .select('statement_id')
-      .eq('poll_id', pollId)
-      .eq('is_approved', true),
-    supabase
-      .from('polis_votes')
-      .select('vote_id')
-      .eq('poll_id', pollId),
-    // Count unique participants (both session_id and user_id)
-    supabase
-      .from('polis_votes')
-      .select('session_id, user_id')
-      .eq('poll_id', pollId)
+  const [consensusCount, statementsCount, votesCount, participantsCount] = await Promise.all([
+    getConsensusPointsCount(poll.poll_id),
+    getStatementsCount(poll.poll_id),
+    getVotesCount(poll.poll_id),
+    getParticipantsCount(poll.poll_id),
   ]);
 
-  // Calculate unique participants properly
-  const uniqueParticipants = new Set();
-  if (participantsData.data) {
-    participantsData.data.forEach(vote => {
-      // Use session_id if available, otherwise use user_id
-      const participantId = vote.session_id || vote.user_id;
-      if (participantId) {
-        uniqueParticipants.add(participantId);
-      }
-    });
-  }
-
-  return {
-    consensusCount: consensusData.data?.length || 0,
-    statementsCount: statementsData.data?.length || 0,
-    votesCount: votesData.data?.length || 0,
-    participantsCount: uniqueParticipants.size
-  };
+  return transformPollData(poll, consensusCount, statementsCount, votesCount, participantsCount);
 };
+
+// Helper functions to get additional poll data
+async function getConsensusPointsCount(pollId: string): Promise<number> {
+  const { count } = await supabase
+    .from('polis_consensus_points')
+    .select('*', { count: 'exact', head: true })
+    .eq('poll_id', pollId);
+  
+  return count || 0;
+}
+
+async function getStatementsCount(pollId: string): Promise<number> {
+  const { count } = await supabase
+    .from('polis_statements')
+    .select('*', { count: 'exact', head: true })
+    .eq('poll_id', pollId)
+    .eq('is_approved', true);
+  
+  return count || 0;
+}
+
+async function getVotesCount(pollId: string): Promise<number> {
+  const { count } = await supabase
+    .from('polis_votes')
+    .select('*', { count: 'exact', head: true })
+    .eq('poll_id', pollId);
+  
+  return count || 0;
+}
+
+async function getParticipantsCount(pollId: string): Promise<number> {
+  const { data } = await supabase
+    .from('polis_votes')
+    .select('user_id, session_id')
+    .eq('poll_id', pollId);
+
+  if (!data) return 0;
+
+  const uniqueParticipants = new Set();
+  data.forEach(vote => {
+    const participantId = vote.user_id || vote.session_id;
+    if (participantId) {
+      uniqueParticipants.add(participantId);
+    }
+  });
+
+  return uniqueParticipants.size;
+}

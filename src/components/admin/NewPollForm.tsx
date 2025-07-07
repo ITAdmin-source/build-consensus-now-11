@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,15 +13,17 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowRight, Save, RefreshCw } from 'lucide-react';
 import { createPoll } from '@/integrations/supabase/admin';
+import { fetchAllRounds } from '@/integrations/supabase/rounds';
 import { generateSlug, isSlugFormatValid } from '@/utils/slugUtils';
+import { Round } from '@/types/round';
 
 const pollSchema = z.object({
   title: z.string().min(1, 'כותרת נדרשת').max(100, 'כותרת ארוכה מדי'),
-  topic: z.string().min(1, 'נושא נדרש').max(50, 'נושא ארוך מדי'),
+  topic: z.string().min(1, 'נושא נדרש').max(50, 'נושא ארוך מदי'),
   description: z.string().min(10, 'תיאור חייב להכיל לפחות 10 תווים').max(500, 'תיאור ארוך מדי'),
   category: z.string().min(1, 'קטגוריה נדרשת'),
   slug: z.string().min(1, 'כתובת URL נדרשת').max(100, 'כתובת URL ארוכה מדי'),
-  end_time: z.string().min(1, 'זמן סיום נדרש'),
+  round_id: z.string().min(1, 'יש לבחור סיבוב'),
   min_consensus_points_to_win: z.number().min(1, 'מינימום נקודת חיבור אחת').max(20, 'מקסימום 20 נקודות חיבור'),
   allow_user_statements: z.boolean(),
   auto_approve_statements: z.boolean(),
@@ -51,6 +53,8 @@ interface NewPollFormProps {
 export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel }) => {
   const { toast } = useToast();
   const [slugGenerated, setSlugGenerated] = useState(false);
+  const [rounds, setRounds] = useState<Round[]>([]);
+  const [roundsLoading, setRoundsLoading] = useState(true);
   
   const form = useForm<PollFormData>({
     resolver: zodResolver(pollSchema),
@@ -60,7 +64,7 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
       description: '',
       category: '',
       slug: '',
-      end_time: '',
+      round_id: '',
       min_consensus_points_to_win: 5,
       allow_user_statements: true,
       auto_approve_statements: false,
@@ -69,6 +73,27 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
       min_votes_per_group: 3
     }
   });
+
+  useEffect(() => {
+    loadRounds();
+  }, []);
+
+  const loadRounds = async () => {
+    try {
+      setRoundsLoading(true);
+      const roundsData = await fetchAllRounds();
+      setRounds(roundsData);
+    } catch (error) {
+      console.error('Error loading rounds:', error);
+      toast({
+        title: 'שגיאה בטעינת הסיבובים',
+        description: 'לא ניתן לטעון את רשימת הסיבובים',
+        variant: 'destructive'
+      });
+    } finally {
+      setRoundsLoading(false);
+    }
+  };
 
   // Auto-generate slug from title
   const handleTitleChange = (title: string) => {
@@ -102,7 +127,7 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
         description: data.description,
         category: data.category,
         slug: data.slug,
-        end_time: data.end_time,
+        round_id: data.round_id,
         min_consensus_points_to_win: data.min_consensus_points_to_win,
         allow_user_statements: data.allow_user_statements,
         auto_approve_statements: data.auto_approve_statements,
@@ -267,16 +292,24 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
                 
                 <FormField
                   control={form.control}
-                  name="end_time"
+                  name="round_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="hebrew-text">זמן סיום</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="datetime-local"
-                          {...field} 
-                        />
-                      </FormControl>
+                      <FormLabel className="hebrew-text">סיבוב הצבעה</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={roundsLoading}>
+                        <FormControl>
+                          <SelectTrigger className="hebrew-text">
+                            <SelectValue placeholder={roundsLoading ? "טוען סיבובים..." : "בחר סיבוב"} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {rounds.map((round) => (
+                            <SelectItem key={round.round_id} value={round.round_id} className="hebrew-text">
+                              {round.title} ({round.publish_status === 'published' ? 'פורסם' : 'טיוטה'})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

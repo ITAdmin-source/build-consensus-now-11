@@ -22,6 +22,40 @@ export const submitVote = async (statementId: string, voteValue: 'support' | 'op
     throw statementError;
   }
 
+  // Check if the poll's round allows voting
+  const { data: pollWithRound, error: pollError } = await supabase
+    .from('polis_polls')
+    .select(`
+      poll_id,
+      polis_rounds(start_time, end_time, publish_status)
+    `)
+    .eq('poll_id', statement.poll_id)
+    .single();
+
+  if (pollError) {
+    throw pollError;
+  }
+
+  // Validate round status before submitting vote
+  if (pollWithRound.polis_rounds) {
+    const round = pollWithRound.polis_rounds;
+    const now = new Date();
+    const startTime = new Date(round.start_time);
+    const endTime = new Date(round.end_time);
+    
+    if (round.publish_status !== 'published') {
+      throw new Error('ההצבעה אינה זמינה - הסיבוב עדיין לא פורסם');
+    }
+    
+    if (now < startTime) {
+      throw new Error('ההצבעה עדיין לא התחילה');
+    }
+    
+    if (now > endTime) {
+      throw new Error('זמן ההצבעה הסתיים');
+    }
+  }
+
   const voteData = {
     statement_id: statementId,
     poll_id: statement.poll_id,

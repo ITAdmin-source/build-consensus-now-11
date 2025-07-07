@@ -4,7 +4,6 @@ export interface Poll {
   topic: string;
   description: string;
   category: string;
-  end_time: string;
   time_left: number;
   is_expired: boolean;
   min_consensus_points_to_win: number;
@@ -21,7 +20,15 @@ export interface Poll {
   slug: string;
   created_at: string;
   created_by: string | null;
-  // New clustering fields
+  round_id: string;
+  round?: {
+    round_id: string;
+    title: string;
+    start_time: string;
+    end_time: string;
+    publish_status: 'draft' | 'published';
+    active_status?: 'pending' | 'active' | 'completed' | null;
+  };
   clustering_min_groups?: number;
   clustering_max_groups?: number;
   clustering_min_participants?: number;
@@ -42,7 +49,7 @@ export interface Statement {
   poll_id: string;
   content_type: 'text' | 'image' | 'audio' | 'video';
   content: string;
-  more_info?: string; // New optional field for additional information
+  more_info?: string;
   is_user_suggested: boolean;
   is_approved: boolean;
   is_consensus_point: boolean;
@@ -77,7 +84,6 @@ export interface Group {
   member_count: number;
   algorithm: string;
   created_at: string;
-  // New clustering fields
   cluster_center?: number[];
   silhouette_score?: number;
   stability_score?: number;
@@ -94,7 +100,6 @@ export interface GroupStatementStats {
   total_votes: number;
 }
 
-// New clustering-related types
 export interface ClusteringJob {
   job_id: string;
   poll_id: string;
