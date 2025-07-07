@@ -7,7 +7,7 @@ export interface CreatePollData {
   description: string;
   category: string;
   slug: string;
-  end_time: string;
+  round_id: string;
   min_consensus_points_to_win: number;
   allow_user_statements: boolean;
   auto_approve_statements: boolean;
@@ -21,7 +21,6 @@ export interface PollQueryResult {
   title: string;
   topic: string | null;
   description: string | null;
-  end_time: string;
   min_consensus_points_to_win: number | null;
   allow_user_statements: boolean | null;
   auto_approve_statements: boolean | null;
@@ -30,6 +29,7 @@ export interface PollQueryResult {
   max_opposition_pct: number | null;
   min_votes_per_group: number | null;
   slug: string | null;
+  round_id: string;
   polis_poll_categories?: {
     name: string;
   } | null;

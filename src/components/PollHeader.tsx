@@ -24,6 +24,9 @@ export const PollHeader: React.FC<PollHeaderProps> = ({
   const consensusProgress = (poll.current_consensus_points / poll.min_consensus_points_to_win) * 100;
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
 
+  // Use round end_time for countdown
+  const endTime = poll.round?.end_time || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
   return (
     <Card className="bg-gradient-to-r from-blue-50 via-white to-purple-50 border-0 shadow-lg">
       <CardContent className="p-6">
@@ -42,7 +45,7 @@ export const PollHeader: React.FC<PollHeaderProps> = ({
               <Badge variant="outline" className="hebrew-text">
                 {poll.category}
               </Badge>
-              <CountdownTimer endTime={poll.end_time} />
+              <CountdownTimer endTime={endTime} />
             </div>
           </div>
 

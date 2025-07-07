@@ -23,6 +23,9 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
     onJoinPoll(poll.slug || poll.poll_id);
   };
 
+  // Use round end_time for countdown
+  const endTime = poll.round?.end_time || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
   return (
     <Card className="poll-card hebrew-text relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-2 border-gray-100 hover:border-[#ec0081]/30">
       {/* Gaming accent line */}
@@ -48,7 +51,7 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
           </Badge>
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-[#ec0081] animate-pulse" />
-            <CountdownTimer endTime={poll.end_time} className="text-sm font-semibold" />
+            <CountdownTimer endTime={endTime} className="text-sm font-semibold" />
           </div>
         </div>
         <CardTitle className="text-xl font-bold text-right leading-relaxed group-hover:text-[#ec0081] transition-colors">

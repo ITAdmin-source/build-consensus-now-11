@@ -8,7 +8,6 @@ export const mockPolls: Poll[] = [
     topic: 'חינוך',
     description: 'דיון על כיוון החינוך הישראלי בעשור הקרוב',
     category: 'חינוך',
-    end_time: '2024-07-01T23:59:59Z',
     time_left: Math.max(0, new Date('2024-07-01T23:59:59Z').getTime() - Date.now()),
     is_expired: new Date('2024-07-01T23:59:59Z').getTime() <= Date.now(),
     min_consensus_points_to_win: 5,
@@ -24,7 +23,16 @@ export const mockPolls: Poll[] = [
     min_votes_per_group: 3,
     slug: 'future-of-education-israel',
     created_at: '2024-06-20T10:00:00Z',
-    created_by: null
+    created_by: null,
+    round_id: 'mock-round-1',
+    round: {
+      round_id: 'mock-round-1',
+      title: 'Mock Round 1',
+      start_time: '2024-06-20T00:00:00Z',
+      end_time: '2024-07-01T23:59:59Z',
+      publish_status: 'published',
+      active_status: 'active'
+    }
   },
   {
     poll_id: '2',
@@ -32,7 +40,6 @@ export const mockPolls: Poll[] = [
     topic: 'תחבורה',
     description: 'איך נוכל לשפר את התחבורה הציבורית ולהפוך אותה לידידותית יותר לסביבה?',
     category: 'איכות סביבה',
-    end_time: '2024-06-28T23:59:59Z',
     time_left: Math.max(0, new Date('2024-06-28T23:59:59Z').getTime() - Date.now()),
     is_expired: new Date('2024-06-28T23:59:59Z').getTime() <= Date.now(),
     min_consensus_points_to_win: 4,
@@ -48,7 +55,16 @@ export const mockPolls: Poll[] = [
     min_votes_per_group: 2,
     slug: 'green-public-transport',
     created_at: '2024-06-18T14:30:00Z',
-    created_by: null
+    created_by: null,
+    round_id: 'mock-round-2',
+    round: {
+      round_id: 'mock-round-2',
+      title: 'Mock Round 2',
+      start_time: '2024-06-18T00:00:00Z',
+      end_time: '2024-06-28T23:59:59Z',
+      publish_status: 'published',
+      active_status: 'completed'
+    }
   },
   {
     poll_id: '3',
@@ -56,7 +72,6 @@ export const mockPolls: Poll[] = [
     topic: 'דיור',
     description: 'פתרונות לבעיית הדיור הישראלית עבור הדור הצעיר',
     category: 'כלכלה',
-    end_time: '2024-07-15T23:59:59Z',
     time_left: Math.max(0, new Date('2024-07-15T23:59:59Z').getTime() - Date.now()),
     is_expired: new Date('2024-07-15T23:59:59Z').getTime() <= Date.now(),
     min_consensus_points_to_win: 6,
@@ -72,6 +87,15 @@ export const mockPolls: Poll[] = [
     min_votes_per_group: 4,
     slug: 'affordable-housing-youth',
     created_at: '2024-06-15T09:15:00Z',
-    created_by: null
+    created_by: null,
+    round_id: 'mock-round-3',
+    round: {
+      round_id: 'mock-round-3',
+      title: 'Mock Round 3',
+      start_time: '2024-06-15T00:00:00Z',
+      end_time: '2024-07-15T23:59:59Z',
+      publish_status: 'published',
+      active_status: 'active'
+    }
   }
 ];

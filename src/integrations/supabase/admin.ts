@@ -1,70 +1,58 @@
-
 import { supabase } from './client';
 import type { CreatePollData } from './polls/types';
 
 export const createPoll = async (pollData: CreatePollData) => {
-  try {
-    console.log('Creating poll with data:', pollData);
-    
-    // First, get or create the category
-    let categoryId: string;
-    
-    const { data: existingCategory } = await supabase
-      .from('polis_poll_categories')
-      .select('category_id')
-      .eq('name', pollData.category)
-      .single();
-    
-    if (existingCategory) {
-      categoryId = existingCategory.category_id;
-    } else {
-      const { data: newCategory, error: categoryError } = await supabase
-        .from('polis_poll_categories')
-        .insert({ name: pollData.category })
-        .select('category_id')
-        .single();
-      
-      if (categoryError) {
-        console.error('Error creating category:', categoryError);
-        throw categoryError;
-      }
-      
-      categoryId = newCategory.category_id;
-    }
-    
-    // Create the poll
-    const { data, error } = await supabase
-      .from('polis_polls')
-      .insert({
-        title: pollData.title,
-        topic: pollData.topic,
-        description: pollData.description,
-        category_id: categoryId,
-        slug: pollData.slug,
-        end_time: pollData.end_time,
-        min_consensus_points_to_win: pollData.min_consensus_points_to_win,
-        allow_user_statements: pollData.allow_user_statements,
-        auto_approve_statements: pollData.auto_approve_statements,
-        min_support_pct: pollData.min_support_pct,
-        max_opposition_pct: pollData.max_opposition_pct,
-        min_votes_per_group: pollData.min_votes_per_group,
-        status: 'active',
-        created_by: (await supabase.auth.getUser()).data.user?.id
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error creating poll:', error);
-      throw error;
-    }
-    
-    console.log('Poll created successfully:', data);
-    return data;
-  } catch (error) {
-    console.error('Error in createPoll:', error);
+  console.log('Creating poll with data:', pollData);
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
+  // Get category_id from category name
+  const { data: categoryData, error: categoryError } = await supabase
+    .from('polis_poll_categories')
+    .select('category_id')
+    .eq('name', pollData.category)
+    .single();
+
+  if (categoryError) {
+    console.error('Error finding category:', categoryError);
+    throw new Error(`Category "${pollData.category}" not found`);
+  }
+
+  const pollInsertData = {
+    title: pollData.title,
+    topic: pollData.topic,
+    description: pollData.description,
+    category_id: categoryData.category_id,
+    slug: pollData.slug,
+    round_id: pollData.round_id,
+    min_consensus_points_to_win: pollData.min_consensus_points_to_win,
+    allow_user_statements: pollData.allow_user_statements,
+    auto_approve_statements: pollData.auto_approve_statements,
+    min_support_pct: pollData.min_support_pct,
+    max_opposition_pct: pollData.max_opposition_pct,
+    min_votes_per_group: pollData.min_votes_per_group,
+    created_by: user.id,
+    status: 'active' as const
+  };
+
+  console.log('Inserting poll data:', pollInsertData);
+
+  const { data, error } = await supabase
+    .from('polis_polls')
+    .insert(pollInsertData)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating poll:', error);
     throw error;
   }
+
+  console.log('Poll created successfully:', data);
+  return data;
 };
 
 // User management functions

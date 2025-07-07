@@ -24,6 +24,9 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onEdit, onDelete }) =>
     });
   };
 
+  // Use round end_time for display
+  const endTime = poll.round?.end_time || new Date().toISOString();
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -45,7 +48,10 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onEdit, onDelete }) =>
               </div>
             </div>
             <div className="text-sm text-muted-foreground">
-              <span>תאריך סיום: {formatEndTime(poll.end_time)}</span>
+              <span>תאריך סיום: {formatEndTime(endTime)}</span>
+              {poll.round && (
+                <span className="block">סיבוב: {poll.round.title}</span>
+              )}
             </div>
           </div>
           <Badge variant={poll.status === 'active' ? 'default' : 'secondary'}>
