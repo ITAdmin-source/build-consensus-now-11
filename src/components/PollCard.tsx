@@ -119,7 +119,7 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll, variant = 
               </div>
               <span className="text-gray-600 flex items-center gap-1">
                 <Trophy className="h-4 w-4" />
-                נקודות זכייה
+                נקודות חיבור
               </span>
             </div>
             <div className="relative">
@@ -145,11 +145,11 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll, variant = 
           <div className="flex justify-between items-center p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <Users className="h-4 w-4 text-[#1a305b]" />
-              <span className="font-medium">{poll.total_votes} מהלכים</span>
+              <span className="font-medium">{poll.total_votes} הצבעות</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <Gamepad2 className="h-4 w-4 text-[#ec0081]" />
-              <span className="font-medium">{poll.total_statements} הצהרות</span>
+              <span className="font-medium">{poll.total_statements} היגדים</span>
             </div>
           </div>
 
