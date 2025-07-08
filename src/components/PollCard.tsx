@@ -6,55 +6,99 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Users, Target, Star, Gamepad2, Trophy, Zap } from 'lucide-react';
-import { toast } from 'sonner';
+import { Users, Target, Star, Gamepad2, Trophy, Zap, Eye, Clock } from 'lucide-react';
 
 interface PollCardProps {
   poll: Poll;
   onJoinPoll: (pollSlug: string) => void;
+  variant?: 'active' | 'completed' | 'pending';
 }
 
-export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
+export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll, variant = 'active' }) => {
   const progressPercentage = (poll.current_consensus_points / poll.min_consensus_points_to_win) * 100;
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
-  const pollUrl = `${window.location.origin}/poll/${poll.slug}`;
-
-  const handleJoinPoll = () => {
+  
+  const handleAction = () => {
     onJoinPoll(poll.slug || poll.poll_id);
   };
 
   // Use round end_time for countdown
   const endTime = poll.round?.end_time || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const startTime = poll.round?.start_time || new Date().toISOString();
+
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'active':
+        return {
+          borderColor: 'border-[#ec0081]/30',
+          accentColor: 'bg-[#ec0081]',
+          buttonColor: 'bg-[#ec0081] hover:bg-[#ec0081]/90',
+          buttonText: 'שחק עכשיו!',
+          buttonIcon: <Gamepad2 className="h-5 w-5 ml-2" />,
+          disabled: false
+        };
+      case 'completed':
+        return {
+          borderColor: 'border-[#66c8ca]/30',
+          accentColor: 'bg-[#66c8ca]',
+          buttonColor: 'bg-[#66c8ca] hover:bg-[#66c8ca]/90',
+          buttonText: 'צפה בתוצאות',
+          buttonIcon: <Eye className="h-5 w-5 ml-2" />,
+          disabled: false
+        };
+      case 'pending':
+        return {
+          borderColor: 'border-[#1a305b]/30',
+          accentColor: 'bg-[#1a305b]',
+          buttonColor: 'bg-gray-400 cursor-not-allowed',
+          buttonText: 'בקרוב...',
+          buttonIcon: <Clock className="h-5 w-5 ml-2" />,
+          disabled: true
+        };
+    }
+  };
+
+  const styles = getVariantStyles();
 
   return (
-    <Card className="poll-card hebrew-text relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-2 border-gray-100 hover:border-[#ec0081]/30">
-      {/* Gaming accent line */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-[#ec0081]"></div>
+    <Card className={`poll-card hebrew-text relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-2 border-gray-100 hover:${styles.borderColor} ${variant === 'active' ? 'transform hover:scale-105' : ''}`}>
+      {/* Variant accent line */}
+      <div className={`absolute top-0 left-0 right-0 h-1 ${styles.accentColor}`}></div>
       
-      {/* Victory indicator */}
-      {isWinning && (
-        <div className="absolute top-4 left-4 z-10">
+      {/* Status indicators */}
+      <div className="absolute top-4 left-4 z-10">
+        {variant === 'completed' && isWinning && (
           <div className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 animate-pulse-slow">
             <Trophy className="h-3 w-3" />
             ניצחון!
           </div>
-        </div>
-      )}
+        )}
+        {variant === 'pending' && (
+          <div className={`${styles.accentColor} text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1`}>
+            <Clock className="h-3 w-3" />
+            בקרוב
+          </div>
+        )}
+      </div>
 
       <CardHeader className="pb-4">
         <div className="flex justify-between items-start mb-3">
           <Badge 
             variant="secondary" 
-            className="text-xs bg-[#66c8ca]/20 text-[#66c8ca] border border-[#66c8ca]/30"
+            className={`text-xs bg-[#66c8ca]/20 text-[#66c8ca] border border-[#66c8ca]/30`}
           >
             🎮 {poll.category || 'אתגר כללי'}
           </Badge>
           <div className="flex items-center gap-2">
-            <Zap className="h-4 w-4 text-[#ec0081] animate-pulse" />
-            <CountdownTimer endTime={endTime} className="text-sm font-semibold" />
+            <Zap className={`h-4 w-4 ${variant === 'active' ? 'text-[#ec0081] animate-pulse' : 'text-gray-400'}`} />
+            {variant === 'pending' ? (
+              <CountdownTimer endTime={startTime} className="text-sm font-semibold" />
+            ) : (
+              <CountdownTimer endTime={endTime} className="text-sm font-semibold" />
+            )}
           </div>
         </div>
-        <CardTitle className="text-xl font-bold text-right leading-relaxed group-hover:text-[#ec0081] transition-colors">
+        <CardTitle className={`text-xl font-bold text-right leading-relaxed group-hover:${variant === 'active' ? 'text-[#ec0081]' : variant === 'completed' ? 'text-[#66c8ca]' : 'text-[#1a305b]'} transition-colors`}>
           {poll.title}
         </CardTitle>
         <p className="text-gray-600 text-right text-sm leading-relaxed">
@@ -64,7 +108,7 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
       
       <CardContent>
         <div className="space-y-5">
-          {/* Victory Progress Section */}
+          {/* Progress Section */}
           <div className="space-y-3">
             <div className="flex justify-between items-center text-sm">
               <div className="flex items-center gap-2">
@@ -84,20 +128,20 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
                 className="h-4 rounded-full bg-gray-100"
               />
               <div 
-                className="absolute top-0 left-0 h-4 bg-[#ec0081] rounded-full transition-all duration-300" 
+                className={`absolute top-0 left-0 h-4 ${styles.accentColor} rounded-full transition-all duration-300`}
                 style={{ width: `${Math.min(progressPercentage, 100)}%` }}
               />
             </div>
             
-            {isWinning && (
-              <div className="flex items-center gap-2 text-orange-600 text-sm font-bold animate-bounce-gentle">
+            {variant === 'completed' && isWinning && (
+              <div className="flex items-center gap-2 text-orange-600 text-sm font-bold">
                 <Star className="h-4 w-4 fill-current" />
-                <span>🏆 ניצחון קבוצתי מושג!</span>
+                <span>🏆 הקהילה זכתה במשחק!</span>
               </div>
             )}
           </div>
 
-          {/* Gaming Stats */}
+          {/* Stats */}
           <div className="flex justify-between items-center p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <Users className="h-4 w-4 text-[#1a305b]" />
@@ -109,23 +153,14 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll }) => {
             </div>
           </div>
 
-          {/* Play Button */}
+          {/* Action Button */}
           <Button 
-            onClick={handleJoinPoll}
-            className="w-full py-4 text-lg font-bold bg-[#ec0081] hover:bg-[#ec0081]/90 hover:shadow-xl transform transition-all duration-300 hover:scale-105 active:scale-95 rounded-full text-white"
-            disabled={poll.status === 'closed'}
+            onClick={handleAction}
+            className={`w-full py-4 text-lg font-bold ${styles.buttonColor} hover:shadow-xl transform transition-all duration-300 ${!styles.disabled ? 'hover:scale-105 active:scale-95' : ''} rounded-full text-white`}
+            disabled={styles.disabled}
           >
-            {poll.status === 'closed' ? (
-              <>
-                <Trophy className="h-5 w-5 ml-2" />
-                המשחק הסתיים
-              </>
-            ) : (
-              <>
-                <Gamepad2 className="h-5 w-5 ml-2" />
-                🎯 שחק עכשיו!
-              </>
-            )}
+            {styles.buttonIcon}
+            {styles.buttonText}
           </Button>
         </div>
       </CardContent>

@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { PollCard } from '@/components/PollCard';
+import { PollSection } from '@/components/PollSection';
 import { Badge } from '@/components/ui/badge';
 import { Poll } from '@/types/poll';
 import { fetchActivePollCategories, CategoryWithPollCount } from '@/integrations/supabase/categories';
 import { toast } from 'sonner';
-import { Gamepad2, Zap } from 'lucide-react';
+import { Gamepad2, Trophy, Clock, Target } from 'lucide-react';
 
 interface PollsGridProps {
   polls: Poll[];
@@ -35,9 +35,23 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
     }
   };
 
-  // Create categories list with "הכל" at the beginning, only showing categories with active polls
-  const categoryOptions = ['הכל', ...categories.map(cat => cat.name)];
-  
+  // Categorize polls based on their status and round status
+  const categorizePoll = (poll: Poll) => {
+    // Check round status first
+    if (poll.round?.active_status === 'pending') {
+      return 'pending';
+    }
+    if (poll.round?.active_status === 'completed' || poll.status === 'closed') {
+      return 'completed';
+    }
+    if (poll.round?.active_status === 'active' && poll.status === 'active') {
+      return 'active';
+    }
+    // Default to pending if unclear
+    return 'pending';
+  };
+
+  // Filter polls by search and category first
   const filteredPolls = polls.filter(poll => {
     const matchesSearch = searchQuery === '' || 
       poll.title.includes(searchQuery) || 
@@ -46,31 +60,39 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
     return matchesSearch && matchesCategory;
   });
 
+  // Then categorize the filtered polls
+  const activePolls = filteredPolls.filter(poll => categorizePoll(poll) === 'active');
+  const completedPolls = filteredPolls.filter(poll => categorizePoll(poll) === 'completed');
+  const pendingPolls = filteredPolls.filter(poll => categorizePoll(poll) === 'pending');
+
+  // Create categories list with "הכל" at the beginning
+  const categoryOptions = ['הכל', ...categories.map(cat => cat.name)];
+  
+  // Check if we have any polls to show
+  const hasAnyPolls = activePolls.length > 0 || completedPolls.length > 0 || pendingPolls.length > 0;
+
   return (
     <div className="container mx-auto px-4 py-12">
-      {/* Gaming Header */}
+      {/* Main Header */}
       <div className="text-center mb-12">
         <div className="flex justify-center items-center gap-4 mb-6">
-          <div className="w-12 h-12 bg-[#66c8ca] rounded-full flex items-center justify-center">
-            <Gamepad2 className="h-6 w-6 text-white" />
+          <div className="w-16 h-16 bg-gradient-to-r from-[#ec0081] to-[#66c8ca] rounded-full flex items-center justify-center">
+            <Target className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold hebrew-text text-[#66c8ca]">
-            🎮 משחקים פעילים 🏆
-          </h2>
-          <div className="w-12 h-12 bg-[#66c8ca] rounded-full flex items-center justify-center">
-            <Zap className="h-6 w-6 text-white animate-pulse" />
-          </div>
+          <h1 className="text-4xl md:text-5xl font-bold hebrew-text bg-gradient-to-r from-[#ec0081] to-[#66c8ca] bg-clip-text text-transparent">
+            🎮 משחקי הסכמה 🏆
+          </h1>
         </div>
         
-        <p className="text-lg text-gray-600 hebrew-text mb-8 max-w-2xl mx-auto">
-          בחרו משחק והתחילו לשחק! כל משחק הוא אתגר חברתי לבניית הסכמה.
+        <p className="text-xl text-gray-600 hebrew-text mb-8 max-w-3xl mx-auto">
+          גלו משחקים פעילים שתוכלו לשחק בהם כעת, צפו בתוצאות של משחקים שהסתיימו, והכינו את עצמכם למשחקים שבקרוב יגיעו!
         </p>
         
-        {/* Gaming Filter */}
+        {/* Category Filter */}
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-wrap justify-center gap-3">
             {categoriesLoading ? (
-              <div className="text-sm text-gray-500 hebrew-text animate-pulse">טוען קטגוריות משחק...</div>
+              <div className="text-sm text-gray-500 hebrew-text animate-pulse">טוען קטגוריות...</div>
             ) : categoryOptions.length > 1 ? (
               categoryOptions.map((category) => (
                 <Badge
@@ -94,24 +116,49 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
         </div>
       </div>
 
-      {/* Game Cards Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredPolls.map((poll) => (
-          <PollCard
-            key={poll.poll_id}
-            poll={poll}
+      {/* Poll Sections */}
+      {hasAnyPolls ? (
+        <div className="space-y-16">
+          {/* Active Polls - Highest Priority */}
+          <PollSection
+            title="🎮 משחקים פעילים - שחקו עכשיו!"
+            subtitle="משחקים שאתם יכולים לשחק בהם כרגע ולהשפיע על התוצאות"
+            polls={activePolls}
             onJoinPoll={onJoinPoll}
+            sectionType="active"
+            icon={<Gamepad2 className="h-6 w-6 text-white" />}
           />
-        ))}
-      </div>
 
-      {filteredPolls.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <Gamepad2 className="h-8 w-8 text-gray-400" />
+          {/* Completed Polls */}
+          <PollSection
+            title="🏆 משחקים שהסתיימו - צפו בתוצאות"
+            subtitle="גלו איך הקהילה הצביעה ומה הוחלט יחד"
+            polls={completedPolls}
+            onJoinPoll={onJoinPoll}
+            sectionType="completed"
+            icon={<Trophy className="h-6 w-6 text-white" />}
+          />
+
+          {/* Pending Polls */}
+          <PollSection
+            title="⏰ משחקים בקרוב - הכינו את עצמכם"
+            subtitle="משחקים מרגשים שיפתחו בקרוב - עקבו אחרי העדכונים!"
+            polls={pendingPolls}
+            onJoinPoll={onJoinPoll}
+            sectionType="pending"
+            icon={<Clock className="h-6 w-6 text-white" />}
+          />
+        </div>
+      ) : (
+        <div className="text-center py-16">
+          <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+            <Gamepad2 className="h-12 w-12 text-gray-400" />
           </div>
-          <p className="text-gray-500 hebrew-text text-lg">
+          <h3 className="text-2xl font-bold text-gray-700 hebrew-text mb-4">
             אין משחקים זמינים בקטגוריה זו כרגע
+          </h3>
+          <p className="text-gray-500 hebrew-text text-lg">
+            נסו לבחור קטגוריה אחרת או חזרו מאוחר יותר
           </p>
         </div>
       )}

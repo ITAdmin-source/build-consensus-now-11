@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HomePage } from '@/components/HomePage';
 import { Poll } from '@/types/poll';
-import { fetchActivePolls } from '@/integrations/supabase/polls';
+import { fetchAllPolls } from '@/integrations/supabase/polls';
 import { toast } from 'sonner';
 
 const Index = () => {
@@ -11,15 +11,15 @@ const Index = () => {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load initial polls
+  // Load all polls (not just active ones)
   useEffect(() => {
-    loadActivePolls();
+    loadAllPolls();
   }, []);
 
-  const loadActivePolls = async () => {
+  const loadAllPolls = async () => {
     try {
       setLoading(true);
-      const pollsData = await fetchActivePolls();
+      const pollsData = await fetchAllPolls();
       setPolls(pollsData);
     } catch (error) {
       console.error('Error loading polls:', error);
