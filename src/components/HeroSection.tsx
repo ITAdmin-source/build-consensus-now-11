@@ -1,8 +1,68 @@
 
 import React from 'react';
 import { Gamepad2, Zap, Users } from 'lucide-react';
+import { HeroCountdown } from '@/components/HeroCountdown';
+import { Poll } from '@/types/poll';
 
-export const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  polls: Poll[];
+}
+
+export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
+  // Helper function to determine countdown target and messaging
+  const getCountdownInfo = () => {
+    // Check for active rounds first
+    const activePolls = polls.filter(poll => 
+      poll.round?.active_status === 'active' && poll.status === 'active'
+    );
+    
+    if (activePolls.length > 0) {
+      // Find the earliest ending active round
+      const earliestEndingPoll = activePolls.reduce((earliest, poll) => {
+        const currentEndTime = new Date(poll.round?.end_time || '').getTime();
+        const earliestEndTime = new Date(earliest.round?.end_time || '').getTime();
+        return currentEndTime < earliestEndTime ? poll : earliest;
+      });
+      
+      return {
+        endTime: earliestEndingPoll.round?.end_time || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        title: 'הזמן אוזל! הצביעו עכשיו',
+        subtitle: `משחק פעיל: ${earliestEndingPoll.title}`,
+        showCountdown: true
+      };
+    }
+
+    // Check for pending rounds
+    const pendingPolls = polls.filter(poll => 
+      poll.round?.active_status === 'pending'
+    );
+    
+    if (pendingPolls.length > 0) {
+      // Find the earliest starting pending round
+      const earliestStartingPoll = pendingPolls.reduce((earliest, poll) => {
+        const currentStartTime = new Date(poll.round?.start_time || '').getTime();
+        const earliestStartTime = new Date(earliest.round?.start_time || '').getTime();
+        return currentStartTime < earliestStartTime ? poll : earliest;
+      });
+      
+      return {
+        endTime: earliestStartingPoll.round?.start_time || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        title: 'בקרוב יתחיל משחק חדש!',
+        subtitle: `משחק הבא: ${earliestStartingPoll.title}`,
+        showCountdown: true
+      };
+    }
+
+    return {
+      endTime: '',
+      title: '',
+      subtitle: '',
+      showCountdown: false
+    };
+  };
+
+  const countdownInfo = getCountdownInfo();
+
   return (
     <div className="relative bg-[#1a305b] text-white overflow-hidden text-center">
       {/* Animated background particles */}
@@ -30,6 +90,17 @@ export const HeroSection: React.FC = () => {
             נקודות חיבור
           </span>
         </h1>
+        
+        {/* Smart Countdown Section */}
+        {countdownInfo.showCountdown && (
+          <div className="mb-8">
+            <HeroCountdown 
+              endTime={countdownInfo.endTime}
+              title={countdownInfo.title}
+              subtitle={countdownInfo.subtitle}
+            />
+          </div>
+        )}
         
         <div className="space-y-4 mb-8">
           <p className="text-xl md:text-2xl font-semibold hebrew-text leading-relaxed text-[#66c8ca]">
