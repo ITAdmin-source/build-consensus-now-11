@@ -3,6 +3,7 @@ import React from 'react';
 import { NavigationHeader } from '@/components/NavigationHeader';
 import { PollHeader } from '@/components/PollHeader';
 import { OptimizedVotingInterface } from '@/components/OptimizedVotingInterface';
+import { GameParticles } from '@/components/GameParticles';
 import { Poll, Statement } from '@/types/poll';
 
 interface VotingPageProps {
@@ -31,10 +32,12 @@ export const VotingPage: React.FC<VotingPageProps> = ({
   isVoting = false
 }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen gaming-bg relative overflow-hidden">
+      <GameParticles count={12} className="opacity-20" />
+      
       <NavigationHeader currentPage="voting" />
       
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <div className="container mx-auto px-4 py-6 max-w-4xl relative z-10">
         <div className="mb-4 animate-fade-in">
           <PollHeader
             poll={poll}
@@ -56,7 +59,6 @@ export const VotingPage: React.FC<VotingPageProps> = ({
             isVoting={isVoting}
           />
         </div>
-        
       </div>
     </div>
   );
