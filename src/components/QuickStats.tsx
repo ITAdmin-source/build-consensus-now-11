@@ -33,7 +33,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ polls }) => {
     {
       icon: Medal,
       value: totalMoves,
-      label: 'הצבעות',
+      label: 'מהלכים',
       color: '#ec0081',
       bgColor: 'bg-pink-50',
       borderColor: 'border-[#ec0081]/20'
@@ -65,7 +65,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ polls }) => {
                 <div className="text-2xl md:text-3xl font-bold mb-1" style={{ color: stat.color }}>
                   {stat.value.toLocaleString()}
                 </div>
-                <div className="text-xs md:text-sm text-gray-600 font-medium hebrew-text">
+                <div className="text-xs md:text-sm text-gray-600 font-medium hebrew-text text-center">
                   {stat.label}
                 </div>
               </div>
