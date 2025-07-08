@@ -24,6 +24,7 @@ import { fetchCategories } from '@/integrations/supabase/categories';
 import { fetchAllRounds } from '@/integrations/supabase/rounds';
 import { supabase } from '@/integrations/supabase/client';
 import { generateSlug, isSlugFormatValid } from '@/utils/slugUtils';
+import { getPollStatus } from '@/utils/pollStatusUtils';
 import type { Poll } from '@/types/poll';
 
 const editPollSchema = z.object({
@@ -38,8 +39,7 @@ const editPollSchema = z.object({
   auto_approve_statements: z.boolean(),
   min_support_pct: z.number().min(0, 'מינימום 0%').max(100, 'מקסימום 100%'),
   max_opposition_pct: z.number().min(0, 'מינימום 0%').max(100, 'מקסימום 100%'),
-  min_votes_per_group: z.number().min(1, 'מינימום הצבעה אחת לקבוצה'),
-  status: z.enum(['draft', 'active', 'closed'])
+  min_votes_per_group: z.number().min(1, 'מינימום הצבעה אחת לקבוצה')
 });
 
 type EditPollFormData = z.infer<typeof editPollSchema>;
@@ -66,8 +66,7 @@ export const EditPollPage: React.FC = () => {
       auto_approve_statements: false,
       min_support_pct: 60,
       max_opposition_pct: 30,
-      min_votes_per_group: 3,
-      status: 'draft'
+      min_votes_per_group: 3
     }
   });
 
@@ -166,7 +165,6 @@ export const EditPollPage: React.FC = () => {
           min_consensus_points_to_win: data.min_consensus_points_to_win,
           allow_user_statements: data.allow_user_statements,
           auto_approve_statements: data.auto_approve_statements,
-          status: data.status,
           min_support_pct: data.min_support_pct,
           max_opposition_pct: data.max_opposition_pct,
           min_votes_per_group: data.min_votes_per_group
@@ -227,8 +225,7 @@ export const EditPollPage: React.FC = () => {
         auto_approve_statements: poll.auto_approve_statements ?? false,
         min_support_pct: poll.min_support_pct || 60,
         max_opposition_pct: poll.max_opposition_pct || 30,
-        min_votes_per_group: poll.min_votes_per_group || 3,
-        status: poll.status || 'draft'
+        min_votes_per_group: poll.min_votes_per_group || 3
       });
     }
   }, [poll, categories, rounds, form]);
@@ -263,6 +260,7 @@ export const EditPollPage: React.FC = () => {
   }
 
   const pollUrl = poll.slug ? `/poll/${poll.slug}` : `/poll/${poll.poll_id}`;
+  const currentPollStatus = getPollStatus(poll);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -283,8 +281,8 @@ export const EditPollPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Badge variant={poll.status === 'active' ? 'default' : 'secondary'}>
-                {poll.status === 'active' ? 'פעיל' : poll.status === 'draft' ? 'טיוטה' : 'סגור'}
+              <Badge variant={currentPollStatus === 'active' ? 'default' : 'secondary'}>
+                {currentPollStatus === 'active' ? 'פעיל' : currentPollStatus === 'completed' ? 'הושלם' : currentPollStatus === 'pending' ? 'ממתין' : 'טיוטה'}
               </Badge>
               <span className="text-sm text-muted-foreground">
                 {poll.total_votes} הצבעות | {poll.current_consensus_points}/{poll.min_consensus_points_to_win} נק' חיבור
@@ -438,29 +436,6 @@ export const EditPollPage: React.FC = () => {
                                     {round.title}
                                   </SelectItem>
                                 ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="hebrew-text">סטטוס</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger className="hebrew-text">
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="draft" className="hebrew-text">טיוטה</SelectItem>
-                                <SelectItem value="active" className="hebrew-text">פעיל</SelectItem>
-                                <SelectItem value="closed" className="hebrew-text">סגור</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />

@@ -3,6 +3,7 @@ import React from 'react';
 import { Gamepad2, Zap, Users, Trophy, Target } from 'lucide-react';
 import { HeroCountdown } from '@/components/HeroCountdown';
 import { Poll } from '@/types/poll';
+import { getPollStatus } from '@/utils/pollStatusUtils';
 
 interface HeroSectionProps {
   polls: Poll[];
@@ -13,7 +14,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
   const getCountdownInfo = () => {
     // Check for active rounds first
     const activePolls = polls.filter(poll => 
-      poll.round?.active_status === 'active' && poll.status === 'active'
+      poll.round?.active_status === 'active' && getPollStatus(poll) === 'active'
     );
     
     if (activePolls.length > 0) {

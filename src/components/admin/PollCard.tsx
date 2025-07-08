@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, Vote, Target, Edit, Trash2 } from 'lucide-react';
+import { getPollStatus } from '@/utils/pollStatusUtils';
 import type { Poll } from '@/types/poll';
 
 interface PollCardProps {
@@ -26,6 +27,22 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onEdit, onDelete }) =>
 
   // Use round end_time for display
   const endTime = poll.round?.end_time || new Date().toISOString();
+  const currentPollStatus = getPollStatus(poll);
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'פעיל';
+      case 'completed':
+        return 'הושלם';
+      case 'pending':
+        return 'ממתין';
+      case 'draft':
+        return 'טיוטה';
+      default:
+        return 'לא ידוע';
+    }
+  };
 
   return (
     <Card>
@@ -54,8 +71,8 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onEdit, onDelete }) =>
               )}
             </div>
           </div>
-          <Badge variant={poll.status === 'active' ? 'default' : 'secondary'}>
-            {poll.status === 'active' ? 'פעיל' : poll.status === 'closed' ? 'סגור' : 'טיוטה'}
+          <Badge variant={currentPollStatus === 'active' ? 'default' : 'secondary'}>
+            {getStatusText(currentPollStatus)}
           </Badge>
         </div>
         

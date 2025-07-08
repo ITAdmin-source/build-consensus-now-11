@@ -4,6 +4,7 @@ import { PollSection } from '@/components/PollSection';
 import { Badge } from '@/components/ui/badge';
 import { Poll } from '@/types/poll';
 import { fetchActivePollCategories, CategoryWithPollCount } from '@/integrations/supabase/categories';
+import { getPollStatus } from '@/utils/pollStatusUtils';
 import { toast } from 'sonner';
 import { Gamepad2, Trophy, Clock, Target } from 'lucide-react';
 
@@ -37,14 +38,16 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
 
   // Categorize polls based on their status and round status
   const categorizePoll = (poll: Poll) => {
+    const pollStatus = getPollStatus(poll);
+    
     // Check round status first
     if (poll.round?.active_status === 'pending') {
       return 'pending';
     }
-    if (poll.round?.active_status === 'completed' || poll.status === 'closed') {
+    if (poll.round?.active_status === 'completed' || pollStatus === 'completed') {
       return 'completed';
     }
-    if (poll.round?.active_status === 'active' && poll.status === 'active') {
+    if (poll.round?.active_status === 'active' && pollStatus === 'active') {
       return 'active';
     }
     // Default to pending if unclear
