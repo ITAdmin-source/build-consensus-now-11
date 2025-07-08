@@ -17,7 +17,7 @@ export const HomePage: React.FC<HomePageProps> = ({ polls, onJoinPoll }) => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <NavigationHeader currentPage="home" />
       
-      <HeroSection />
+      <HeroSection polls={polls} />
       <QuickStats polls={polls} />
       <HowItWorks />
       <PollsGrid polls={polls} onJoinPoll={onJoinPoll} />
