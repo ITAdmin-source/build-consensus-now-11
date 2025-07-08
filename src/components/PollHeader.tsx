@@ -6,20 +6,22 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CountdownTimer } from './CountdownTimer';
 import { Poll } from '@/types/poll';
-import { Target, BarChart3 } from 'lucide-react';
+import { Target, BarChart3, Clock } from 'lucide-react';
 
 interface PollHeaderProps {
   poll: Poll;
   currentPage: 'voting' | 'results';
   onNavigateToResults?: () => void;
   onNavigateToVoting?: () => void;
+  isPollCompleted?: boolean;
 }
 
 export const PollHeader: React.FC<PollHeaderProps> = ({
   poll,
   currentPage,
   onNavigateToResults,
-  onNavigateToVoting
+  onNavigateToVoting,
+  isPollCompleted = false
 }) => {
   const consensusProgress = (poll.current_consensus_points / poll.min_consensus_points_to_win) * 100;
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
@@ -34,9 +36,17 @@ export const PollHeader: React.FC<PollHeaderProps> = ({
           {/* Poll Title and Category */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <h1 className="text-2xl md:text-3xl font-bold hebrew-text text-gradient mb-2">
-                {poll.title}
-              </h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl md:text-3xl font-bold hebrew-text text-gradient">
+                  {poll.title}
+                </h1>
+                {isPollCompleted && (
+                  <Badge variant="secondary" className="bg-gray-100 text-gray-700 hebrew-text">
+                    <Clock className="h-3 w-3 ml-1" />
+                    הסקר הסתיים
+                  </Badge>
+                )}
+              </div>
               <p className="text-muted-foreground hebrew-text leading-relaxed">
                 {poll.description}
               </p>
@@ -45,7 +55,7 @@ export const PollHeader: React.FC<PollHeaderProps> = ({
               <Badge variant="outline" className="hebrew-text">
                 {poll.category}
               </Badge>
-              <CountdownTimer endTime={endTime} />
+              {!isPollCompleted && <CountdownTimer endTime={endTime} />}
             </div>
           </div>
 
@@ -68,7 +78,10 @@ export const PollHeader: React.FC<PollHeaderProps> = ({
                 className="h-3 consensus-gradient" 
               />
               <p className="text-xs text-muted-foreground hebrew-text mt-1">
-                {isWinning ? 'ניצחון קבוצתי!' : 'נקודות חיבור שנמצאו'}
+                {isPollCompleted 
+                  ? (isWinning ? 'ניצחון קבוצתי הושג!' : 'התוצאות הסופיות')
+                  : (isWinning ? 'ניצחון קבוצתי!' : 'נקודות חיבור שנמצאו')
+                }
               </p>
             </div>
 
@@ -82,7 +95,7 @@ export const PollHeader: React.FC<PollHeaderProps> = ({
                   צפה בתוצאות
                 </Button>
               )}
-              {currentPage === 'results' && onNavigateToVoting && (
+              {currentPage === 'results' && onNavigateToVoting && !isPollCompleted && (
                 <Button
                   onClick={onNavigateToVoting}
                   className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 hebrew-text"

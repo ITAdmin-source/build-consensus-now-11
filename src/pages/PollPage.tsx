@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { VotingPage } from '@/components/VotingPage';
@@ -34,6 +35,19 @@ const PollPage = () => {
     isLive
   } = useRealtimePollData({ slug: slug || '' });
 
+  // Check if poll is completed
+  const isPollCompleted = useMemo(() => {
+    if (!poll) return false;
+    return poll.round?.active_status === 'completed' || poll.status === 'closed';
+  }, [poll]);
+
+  // Force results view for completed polls
+  useEffect(() => {
+    if (isPollCompleted && currentView === 'voting') {
+      setCurrentView('results');
+    }
+  }, [isPollCompleted, currentView]);
+
   // Enhanced statement manager with routing capabilities
   const statementManager = useMemo(() => {
     if (statements.length === 0) return null;
@@ -57,7 +71,7 @@ const PollPage = () => {
 
   // Update current transition when statement manager changes
   useEffect(() => {
-    if (statementManager) {
+    if (statementManager && !isPollCompleted) {
       const updateTransition = async () => {
         try {
           const transition = await statementManager.getCurrentTransition();
@@ -76,9 +90,14 @@ const PollPage = () => {
       
       updateTransition();
     }
-  }, [statementManager]);
+  }, [statementManager, isPollCompleted]);
 
   const handleVote = async (statementId: string, vote: string) => {
+    if (isPollCompleted) {
+      toast.error('הסקר הסתיים - לא ניתן להצביע יותר');
+      return;
+    }
+
     setIsVoting(true);
     
     try {
@@ -110,6 +129,11 @@ const PollPage = () => {
   };
 
   const handleSubmitStatement = async (content: string, contentType: string) => {
+    if (isPollCompleted) {
+      toast.error('הסקר הסתיים - לא ניתן להוסיף הצהרות חדשות');
+      return;
+    }
+
     if (!user) {
       toast.error('יש להתחבר כדי להוסיף הצהרה');
       return;
@@ -135,6 +159,10 @@ const PollPage = () => {
   };
 
   const handleNavigateToVoting = () => {
+    if (isPollCompleted) {
+      toast.info('הסקר הסתיים - ניתן לראות רק תוצאות');
+      return;
+    }
     setCurrentView('voting');
   };
 
@@ -167,24 +195,8 @@ const PollPage = () => {
     );
   }
 
-  if (currentView === 'voting') {
-    return (
-      <VotingPage
-        poll={poll}
-        currentStatement={currentTransition.current}
-        unvotedStatements={statements.filter(s => !userVotes[s.statement_id])}
-        totalStatements={statements.length}
-        userVoteCount={Object.keys(userVotes).length}
-        onVote={handleVote}
-        onViewResults={handleViewResults}
-        onBackToHome={handleBackToHome}
-        onSubmitStatement={handleSubmitStatement}
-        isVoting={isVoting}
-      />
-    );
-  }
-
-  if (currentView === 'results') {
+  // Force results view for completed polls
+  if (isPollCompleted || currentView === 'results') {
     return (
       <ResultsPage
         poll={poll}
@@ -193,13 +205,13 @@ const PollPage = () => {
         groups={groups}
         groupStats={groupStats}
         onBackToHome={handleBackToHome}
-        onNavigateToVoting={statements.length > 0 ? handleNavigateToVoting : undefined}
-        isLive={isLive}
+        onNavigateToVoting={!isPollCompleted && statements.length > 0 ? handleNavigateToVoting : undefined}
+        isLive={!isPollCompleted && isLive}
+        isPollCompleted={isPollCompleted}
       />
     );
   }
 
-  // Default fallback
   return (
     <VotingPage
       poll={poll}
