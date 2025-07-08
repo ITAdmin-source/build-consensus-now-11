@@ -25,7 +25,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ polls }) => {
     {
       icon: Star,
       value: totalVictoryPoints,
-      label: 'נקודות זכייה',
+      label: 'נקודות חיבור',
       color: '#66c8ca',
       bgColor: 'bg-teal-50',
       borderColor: 'border-[#66c8ca]/20'
