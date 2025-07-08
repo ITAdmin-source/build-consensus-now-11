@@ -34,6 +34,15 @@ export const HowItWorks: React.FC = () => {
       color: '#ec0081',
       bgColor: 'bg-pink-50',
       borderColor: 'border-[#ec0081]/20'
+    },
+    {
+      icon: Trophy,
+      step: '4',
+      title: 'תובנות אישיות',
+      description: 'גלו תובנות מעניינות על עצמכם ',
+      color: '#ec0081',
+      bgColor: 'bg-pink-50',
+      borderColor: 'border-[#ec0081]/20'
     }
   ];
 
