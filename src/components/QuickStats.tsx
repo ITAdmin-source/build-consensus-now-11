@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Poll } from '@/types/poll';
+import { getPollStatus } from '@/utils/pollStatusUtils';
 import { Gamepad2, Trophy, Star, Medal } from 'lucide-react';
 
 interface QuickStatsProps {
@@ -8,7 +9,11 @@ interface QuickStatsProps {
 }
 
 export const QuickStats: React.FC<QuickStatsProps> = ({ polls }) => {
-  const activeGames = polls.filter(p => p.status === 'active').length;
+  const activeGames = polls.filter(p => {
+    const status = getPollStatus(p);
+    return status === 'active' || status === 'pending';
+  }).length;
+  
   const totalVictoryPoints = polls.reduce((sum, p) => sum + p.current_consensus_points, 0);
   const totalMoves = polls.reduce((sum, p) => sum + p.total_votes, 0);
   const collectiveWins = polls.filter(p => p.current_consensus_points >= p.min_consensus_points_to_win).length;

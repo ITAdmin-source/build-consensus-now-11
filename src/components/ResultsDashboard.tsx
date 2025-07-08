@@ -20,6 +20,7 @@ interface ResultsDashboardProps {
   consensusPoints: ConsensusPoint[];
   groups: Group[];
   groupStats: GroupStatementStats[];
+  isPollCompleted?: boolean;
 }
 
 export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
@@ -27,7 +28,8 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   statements,
   consensusPoints,
   groups,
-  groupStats
+  groupStats,
+  isPollCompleted = false
 }) => {
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
   

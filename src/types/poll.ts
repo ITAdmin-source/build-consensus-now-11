@@ -1,3 +1,4 @@
+
 export interface Poll {
   poll_id: string;
   title: string;
@@ -13,7 +14,7 @@ export interface Poll {
   total_participants: number;
   allow_user_statements: boolean;
   auto_approve_statements: boolean;
-  status: 'draft' | 'active' | 'closed';
+  // status removed - now derived from round status
   min_support_pct: number;
   max_opposition_pct: number;
   min_votes_per_group: number;

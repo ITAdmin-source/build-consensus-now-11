@@ -56,7 +56,7 @@ export const transformPollData = (
     slug: poll.slug || '',
     time_left: Math.max(0, timeLeft),
     is_expired: isExpired,
-    status: poll.status as 'draft' | 'active' | 'closed',
+    // status removed - now derived from round status
     min_consensus_points_to_win: poll.min_consensus_points_to_win || 3,
     current_consensus_points: consensusCount,
     total_statements: statementsCount,

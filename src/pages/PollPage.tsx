@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { VotingPage } from '@/components/VotingPage';
@@ -9,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { StatementManager, StatementTransition } from '@/utils/optimizedStatementUtils';
 import { useRealtimePollData } from '@/hooks/useRealtimePollData';
+import { getPollStatus, isPollCompleted } from '@/utils/pollStatusUtils';
 
 const PollPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -35,18 +35,18 @@ const PollPage = () => {
     isLive
   } = useRealtimePollData({ slug: slug || '' });
 
-  // Check if poll is completed
-  const isPollCompleted = useMemo(() => {
+  // Check if poll is completed using new utility
+  const pollCompleted = useMemo(() => {
     if (!poll) return false;
-    return poll.round?.active_status === 'completed' || poll.status === 'closed';
+    return isPollCompleted(poll);
   }, [poll]);
 
   // Force results view for completed polls
   useEffect(() => {
-    if (isPollCompleted && currentView === 'voting') {
+    if (pollCompleted && currentView === 'voting') {
       setCurrentView('results');
     }
-  }, [isPollCompleted, currentView]);
+  }, [pollCompleted, currentView]);
 
   // Enhanced statement manager with routing capabilities
   const statementManager = useMemo(() => {
@@ -71,7 +71,7 @@ const PollPage = () => {
 
   // Update current transition when statement manager changes
   useEffect(() => {
-    if (statementManager && !isPollCompleted) {
+    if (statementManager && !pollCompleted) {
       const updateTransition = async () => {
         try {
           const transition = await statementManager.getCurrentTransition();
@@ -90,10 +90,10 @@ const PollPage = () => {
       
       updateTransition();
     }
-  }, [statementManager, isPollCompleted]);
+  }, [statementManager, pollCompleted]);
 
   const handleVote = async (statementId: string, vote: string) => {
-    if (isPollCompleted) {
+    if (pollCompleted) {
       toast.error('הסקר הסתיים - לא ניתן להצביע יותר');
       return;
     }
@@ -129,7 +129,7 @@ const PollPage = () => {
   };
 
   const handleSubmitStatement = async (content: string, contentType: string) => {
-    if (isPollCompleted) {
+    if (pollCompleted) {
       toast.error('הסקר הסתיים - לא ניתן להוסיף הצהרות חדשות');
       return;
     }
@@ -159,7 +159,7 @@ const PollPage = () => {
   };
 
   const handleNavigateToVoting = () => {
-    if (isPollCompleted) {
+    if (pollCompleted) {
       toast.info('הסקר הסתיים - ניתן לראות רק תוצאות');
       return;
     }
@@ -196,7 +196,7 @@ const PollPage = () => {
   }
 
   // Force results view for completed polls
-  if (isPollCompleted || currentView === 'results') {
+  if (pollCompleted || currentView === 'results') {
     return (
       <ResultsPage
         poll={poll}
@@ -205,9 +205,9 @@ const PollPage = () => {
         groups={groups}
         groupStats={groupStats}
         onBackToHome={handleBackToHome}
-        onNavigateToVoting={!isPollCompleted && statements.length > 0 ? handleNavigateToVoting : undefined}
-        isLive={!isPollCompleted && isLive}
-        isPollCompleted={isPollCompleted}
+        onNavigateToVoting={!pollCompleted && statements.length > 0 ? handleNavigateToVoting : undefined}
+        isLive={!pollCompleted && isLive}
+        isPollCompleted={pollCompleted}
       />
     );
   }

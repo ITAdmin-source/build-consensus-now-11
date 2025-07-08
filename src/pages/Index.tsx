@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { HomePage } from '@/components/HomePage';
 import { Poll } from '@/types/poll';
 import { fetchAllPolls } from '@/integrations/supabase/polls';
+import { isPollVisible } from '@/utils/pollStatusUtils';
 import { toast } from 'sonner';
 
 const Index = () => {
@@ -11,7 +12,7 @@ const Index = () => {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load all polls (not just active ones)
+  // Load all polls but filter visible ones
   useEffect(() => {
     loadAllPolls();
   }, []);
@@ -20,10 +21,12 @@ const Index = () => {
     try {
       setLoading(true);
       const pollsData = await fetchAllPolls();
-      setPolls(pollsData);
+      // Filter to only show visible polls (not draft)
+      const visiblePolls = pollsData.filter(isPollVisible);
+      setPolls(visiblePolls);
     } catch (error) {
       console.error('Error loading polls:', error);
-      toast.error('שגיאה בטעינת הסקרים');
+      toast.error('שגיאה בטעينת הסקרים');
     } finally {
       setLoading(false);
     }

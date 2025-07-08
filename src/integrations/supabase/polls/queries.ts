@@ -1,4 +1,3 @@
-
 import { supabase } from '../client';
 import { transformPollData } from './transformers';
 import { Poll } from '@/types/poll';
@@ -11,7 +10,6 @@ export const fetchActivePolls = async (): Promise<Poll[]> => {
       polis_poll_categories(name),
       polis_rounds(round_id, title, start_time, end_time, publish_status)
     `)
-    .eq('status', 'active')
     .eq('polis_rounds.publish_status', 'published'); // Only include polls from published rounds
 
   if (error) {
@@ -35,7 +33,7 @@ export const fetchActivePolls = async (): Promise<Poll[]> => {
     })
   );
 
-  // Filter out polls from inactive rounds
+  // Filter out polls from inactive rounds - now handled by round active_status
   return transformedPolls.filter(poll => 
     poll.round?.active_status === 'active' || poll.round?.active_status === 'pending'
   );
@@ -178,4 +176,3 @@ async function getParticipantsCount(pollId: string): Promise<number> {
 
   return uniqueParticipants.size;
 }
-
