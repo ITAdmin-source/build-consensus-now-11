@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { UserStatementForm } from '@/components/UserStatementForm';
 import { StatementInfo } from '@/components/StatementInfo';
+import { VotingProgress } from '@/components/VotingProgress';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, HelpCircle, Users, LogIn } from 'lucide-react';
@@ -88,6 +89,14 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
           </Button>
         </div>
 
+        {/* VotingProgress Component */}
+        <VotingProgress
+          poll={poll}
+          userVoteCount={userVoteCount}
+          totalStatements={totalStatements}
+          remainingStatements={remainingStatements}
+        />
+
         {/* User Statement Form - Show consistently based on poll settings */}
         {renderUserStatementSection()}
       </div>
@@ -143,6 +152,14 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* VotingProgress Component */}
+      <VotingProgress
+        poll={poll}
+        userVoteCount={userVoteCount}
+        totalStatements={totalStatements}
+        remainingStatements={remainingStatements}
+      />
 
       {/* User Statement Form - Show consistently based on poll settings */}
       {renderUserStatementSection()}
