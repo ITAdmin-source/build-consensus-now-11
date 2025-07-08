@@ -16,10 +16,10 @@ export const HeroCountdown: React.FC<HeroCountdownProps> = ({ endTime, title, su
   }
 
   const timeUnits = [
-    { value: days, label: 'ימים' },
-    { value: hours, label: 'שעות' },
+    { value: seconds, label: 'שניות' },
     { value: minutes, label: 'דקות' },
-    { value: seconds, label: 'שניות' }
+    { value: hours, label: 'שעות' },
+    { value: days, label: 'ימים' }
   ];
 
   return (
