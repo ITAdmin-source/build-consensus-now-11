@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Gamepad2, Zap, Users, Trophy, Target } from 'lucide-react';
 import { HeroCountdown } from '@/components/HeroCountdown';
@@ -170,32 +171,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
           </div>
         </div>
       </div>
-      
-      {/* Custom animations styles */}
-      <style jsx>{`
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-20px) scale(1.1); }
-        }
-        @keyframes float-medium {
-          0%, 100% { transform: translateY(0px) translateX(0px); }
-          33% { transform: translateY(-15px) translateX(10px); }
-          66% { transform: translateY(-5px) translateX(-5px); }
-        }
-        @keyframes float-fast {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-25px) rotate(180deg); }
-        }
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
-        }
-        
-        .animate-float-slow { animation: float-slow 4s ease-in-out infinite; }
-        .animate-float-medium { animation: float-medium 3s ease-in-out infinite; }
-        .animate-float-fast { animation: float-fast 2s ease-in-out infinite; }
-        .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
-      `}</style>
     </div>
   );
 };
