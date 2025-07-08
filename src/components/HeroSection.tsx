@@ -85,7 +85,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
       </div>
       
       <div className="container mx-auto px-4 py-16 text-center relative z-10 flex flex-col items-center">
-        {/* Enhanced icon section */}
+        {/* Enhanced icon section
         <div className="flex justify-center mb-8">
           <div className="relative group">
             <div className="absolute -inset-4 bg-gradient-to-r from-[#66c8ca]/30 to-[#66c8ca]/10 rounded-full blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -96,7 +96,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
               </div>
             </div>
           </div>
-        </div>
+        </div>  */}
         
         {/* Enhanced main title */}
         <h1 className="text-5xl md:text-7xl font-bold mb-8 hebrew-text relative text-center">
