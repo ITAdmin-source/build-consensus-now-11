@@ -85,18 +85,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
       </div>
       
       <div className="container mx-auto px-4 py-16 text-center relative z-10 flex flex-col items-center">
-        {/* Enhanced icon section
-        <div className="flex justify-center mb-8">
-          <div className="relative group">
-            <div className="absolute -inset-4 bg-gradient-to-r from-[#66c8ca]/30 to-[#66c8ca]/10 rounded-full blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="relative bg-white/10 backdrop-blur-sm rounded-full p-4 border border-white/20 shadow-2xl">
-              <Gamepad2 className="h-16 w-16 text-white animate-pulse group-hover:scale-110 transition-transform duration-300" />
-              <div className="absolute -top-2 -right-2 animate-bounce">
-                <Zap className="h-6 w-6 text-[#66c8ca] drop-shadow-lg" />
-              </div>
-            </div>
-          </div>
-        </div>  */}
         
         {/* Enhanced main title */}
         <h1 className="text-5xl md:text-7xl font-bold mb-8 hebrew-text relative text-center">
