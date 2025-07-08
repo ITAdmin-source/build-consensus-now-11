@@ -2,7 +2,6 @@
 import React from 'react';
 import { NavigationHeader } from '@/components/NavigationHeader';
 import { PollHeader } from '@/components/PollHeader';
-import { VotingProgress } from '@/components/VotingProgress';
 import { OptimizedVotingInterface } from '@/components/OptimizedVotingInterface';
 import { Poll, Statement } from '@/types/poll';
 
@@ -55,15 +54,6 @@ export const VotingPage: React.FC<VotingPageProps> = ({
             onViewResults={onViewResults}
             onSubmitStatement={onSubmitStatement}
             isVoting={isVoting}
-          />
-        </div>
-
-        <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <VotingProgress
-            poll={poll}
-            userVoteCount={userVoteCount}
-            totalStatements={totalStatements}
-            remainingStatements={unvotedStatements.length}
           />
         </div>
         

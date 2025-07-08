@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserStatementForm } from '@/components/UserStatementForm';
 import { StatementInfo } from '@/components/StatementInfo';
+import { VotingProgress } from '@/components/VotingProgress';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, HelpCircle, LogIn } from 'lucide-react';
@@ -93,6 +94,15 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
             צפה בתוצאות
           </Button>
         </div>
+        
+        {/* VotingProgress Component */}
+        <VotingProgress
+          poll={poll}
+          userVoteCount={userVoteCount}
+          totalStatements={totalStatements}
+          remainingStatements={remainingStatements}
+        />
+        
         {userStatementSection}
       </div>
     );
@@ -166,6 +176,14 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           </CardContent>
         </Card>
       </div>
+
+      {/* VotingProgress Component */}
+      <VotingProgress
+        poll={poll}
+        userVoteCount={userVoteCount}
+        totalStatements={totalStatements}
+        remainingStatements={remainingStatements}
+      />
 
       {userStatementSection}
     </div>
