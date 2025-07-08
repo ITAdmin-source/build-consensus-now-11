@@ -33,7 +33,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ polls }) => {
     {
       icon: Medal,
       value: totalMoves,
-      label: 'מהלכים',
+      label: 'הצבעות',
       color: '#ec0081',
       bgColor: 'bg-pink-50',
       borderColor: 'border-[#ec0081]/20'
