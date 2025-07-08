@@ -11,8 +11,8 @@ export const HowItWorks: React.FC = () => {
     {
       icon: Gamepad2,
       step: '1',
-      title: 'בחרו את המיקום שלכם',
-      description: 'קראו הצהרות בנושא וציינו: תומכים 👍, מתנגדים 👎, או לא בטוחים 🤔',
+      title: 'הצביעו ודרגו',
+      description: 'תראו היגדים בנושא וציינו: תומכים 👍, מתנגדים 👎, או לא בטוחים 🤔',
       color: '#1a305b',
       bgColor: 'bg-blue-50',
       borderColor: 'border-[#1a305b]/20'
@@ -20,8 +20,8 @@ export const HowItWorks: React.FC = () => {
     {
       icon: Target,
       step: '2', 
-      title: 'מצאו נקודות זכייה',
-      description: 'המערכת מזהה הצהרות שזוכות לתמיכה רחבה מכל הקבוצות - אלו נקודות הזכייה!',
+      title: 'מצאו נקודות חיבור',
+      description: 'המערכת מזהה היגדים שזוכים לתמיכה רחבה מכל קבוצות הדעה - אלו נקודות החיבור!',
       color: '#66c8ca',
       bgColor: 'bg-teal-50',
       borderColor: 'border-[#66c8ca]/20'
@@ -30,7 +30,7 @@ export const HowItWorks: React.FC = () => {
       icon: Trophy,
       step: '3',
       title: 'זכו יחד!',
-      description: 'כשמוצאים מספיק נקודות זכייה לפני שהזמן נגמר - כולם מנצחים במשחק!',
+      description: 'כשמוצאים מספיק נקודות חיבור לפני שהזמן נגמר - כולם מנצחים במשחק!',
       color: '#ec0081',
       bgColor: 'bg-pink-50',
       borderColor: 'border-[#ec0081]/20'
@@ -39,7 +39,7 @@ export const HowItWorks: React.FC = () => {
       icon: Trophy,
       step: '4',
       title: 'תובנות אישיות',
-      description: 'גלו תובנות מעניינות על עצמכם ',
+      description: ' גלו תובנות מעניינות על עצמכם המבוססות על הבחירות שלכם',
       color: '#ec0081',
       bgColor: 'bg-pink-50',
       borderColor: 'border-[#ec0081]/20'
@@ -79,7 +79,7 @@ export const HowItWorks: React.FC = () => {
         </div>
         
         {isExpanded && (
-          <div className="grid md:grid-cols-3 gap-8 animate-fade-in">
+          <div className="grid md:grid-cols-4 gap-8 animate-fade-in">
             {gameRules.map((rule, index) => {
               const IconComponent = rule.icon;
               return (
