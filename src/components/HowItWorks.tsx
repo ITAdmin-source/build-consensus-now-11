@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Gamepad2, Target, Trophy, ChevronDown, ChevronUp, Zap } from 'lucide-react';
+import { Gamepad2, Target, Trophy, ChevronDown, ChevronUp, Zap, Lightbulb } from 'lucide-react';
 
 export const HowItWorks: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -27,13 +27,13 @@ export const HowItWorks: React.FC = () => {
       borderColor: 'border-[#66c8ca]/20'
     },
     {
-      icon: Trophy,
+      icon: Lightbulb, // or Eye - import { Lightbulb, Eye } from 'lucide-react'
       step: '3',
       title: 'גלו תובנות',
       description: ' גלו תובנות מעניינות על עצמכם המבוססות על הבחירות שלכם',
-      color: '#ec0081',
-      bgColor: 'bg-pink-50',
-      borderColor: 'border-[#ec0081]/20'
+      color: '#66c8ca',
+      bgColor: 'bg-teal-50',
+      borderColor: 'border-[#66c8ca]/20'
     },
     {
       icon: Trophy,
