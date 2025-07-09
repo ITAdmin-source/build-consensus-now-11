@@ -276,9 +276,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           
           <CardHeader className="text-center pb-4">
             <div className="flex items-start justify-between mb-4">
-              {/*<CardTitle className="text-2xl font-bold leading-relaxed flex-1 text-center">
-                {statement.content}
-              </CardTitle>*/}
+              
               <CardTitle className="text-2xl font-bold leading-relaxed flex-1 text-center flex items-start justify-center gap-3">
                 <span>{statement.content}</span>
                 {statement.more_info && (
@@ -289,7 +287,8 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
                 )}
               </CardTitle>
               {statement.more_info && (
-                <div className="mr-4 flex-shrink-0">
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                  <span className="hebrew-text">רוצה פרטים נוספים?</span>
                   <StatementInfo 
                     statementContent={statement.content}
                     moreInfo={statement.more_info} 
