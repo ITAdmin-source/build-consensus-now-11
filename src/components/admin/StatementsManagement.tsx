@@ -14,8 +14,6 @@ import { fetchStatementsByPollId, submitUserStatement } from '@/integrations/sup
 import { fetchPendingStatements, approveStatement, rejectStatement } from '@/integrations/supabase/admin';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import type { Statement } from '@/types/poll';
 
 interface StatementsManagementProps {
@@ -362,15 +360,16 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
                 </Button>
               </div>
             </div>
-            {/* More Info field with rich text editor */}
+            {/* More Info field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 hebrew-text">
                 מידע נוסף (אופציונלי)
               </label>
-              <RichTextEditor
+              <Textarea
                 value={newStatementMoreInfo}
-                onChange={setNewStatementMoreInfo}
+                onChange={(e) => setNewStatementMoreInfo(e.target.value)}
                 placeholder="הוסף מידע נוסף שיעזור למשתתפים להחליט כיצד להצביע..."
+                className="hebrew-text text-right min-h-[100px]"
                 rows={4}
               />
               <p className="text-xs text-gray-500 mt-1 hebrew-text">
@@ -407,9 +406,9 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
                     <div className="flex-1">
                       <p className="hebrew-text text-right">{statement.content}</p>
                       {statement.more_info && (
-                        <div className="mt-2 p-3 bg-blue-50 rounded border-r-4 border-blue-200">
-                          <p className="text-xs font-medium text-blue-800 hebrew-text mb-2">מידע נוסף:</p>
-                          <MarkdownRenderer content={statement.more_info} className="text-sm text-blue-700" />
+                        <div className="mt-2 p-2 bg-blue-50 rounded border-r-4 border-blue-200">
+                          <p className="text-xs font-medium text-blue-800 hebrew-text mb-1">מידע נוסף:</p>
+                          <p className="text-sm text-blue-700 hebrew-text">{statement.more_info}</p>
                         </div>
                       )}
                       <div className="flex items-center gap-2 mt-2">
@@ -551,7 +550,7 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
       {/* Edit Statement Dialog */}
       {editingStatement && (
         <Dialog open={!!editingStatement} onOpenChange={() => setEditingStatement(null)}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle className="hebrew-text">עריכת הצהרה</DialogTitle>
             </DialogHeader>
@@ -569,14 +568,15 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 hebrew-text">מידע נוסף (אופציונלי)</label>
-                <RichTextEditor
+                <Textarea
                   value={editingStatement.more_info || ''}
-                  onChange={(value) => setEditingStatement({
+                  onChange={(e) => setEditingStatement({
                     ...editingStatement,
-                    more_info: value
+                    more_info: e.target.value
                   })}
                   placeholder="הוסף מידע נוסף שיעזור למשתתפים להחליט כיצד להצביע..."
-                  rows={6}
+                  className="hebrew-text text-right min-h-[100px]"
+                  rows={4}
                 />
                 <p className="text-xs text-gray-500 mt-1 hebrew-text">
                   מידע זה יוצג למשתתפים בלחיצה על סמל המידע ליד ההצהרה

@@ -45,9 +45,15 @@ export const VotingPage: React.FC<VotingPageProps> = ({
         
         <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <OptimizedVotingInterface
-            pollId={poll.poll_id}
+            poll={poll}
+            statement={currentStatement}
+            userVoteCount={userVoteCount}
             totalStatements={totalStatements}
-            onVoteComplete={onViewResults}
+            remainingStatements={unvotedStatements.length}
+            onVote={onVote}
+            onViewResults={onViewResults}
+            onSubmitStatement={onSubmitStatement}
+            isVoting={isVoting}
           />
         </div>
         

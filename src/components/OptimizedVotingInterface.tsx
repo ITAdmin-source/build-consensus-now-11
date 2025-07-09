@@ -1,331 +1,346 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useSwipeable } from 'react-swipeable';
-
-import { fetchPollById } from '@/integrations/supabase/polls';
-import { submitVote } from '@/integrations/supabase/votes';
-import { fetchStatementsByPollId } from '@/integrations/supabase/statements';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useMemo, useRef } from 'react';
+import { Poll, Statement } from '@/types/poll';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { UserStatementForm } from '@/components/UserStatementForm';
 import { StatementInfo } from '@/components/StatementInfo';
-import type { Poll, Statement } from '@/types/poll';
+import { VotingProgress } from '@/components/VotingProgress';
+import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
+import { ThumbsUp, ThumbsDown, HelpCircle, LogIn } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { getVotingButtonLabels } from '@/utils/votingButtonUtils';
 
 interface OptimizedVotingInterfaceProps {
-  pollId: string;
-  totalStatements?: number;
-  onVoteComplete?: () => void;
-  className?: string;
+  poll: Poll;
+  statement: Statement | null;
+  userVoteCount: number;
+  totalStatements: number;
+  remainingStatements: number;
+  onVote: (statementId: string, vote: string) => void;
+  onViewResults: () => void;
+  onSubmitStatement?: (content: string, contentType: string) => void;
+  isVoting?: boolean;
 }
 
-export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> = ({
-  pollId,
-  totalStatements = 0,
-  onVoteComplete,
-  className = ''
+export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> = React.memo(({
+  poll,
+  statement,
+  userVoteCount,
+  totalStatements,
+  remainingStatements,
+  onVote,
+  onViewResults,
+  onSubmitStatement,
+  isVoting = false
 }) => {
-  const [currentStatementIndex, setCurrentStatementIndex] = useState(0);
-  const [currentStatement, setCurrentStatement] = useState<Statement | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [rotation, setRotation] = useState(0);
-  const [swipeDirection, setSwipeDirection] = useState<string | null>(null);
+  const { user } = useAuth();
+  const [pendingVote, setPendingVote] = useState<string | null>(null);
+  const [swipeState, setSwipeState] = useState<{ isDragging: boolean; direction: string | null; distance: number }>({
+    isDragging: false,
+    direction: null,
+    distance: 0
+  });
   const cardRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+  const startPos = useRef<{ x: number; y: number } | null>(null);
+  const buttonLabels = getVotingButtonLabels(poll);
 
-  // Fetch poll details
-  const { data: currentPoll, isLoading: pollLoading } = useQuery({
-    queryKey: ['poll', pollId],
-    queryFn: () => fetchPollById(pollId),
-    enabled: !!pollId,
-  });
-
-  // Fetch statements for the poll
-  const { data: statements, isLoading: statementsLoading } = useQuery({
-    queryKey: ['statements', pollId],
-    queryFn: () => fetchStatementsByPollId(pollId),
-    enabled: !!pollId,
-  });
-
-  // Update current statement when statements are loaded
-  useEffect(() => {
-    if (statements && statements.length > 0) {
-      setCurrentStatement(statements[0]);
-      if (totalStatements === 0) {
-        totalStatements = statements.length;
-      }
-    }
-  }, [statements, totalStatements]);
-
-  // Submit vote mutation
-  const voteMutation = useMutation({
-    mutationFn: (voteValue: 'support' | 'oppose' | 'unsure') => 
-      submitVote(currentStatement!.statement_id, voteValue),
-    onSuccess: () => {
-      setDragOffset({ x: 0, y: 0 });
-      setRotation(0);
-      setSwipeDirection(null);
-      
-      if (statements && currentStatementIndex < statements.length - 1) {
-        setCurrentStatementIndex(currentStatementIndex + 1);
-        setCurrentStatement(statements[currentStatementIndex + 1]);
-      } else {
-        // All statements voted
-        toast({
-          title: 'הצלחה',
-          description: 'הצבעת על כל ההצהרות!',
-        });
-      }
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'שגיאה',
-        description: error.message || 'הייתה שגיאה בהצבעה. אנא נסה שוב.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const isLoading = pollLoading || statementsLoading;
-
-  const handleVote = (voteValue: 'support' | 'oppose' | 'unsure') => {
-    if (!currentStatement) return;
-    voteMutation.mutate(voteValue);
+  const handleOptimisticVote = (vote: string) => {
+    if (!statement) return;
+    
+    // Set pending vote for immediate UI feedback
+    setPendingVote(vote);
+    
+    // Submit the actual vote
+    onVote(statement.statement_id, vote);
+    
+    // Clear pending vote after a short delay to allow for smooth transition
+    setTimeout(() => {
+      setPendingVote(null);
+    }, 300);
   };
 
-  // Drag functionality
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setDragOffset({
-      x: e.clientX - (e.currentTarget as HTMLElement).offsetLeft,
-      y: e.clientY - (e.currentTarget as HTMLElement).offsetTop,
-    });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-
-    const x = e.clientX - dragOffset.x;
-    const y = e.clientY - dragOffset.y;
-    setDragOffset({ x, y });
-
-    // Rotate card based on horizontal drag
-    const maxRotation = 15; // degrees
-    const rotationStrength = Math.min(x / 50, maxRotation);
-    setRotation(rotationStrength);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    releaseCard();
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      releaseCard();
-    }
-  };
-
-  // Touch functionality
   const handleTouchStart = (e: React.TouchEvent) => {
-    setIsDragging(true);
-    setDragOffset({
-      x: e.touches[0].clientX - (e.currentTarget as HTMLElement).offsetLeft,
-      y: e.touches[0].clientY - (e.currentTarget as HTMLElement).offsetTop,
-    });
+    const touch = e.touches[0];
+    startPos.current = { x: touch.clientX, y: touch.clientY };
+    setSwipeState({ isDragging: true, direction: null, distance: 0 });
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-
-    const x = e.touches[0].clientX - dragOffset.x;
-    const y = e.touches[0].clientY - dragOffset.y;
-    setDragOffset({ x, y });
-
-    // Rotate card based on horizontal drag
-    const maxRotation = 15; // degrees
-    const rotationStrength = Math.min(x / 50, maxRotation);
-    setRotation(rotationStrength);
+    if (!startPos.current || !swipeState.isDragging) return;
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - startPos.current.x;
+    const deltaY = touch.clientY - startPos.current.y;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    let direction = null;
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      // Horizontal swipe
+      if (Math.abs(deltaX) > 50) {
+        direction = deltaX > 0 ? 'right' : 'left';
+      }
+    } else {
+      // Vertical swipe
+      if (Math.abs(deltaY) > 50) {
+        direction = deltaY > 0 ? 'down' : 'up';
+      }
+    }
+    
+    setSwipeState({ isDragging: true, direction, distance });
   };
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
-    releaseCard();
+    if (!swipeState.isDragging || !statement) {
+      setSwipeState({ isDragging: false, direction: null, distance: 0 });
+      return;
+    }
+    
+    // Execute vote based on swipe direction
+    if (swipeState.direction && swipeState.distance > 80) {
+      switch (swipeState.direction) {
+        case 'right':
+          handleOptimisticVote('support');
+          break;
+        case 'left':
+          handleOptimisticVote('oppose');
+          break;
+        case 'down':
+          handleOptimisticVote('unsure');
+          break;
+      }
+    }
+    
+    setSwipeState({ isDragging: false, direction: null, distance: 0 });
+    startPos.current = null;
   };
 
-  // Swipe functionality using react-swipeable
-  const swipeHandlers = useSwipeable({
-    onSwipedRight: () => {
-      setSwipeDirection('right');
-      handleVote('support');
-    },
-    onSwipedLeft: () => {
-      setSwipeDirection('left');
-      handleVote('oppose');
-    },
-    onSwipedDown: () => {
-      setSwipeDirection('down');
-      handleVote('unsure');
-    },
-    trackMouse: false,
-  });
+  const handleMouseStart = (e: React.MouseEvent) => {
+    startPos.current = { x: e.clientX, y: e.clientY };
+    setSwipeState({ isDragging: true, direction: null, distance: 0 });
+  };
 
-  // Card release logic
-  const releaseCard = () => {
-    const threshold = 100; // Distance threshold for a swipe
-
-    if (dragOffset.x > threshold) {
-      setSwipeDirection('right');
-      handleVote('support');
-    } else if (dragOffset.x < -threshold) {
-      setSwipeDirection('left');
-      handleVote('oppose');
-    } else if (dragOffset.y > threshold) {
-      setSwipeDirection('down');
-      handleVote('unsure');
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!startPos.current || !swipeState.isDragging) return;
+    
+    const deltaX = e.clientX - startPos.current.x;
+    const deltaY = e.clientY - startPos.current.y;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    let direction = null;
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (Math.abs(deltaX) > 50) {
+        direction = deltaX > 0 ? 'right' : 'left';
+      }
     } else {
-      // Return card to original position
-      setDragOffset({ x: 0, y: 0 });
-      setRotation(0);
-      setTimeout(() => setSwipeDirection(null), 200);
+      if (Math.abs(deltaY) > 50) {
+        direction = deltaY > 0 ? 'down' : 'up';
+      }
+    }
+    
+    setSwipeState({ isDragging: true, direction, distance });
+  };
+
+  const handleMouseEnd = () => {
+    if (!swipeState.isDragging || !statement) {
+      setSwipeState({ isDragging: false, direction: null, distance: 0 });
+      return;
+    }
+    
+    if (swipeState.direction && swipeState.distance > 80) {
+      switch (swipeState.direction) {
+        case 'right':
+          handleOptimisticVote('support');
+          break;
+        case 'left':
+          handleOptimisticVote('oppose');
+          break;
+        case 'down':
+          handleOptimisticVote('unsure');
+          break;
+      }
+    }
+    
+    setSwipeState({ isDragging: false, direction: null, distance: 0 });
+    startPos.current = null;
+  };
+
+  // Memoize user statement section to prevent unnecessary re-renders
+  const userStatementSection = useMemo(() => {
+    if (!poll.allow_user_statements) return null;
+    
+    if (user && onSubmitStatement) {
+      return <UserStatementForm poll={poll} onSubmitStatement={onSubmitStatement} />;
+    } else {
+      return (
+        <div className="text-center p-4 rounded-lg border border-blue-200 bg-white">
+          <LogIn className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+          <p className="text-blue-800 mb-3 hebrew-text">
+            להוספת הצהרות חדשות נדרשת התחברות
+          </p>
+          <Link to="/auth">
+            <Button variant="outline" size="sm">
+              <LogIn className="h-4 w-4 ml-2" />
+              התחבר למערכת
+            </Button>
+          </Link>
+        </div>
+      );
+    }
+  }, [poll.allow_user_statements, user, onSubmitStatement, poll]);
+
+  // Show completion message when no statement is available
+  if (!statement) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="text-center p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+          <h3 className="text-xl font-bold text-green-800 mb-2 hebrew-text">
+            🎉 סיימת להצביע על כל ההצהרות!
+          </h3>
+          <p className="text-green-700 mb-4 hebrew-text">
+            תודה על השתתפותך. כעת תוכל לראות את התוצאות ולגלות אילו נקודות חיבור נמצאו.
+          </p>
+          <Button 
+            onClick={onViewResults} 
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
+          >
+            צפה בתוצאות
+          </Button>
+        </div>
+        
+        {/* VotingProgress Component */}
+        <VotingProgress
+          poll={poll}
+          userVoteCount={userVoteCount}
+          totalStatements={totalStatements}
+          remainingStatements={remainingStatements}
+        />
+        
+        {userStatementSection}
+      </div>
+    );
+  }
+
+  const getSwipeIndicatorColor = () => {
+    switch (swipeState.direction) {
+      case 'right': return 'border-green-400 bg-green-50';
+      case 'left': return 'border-red-400 bg-red-50';
+      case 'down': return 'border-yellow-400 bg-yellow-50';
+      default: return '';
+    }
+  };
+
+  const getSwipeIndicatorText = () => {
+    switch (swipeState.direction) {
+      case 'right': return buttonLabels.support;
+      case 'left': return buttonLabels.oppose;
+      case 'down': return buttonLabels.unsure;
+      default: return '';
     }
   };
 
   return (
-    <div className={`max-w-2xl mx-auto p-6 ${className}`}>
-      {isLoading ? (
-        <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      ) : currentStatement ? (
-        <div className="space-y-6">
-          {/* Progress indicator */}
-          <div className="text-center">
-            <p className="text-sm text-gray-600 hebrew-text">
-              הצהרה {currentStatementIndex + 1} מתוך {totalStatements}
-            </p>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div 
-                className="bg-[#1a305b] h-2 rounded-full transition-all duration-300"
-                style={{ width: `${((currentStatementIndex + 1) / totalStatements) * 100}%` }}
-              />
+    <div className="space-y-6">
+      {/* Statement Card with swipe functionality */}
+      <div className="relative">
+        {isVoting && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 animate-fade-in">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+              <p className="text-sm text-gray-600 hebrew-text">מעבד הצבעה...</p>
             </div>
           </div>
-
-          {/* Statement Card */}
-          <div 
-            ref={cardRef}
-            className={`
-              relative bg-white rounded-xl shadow-lg border border-gray-200 p-8 min-h-[300px]
-              cursor-grab active:cursor-grabbing select-none touch-none
-              transition-transform duration-200 ease-out
-              ${isDragging ? 'scale-105 shadow-2xl' : ''}
-              ${swipeDirection === 'right' ? 'border-green-400 bg-green-50' : ''}
-              ${swipeDirection === 'left' ? 'border-red-400 bg-red-50' : ''}
-              ${swipeDirection === 'down' ? 'border-yellow-400 bg-yellow-50' : ''}
-            `}
-            style={{
-              transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${rotation}deg)`
-            }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            {...swipeHandlers}
-          >
-            {/* Swipe indicators */}
-            {swipeDirection && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className={`
-                  text-6xl font-bold opacity-60
-                  ${swipeDirection === 'right' ? 'text-green-600' : ''}
-                  ${swipeDirection === 'left' ? 'text-red-600' : ''}
-                  ${swipeDirection === 'down' ? 'text-yellow-600' : ''}
-                `}>
-                  {swipeDirection === 'right' && '✓'}
-                  {swipeDirection === 'left' && '✗'}
-                  {swipeDirection === 'down' && '?'}
-                </div>
+        )}
+        
+        <Card 
+          ref={cardRef}
+          className={`poll-card transition-all duration-300 cursor-grab active:cursor-grabbing select-none ${
+            pendingVote ? 'scale-[0.98] opacity-80' : 'scale-100 opacity-100'
+          } ${swipeState.isDragging ? `${getSwipeIndicatorColor()} border-2` : ''} animate-scale-in`}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseStart}
+          onMouseMove={swipeState.isDragging ? handleMouseMove : undefined}
+          onMouseUp={handleMouseEnd}
+          onMouseLeave={handleMouseEnd}
+        >
+          {swipeState.isDragging && swipeState.direction && (
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20">
+              <div className="bg-white px-3 py-1 rounded-full shadow-lg border-2 border-current text-sm font-medium hebrew-text">
+                {getSwipeIndicatorText()}
               </div>
-            )}
-
-            {/* Statement content */}
-            <div className="flex flex-col items-center justify-center h-full text-center relative">
-              {/* More info button */}
-              {currentStatement.more_info && (
-                <div className="absolute top-0 right-0">
-                  <StatementInfo 
-                    moreInfo={currentStatement.more_info}
-                    statementContent={currentStatement.content}
-                  />
+            </div>
+          )}
+          
+          <CardHeader className="text-center pb-4">
+            <div className="flex items-start justify-between mb-4">
+              <CardTitle className="text-2xl font-bold leading-relaxed flex-1 text-center">
+                {statement.content}
+              </CardTitle>
+              {statement.more_info && (
+                <div className="mr-4 flex-shrink-0">
+                  <StatementInfo moreInfo={statement.more_info} />
                 </div>
               )}
-
-              <h2 className="text-xl font-medium text-gray-900 hebrew-text leading-relaxed">
-                {currentStatement.content}
-              </h2>
             </div>
-          </div>
+          </CardHeader>
+          
+          <CardContent>
+             
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <Button 
+                onClick={() => handleOptimisticVote('support')} 
+                disabled={!!pendingVote}
+                className={`vote-button bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-6 transition-all duration-300 ${
+                  pendingVote === 'support' ? 'ring-4 ring-green-300 scale-105' : ''
+                }`}
+                size="lg"
+              >
+                <ThumbsUp className="h-6 w-6 ml-2" />
+                <span className="hebrew-text text-lg">{buttonLabels.support}</span>
+              </Button>
+              
+              <Button 
+                onClick={() => handleOptimisticVote('unsure')} 
+                disabled={!!pendingVote}
+                className={`vote-button bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white py-6 transition-all duration-300 ${
+                  pendingVote === 'unsure' ? 'ring-4 ring-yellow-300 scale-105' : ''
+                }`}
+                size="lg"
+              >
+                <HelpCircle className="h-6 w-6 ml-2" />
+                <span className="hebrew-text text-lg">{buttonLabels.unsure}</span>
+              </Button>
+              
+              <Button 
+                onClick={() => handleOptimisticVote('oppose')} 
+                disabled={!!pendingVote}
+                className={`vote-button bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-6 transition-all duration-300 ${
+                  pendingVote === 'oppose' ? 'ring-4 ring-red-300 scale-105' : ''
+                }`}
+                size="lg"
+              >
+                <ThumbsDown className="h-6 w-6 ml-2" />
+                <span className="hebrew-text text-lg">{buttonLabels.oppose}</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Voting buttons */}
-          <div className="flex justify-center gap-4">
-            <Button
-              onClick={() => handleVote('oppose')}
-              disabled={voteMutation.isPending}
-              variant="outline"
-              className="flex-1 max-w-[120px] h-12 bg-red-50 border-red-200 text-red-700 hover:bg-red-100 hover:border-red-300"
-            >
-              {currentPoll?.oppose_button_label || 'מתנגד'}
-            </Button>
-            
-            <Button
-              onClick={() => handleVote('unsure')}
-              disabled={voteMutation.isPending}
-              variant="outline"
-              className="flex-1 max-w-[120px] h-12 bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100 hover:border-yellow-300"
-            >
-              {currentPoll?.unsure_button_label || 'לא בטוח'}
-            </Button>
-            
-            <Button
-              onClick={() => handleVote('support')}
-              disabled={voteMutation.isPending}
-              variant="outline"
-              className="flex-1 max-w-[120px] h-12 bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:border-green-300"
-            >
-              {currentPoll?.support_button_label || 'תומך'}
-            </Button>
-          </div>
+      {/* VotingProgress Component */}
+      <VotingProgress
+        poll={poll}
+        userVoteCount={userVoteCount}
+        totalStatements={totalStatements}
+        remainingStatements={remainingStatements}
+      />
 
-          {/* Instructions */}
-          <div className="text-center">
-            <p className="text-sm text-gray-500 hebrew-text">
-              החלק ימינה לתמיכה • החלק שמאלה להתנגדות • החלק למטה אם לא בטוח
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="text-center space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900 hebrew-text">
-            סיימת להצביע על כל ההצהרות!
-          </h2>
-          <p className="text-gray-600 hebrew-text">
-            תודה על השתתפותך בסקר
-          </p>
-          {onVoteComplete && (
-            <Button onClick={onVoteComplete} className="mt-4">
-              עבור לתוצאות
-            </Button>
-          )}
-        </div>
-      )}
+      {userStatementSection}
     </div>
   );
-};
+});
+
+OptimizedVotingInterface.displayName = 'OptimizedVotingInterface';
