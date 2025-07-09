@@ -50,7 +50,7 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a305b]/5 via-white to-[#66c8ca]/8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <NavigationHeader currentPage="results" />
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -77,7 +77,7 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                 disabled={isRunning || isChecking}
                 variant="outline"
                 size="sm"
-                className="hebrew-text border-[#66c8ca] text-[#1a305b] hover:bg-[#66c8ca]/10"
+                className="hebrew-text"
               >
                 <RefreshCw className={`h-4 w-4 ml-2 ${(isRunning || isChecking) ? 'animate-spin' : ''}`} />
                 {isRunning ? 'מעבד...' : isChecking ? 'בודק...' : 'רענן קבצה'}
