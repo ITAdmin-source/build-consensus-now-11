@@ -2,7 +2,7 @@
 import React from 'react';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 
 interface StatementInfoProps {
@@ -17,8 +17,8 @@ export const StatementInfo: React.FC<StatementInfoProps> = ({
   className = '' 
 }) => {
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <Dialog>
+      <DialogTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
@@ -27,26 +27,20 @@ export const StatementInfo: React.FC<StatementInfoProps> = ({
         >
           <Info className="h-4 w-4" />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent 
-        className="w-[500px] max-w-[90vw] p-6 hebrew-text text-right" 
-        align="center"
-        side="bottom"
-      >
-        <div className="space-y-4">
-          <div className="border-b pb-3">
-            <h4 className="font-semibold text-base text-foreground leading-relaxed">
-              {statementContent}
-            </h4>
-          </div>
-          <div className="max-h-80 overflow-y-auto">
-            <MarkdownRenderer 
-              content={moreInfo} 
-              className="text-muted-foreground text-base leading-relaxed" 
-            />
-          </div>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[80vh] hebrew-text text-right">
+        <DialogHeader className="text-right">
+          <DialogTitle className="text-lg font-semibold text-foreground leading-relaxed text-right">
+            {statementContent}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="mt-4 max-h-96 overflow-y-auto">
+          <MarkdownRenderer 
+            content={moreInfo} 
+            className="text-muted-foreground text-base leading-relaxed" 
+          />
         </div>
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
   );
 };
