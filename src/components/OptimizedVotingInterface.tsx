@@ -276,7 +276,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           
           <CardHeader className="text-center pb-4">
             <div className="flex items-start justify-between mb-4">
-              <CardTitle className="text-2xl font-bold hebrew-text leading-relaxed flex-1 text-center">
+              <CardTitle className="text-2xl font-bold leading-relaxed flex-1 text-center">
                 {statement.content}
               </CardTitle>
               {statement.more_info && (
