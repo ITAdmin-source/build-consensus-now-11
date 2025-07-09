@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Poll, Statement } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,13 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
 }) => {
   const { user } = useAuth();
   const [pendingVote, setPendingVote] = useState<string | null>(null);
+  const [swipeState, setSwipeState] = useState<{ isDragging: boolean; direction: string | null; distance: number }>({
+    isDragging: false,
+    direction: null,
+    distance: 0
+  });
+  const cardRef = useRef<HTMLDivElement>(null);
+  const startPos = useRef<{ x: number; y: number } | null>(null);
   const buttonLabels = getVotingButtonLabels(poll);
 
   const handleOptimisticVote = (vote: string) => {
@@ -52,6 +59,111 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
     setTimeout(() => {
       setPendingVote(null);
     }, 300);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    startPos.current = { x: touch.clientX, y: touch.clientY };
+    setSwipeState({ isDragging: true, direction: null, distance: 0 });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!startPos.current || !swipeState.isDragging) return;
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - startPos.current.x;
+    const deltaY = touch.clientY - startPos.current.y;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    let direction = null;
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      // Horizontal swipe
+      if (Math.abs(deltaX) > 50) {
+        direction = deltaX > 0 ? 'right' : 'left';
+      }
+    } else {
+      // Vertical swipe
+      if (Math.abs(deltaY) > 50) {
+        direction = deltaY > 0 ? 'down' : 'up';
+      }
+    }
+    
+    setSwipeState({ isDragging: true, direction, distance });
+  };
+
+  const handleTouchEnd = () => {
+    if (!swipeState.isDragging || !statement) {
+      setSwipeState({ isDragging: false, direction: null, distance: 0 });
+      return;
+    }
+    
+    // Execute vote based on swipe direction
+    if (swipeState.direction && swipeState.distance > 80) {
+      switch (swipeState.direction) {
+        case 'right':
+          handleOptimisticVote('support');
+          break;
+        case 'left':
+          handleOptimisticVote('oppose');
+          break;
+        case 'down':
+          handleOptimisticVote('unsure');
+          break;
+      }
+    }
+    
+    setSwipeState({ isDragging: false, direction: null, distance: 0 });
+    startPos.current = null;
+  };
+
+  const handleMouseStart = (e: React.MouseEvent) => {
+    startPos.current = { x: e.clientX, y: e.clientY };
+    setSwipeState({ isDragging: true, direction: null, distance: 0 });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!startPos.current || !swipeState.isDragging) return;
+    
+    const deltaX = e.clientX - startPos.current.x;
+    const deltaY = e.clientY - startPos.current.y;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    let direction = null;
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (Math.abs(deltaX) > 50) {
+        direction = deltaX > 0 ? 'right' : 'left';
+      }
+    } else {
+      if (Math.abs(deltaY) > 50) {
+        direction = deltaY > 0 ? 'down' : 'up';
+      }
+    }
+    
+    setSwipeState({ isDragging: true, direction, distance });
+  };
+
+  const handleMouseEnd = () => {
+    if (!swipeState.isDragging || !statement) {
+      setSwipeState({ isDragging: false, direction: null, distance: 0 });
+      return;
+    }
+    
+    if (swipeState.direction && swipeState.distance > 80) {
+      switch (swipeState.direction) {
+        case 'right':
+          handleOptimisticVote('support');
+          break;
+        case 'left':
+          handleOptimisticVote('oppose');
+          break;
+        case 'down':
+          handleOptimisticVote('unsure');
+          break;
+      }
+    }
+    
+    setSwipeState({ isDragging: false, direction: null, distance: 0 });
+    startPos.current = null;
   };
 
   // Memoize user statement section to prevent unnecessary re-renders
@@ -110,9 +222,27 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
     );
   }
 
+  const getSwipeIndicatorColor = () => {
+    switch (swipeState.direction) {
+      case 'right': return 'border-green-400 bg-green-50';
+      case 'left': return 'border-red-400 bg-red-50';
+      case 'down': return 'border-yellow-400 bg-yellow-50';
+      default: return '';
+    }
+  };
+
+  const getSwipeIndicatorText = () => {
+    switch (swipeState.direction) {
+      case 'right': return buttonLabels.support;
+      case 'left': return buttonLabels.oppose;
+      case 'down': return buttonLabels.unsure;
+      default: return '';
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Statement Card with optimistic loading */}
+      {/* Statement Card with swipe functionality */}
       <div className="relative">
         {isVoting && (
           <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 animate-fade-in">
@@ -123,10 +253,30 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           </div>
         )}
         
-        <Card className={`poll-card transition-all duration-300 ${pendingVote ? 'scale-[0.98] opacity-80' : 'scale-100 opacity-100'} animate-scale-in`}>
+        <Card 
+          ref={cardRef}
+          className={`poll-card transition-all duration-300 cursor-grab active:cursor-grabbing select-none ${
+            pendingVote ? 'scale-[0.98] opacity-80' : 'scale-100 opacity-100'
+          } ${swipeState.isDragging ? `${getSwipeIndicatorColor()} border-2` : ''} animate-scale-in`}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseStart}
+          onMouseMove={swipeState.isDragging ? handleMouseMove : undefined}
+          onMouseUp={handleMouseEnd}
+          onMouseLeave={handleMouseEnd}
+        >
+          {swipeState.isDragging && swipeState.direction && (
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20">
+              <div className="bg-white px-3 py-1 rounded-full shadow-lg border-2 border-current text-sm font-medium hebrew-text">
+                {getSwipeIndicatorText()}
+              </div>
+            </div>
+          )}
+          
           <CardHeader className="text-center pb-4">
             <div className="flex items-start justify-between mb-4">
-              <CardTitle className="text-2xl font-bold hebrew-text leading-relaxed flex-1 text-right">
+              <CardTitle className="text-2xl font-bold hebrew-text leading-relaxed flex-1 text-center">
                 {statement.content}
               </CardTitle>
               {statement.more_info && (
@@ -138,6 +288,16 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           </CardHeader>
           
           <CardContent>
+            {/* Swipe Instructions */}
+            <div className="text-center mb-6 p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600 hebrew-text mb-2">
+                החלק כדי להצביע: ימינה = תמיכה, שמאלה = התנגדות, למטה = לא בטוח
+              </p>
+              <p className="text-xs text-gray-500 hebrew-text">
+                או השתמש בכפתורים למטה
+              </p>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <Button 
                 onClick={() => handleOptimisticVote('support')} 
