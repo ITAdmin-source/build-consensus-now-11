@@ -3,7 +3,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { useReturnUrl } from '@/hooks/useReturnUrl';
 import { LogIn, LogOut, User } from 'lucide-react';
 
 interface NavigationHeaderProps {
@@ -12,7 +11,6 @@ interface NavigationHeaderProps {
 
 export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage }) => {
   const { user, signOut } = useAuth();
-  const { createAuthUrl } = useReturnUrl();
 
   const handleSignOut = async () => {
     await signOut();
@@ -22,7 +20,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage 
     <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="text-xl font-bold text-[#1a305b] hebrew-text">
+          <Link to="/" className="text-xl font-bold text-primary hebrew-text">
             נקודות חיבור
           </Link>
           
@@ -37,15 +35,15 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage 
                   variant="outline"
                   size="sm"
                   onClick={handleSignOut}
-                  className="hebrew-text border-[#66c8ca] text-[#1a305b] hover:bg-[#66c8ca]/10"
+                  className="hebrew-text"
                 >
                   <LogOut className="h-4 w-4 ml-1" />
                   התנתק
                 </Button>
               </div>
             ) : (
-              <Link to={createAuthUrl()}>
-                <Button variant="outline" size="sm" className="hebrew-text border-[#ec0081] text-[#1a305b] hover:bg-[#ec0081]/10">
+              <Link to="/auth">
+                <Button variant="outline" size="sm" className="hebrew-text">
                   <LogIn className="h-4 w-4 ml-1" />
                   התחבר
                 </Button>
