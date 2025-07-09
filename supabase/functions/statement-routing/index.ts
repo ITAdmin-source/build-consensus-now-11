@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -63,7 +62,7 @@ serve(async (req) => {
     // Get statements that haven't been voted on by this participant
     const { data: unvotedStatements } = await supabaseClient
       .from('polis_statements')
-      .select('statement_id, content, created_at')
+      .select('statement_id, content, content_type, more_info, created_at')
       .eq('poll_id', poll_id)
       .eq('is_approved', true)
       .not('statement_id', 'in', `(${exclude_statement_ids.map(id => `'${id}'`).join(',')})`)
