@@ -8,7 +8,7 @@ import { StatementInfo } from '@/components/StatementInfo';
 import { VotingProgress } from '@/components/VotingProgress';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown, HelpCircle, LogIn, Info } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, HelpCircle, LogIn } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getVotingButtonLabels } from '@/utils/votingButtonUtils';
 
@@ -275,14 +275,12 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           )}
           
           <CardHeader className="text-center pb-4">
-            <div className="relative inline-block">
-              <CardTitle className="text-2xl font-bold leading-relaxed">
+            <div className="flex items-start justify-between mb-4">
+              <CardTitle className="text-2xl font-bold leading-relaxed flex-1 text-center">
                 {statement.content}
               </CardTitle>
-              
-              {/* Info Badge - positioned next to statement text */}
               {statement.more_info && (
-                <div className="absolute -top-2 -right-8">
+                <div className="mr-4 flex-shrink-0">
                   <StatementInfo moreInfo={statement.more_info} />
                 </div>
               )}
@@ -290,6 +288,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           </CardHeader>
           
           <CardContent>
+             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <Button 
                 onClick={() => handleOptimisticVote('support')} 
