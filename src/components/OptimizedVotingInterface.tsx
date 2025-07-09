@@ -280,7 +280,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
                 {statement.content}
               </CardTitle>
               {statement.more_info && (
-                <div className="mr-2 flex-shrink-0">
+                <div className="mr-4 flex-shrink-0">
                   <StatementInfo moreInfo={statement.more_info} />
                 </div>
               )}
