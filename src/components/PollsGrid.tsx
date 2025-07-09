@@ -76,7 +76,8 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      {/* Main Header */}
+      
+      {/* Main Header 
       <div className="text-center mb-12">
         <div className="flex justify-center items-center gap-4 mb-6">
           <div className="w-16 h-16 bg-gradient-to-r from-[#ec0081] to-[#66c8ca] rounded-full flex items-center justify-center">
@@ -89,7 +90,7 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
         
         <p className="text-xl text-gray-600 hebrew-text mb-8 max-w-3xl mx-auto">
           גלו משחקים פעילים שתוכלו לשחק בהם כעת, צפו בתוצאות של משחקים שהסתיימו, והכינו את עצמכם למשחקים שבקרוב יגיעו!
-        </p>
+        </p> */}
         
         {/* Category Filter */}
         <div className="max-w-4xl mx-auto">
