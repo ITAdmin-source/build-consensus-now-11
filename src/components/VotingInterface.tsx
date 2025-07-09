@@ -1,25 +1,22 @@
 
-import React from 'react';
-import { Poll, Statement } from '@/types/poll';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { UserStatementForm } from '@/components/UserStatementForm';
-import { StatementInfo } from '@/components/StatementInfo';
-import { useAuth } from '@/contexts/AuthContext';
-import { Link } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown, HelpCircle, Users, LogIn } from 'lucide-react';
-import { getVotingButtonLabels } from '@/utils/votingButtonUtils';
+import { Card, CardContent } from '@/components/ui/card';
+import { StatementInfo } from './StatementInfo';
+import { Separator } from '@/components/ui/separator';
+import { UserStatementForm } from './UserStatementForm';
+import type { Statement, Poll } from '@/types/poll';
 
 interface VotingInterfaceProps {
   poll: Poll;
-  statement: Statement | null;
+  statement: Statement;
   userVoteCount: number;
   totalStatements: number;
   remainingStatements: number;
   onVote: (statementId: string, vote: string) => void;
   onViewResults: () => void;
-  onSubmitStatement?: (content: string, contentType: string) => void;
+  onSubmitStatement: (content: string, contentType: string) => void;
+  isVoting: boolean;
 }
 
 export const VotingInterface: React.FC<VotingInterfaceProps> = ({
@@ -30,124 +27,146 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   remainingStatements,
   onVote,
   onViewResults,
-  onSubmitStatement
+  onSubmitStatement,
+  isVoting,
 }) => {
-  const { user } = useAuth();
-  const buttonLabels = getVotingButtonLabels(poll);
+  const [showUserStatementForm, setShowUserStatementForm] = useState(false);
 
-  const handleVote = (vote: string) => {
-    if (statement) {
-      onVote(statement.statement_id, vote);
-    }
-  };
-
-  const handleSubmitStatement = (content: string, contentType: string) => {
-    if (onSubmitStatement) {
-      onSubmitStatement(content, contentType);
-    }
-  };
-
-  // Render user statement section if allowed by poll
-  const renderUserStatementSection = () => {
-    if (!poll.allow_user_statements) return null;
-    
-    if (user && onSubmitStatement) {
-      // User is authenticated - show the form
-      return <UserStatementForm poll={poll} onSubmitStatement={handleSubmitStatement} />;
-    } else {
-      // User is not authenticated - show login prompt
-      return (
-        <div className="text-center p-4 rounded-lg border border-blue-200 bg-white">
-          <LogIn className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-          <p className="text-blue-800 mb-3 hebrew-text">
-            להוספת הצהרות חדשות נדרשת התחברות
-          </p>
-          <Link to="/auth">
-            <Button variant="outline" size="sm">
-              <LogIn className="h-4 w-4 ml-2" />
-              התחבר למערכת
-            </Button>
-          </Link>
-        </div>
-      );
-    }
-  };
-
-  // Show completion message when no statement is available (all voted)
   if (!statement) {
     return (
-      <div className="space-y-6">
-        {/* Completion Message */}
-        <div className="text-center p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-          <h3 className="text-xl font-bold text-green-800 mb-2 hebrew-text">
-            🎉 סיימת להצביע על כל ההצהרות!
-          </h3>
-          <p className="text-green-700 mb-4 hebrew-text">
-            תודה על השתתפותך. כעת תוכל לראות את התוצאות ולגלות אילו נקודות חיבור נמצאו.
-          </p>
-          <Button onClick={onViewResults} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
-            צפה בתוצאות
-          </Button>
-        </div>
-
-        {/* User Statement Form - Show consistently based on poll settings */}
-        {renderUserStatementSection()}
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-semibold mb-4 hebrew-text">
+          השלמת את כל ההצהרות!
+        </h2>
+        <p className="text-muted-foreground mb-6 hebrew-text">
+          תודה על השתתפותך. תוכל כעת לראות את התוצאות.
+        </p>
+        <Button 
+          onClick={onViewResults}
+          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 text-lg hebrew-text"
+        >
+          צפה בתוצאות
+        </Button>
       </div>
     );
   }
 
+  const handleVote = (vote: string) => {
+    onVote(statement.statement_id, vote);
+  };
+
+  const progressPercentage = Math.round((userVoteCount / totalStatements) * 100);
+
   return (
-    <div className="space-y-6">
-      {/* Statement Card */}
-      <Card className="poll-card">
-        <CardHeader className="text-center pb-4">
-          <div className="flex items-start justify-between mb-4">
-            <CardTitle className="text-2xl font-bold hebrew-text leading-relaxed flex-1 text-right">
-              {statement.content}
-            </CardTitle>
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Progress indicator */}
+      <div className="bg-white rounded-lg p-4 shadow-sm border">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-medium hebrew-text">התקדמות</span>
+          <span className="text-sm text-muted-foreground hebrew-text">
+            {userVoteCount} מתוך {totalStatements}
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300 ease-out"
+            style={{ width: `${progressPercentage}%` }}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground mt-1 hebrew-text">
+          נותרו {remainingStatements} הצהרות
+        </p>
+      </div>
+
+      {/* Statement card */}
+      <Card className="bg-white shadow-lg border-0">
+        <CardContent className="p-8">
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex-1">
+              <p className="text-lg leading-relaxed hebrew-text text-right font-medium">
+                {statement.content}
+              </p>
+            </div>
             {statement.more_info && (
-              <div className="mr-2 flex-shrink-0">
-                <StatementInfo moreInfo={statement.more_info} />
-              </div>
+              <StatementInfo 
+                statementContent={statement.content}
+                moreInfo={statement.more_info} 
+                className="mr-3 mt-1 flex-shrink-0" 
+              />
             )}
           </div>
-        </CardHeader>
-        
-        <CardContent>
-          {/* Voting Buttons - Available to all users */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Button 
-              onClick={() => handleVote('support')} 
-              className="vote-button bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-6" 
-              size="lg"
+
+          {/* Voting buttons */}
+          <div className="grid grid-cols-3 gap-4">
+            <Button
+              onClick={() => handleVote('support')}
+              disabled={isVoting}
+              className="bg-green-500 hover:bg-green-600 text-white py-4 text-lg font-medium hebrew-text transition-all duration-200 hover:scale-105"
             >
-              <ThumbsUp className="h-6 w-6 ml-2" />
-              <span className="hebrew-text text-lg">{buttonLabels.support}</span>
+              {poll.support_button_label || 'תומך'}
             </Button>
             
-            <Button 
-              onClick={() => handleVote('unsure')} 
-              className="vote-button bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white py-6" 
-              size="lg"
+            <Button
+              onClick={() => handleVote('unsure')}
+              disabled={isVoting}
+              variant="outline"
+              className="border-2 border-gray-300 hover:border-gray-400 py-4 text-lg font-medium hebrew-text transition-all duration-200 hover:scale-105"
             >
-              <HelpCircle className="h-6 w-6 ml-2" />
-              <span className="hebrew-text text-lg">{buttonLabels.unsure}</span>
+              {poll.unsure_button_label || 'לא בטוח'}
             </Button>
             
-            <Button 
-              onClick={() => handleVote('oppose')} 
-              className="vote-button bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-6" 
-              size="lg"
+            <Button
+              onClick={() => handleVote('oppose')}
+              disabled={isVoting}
+              className="bg-red-500 hover:bg-red-600 text-white py-4 text-lg font-medium hebrew-text transition-all duration-200 hover:scale-105"
             >
-              <ThumbsDown className="h-6 w-6 ml-2" />
-              <span className="hebrew-text text-lg">{buttonLabels.oppose}</span>
+              {poll.oppose_button_label || 'מתנגד'}
             </Button>
           </div>
+
+          {isVoting && (
+            <div className="mt-4 text-center">
+              <div className="inline-flex items-center text-blue-600">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 ml-2"></div>
+                <span className="hebrew-text">שומר הצבעה...</span>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* User Statement Form - Show consistently based on poll settings */}
-      {renderUserStatementSection()}
+      {/* Action buttons */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <Button
+          onClick={onViewResults}
+          variant="outline"
+          className="px-6 py-3 hebrew-text"
+        >
+          צפה בתוצאות ביניים
+        </Button>
+
+        {poll.allow_user_statements && (
+          <Button
+            onClick={() => setShowUserStatementForm(true)}
+            variant="outline"
+            className="px-6 py-3 hebrew-text"
+          >
+            הוסף הצהרה
+          </Button>
+        )}
+      </div>
+
+      {/* User statement form */}
+      {showUserStatementForm && (
+        <>
+          <Separator className="my-8" />
+          <UserStatementForm
+            poll={poll}
+            onSubmit={onSubmitStatement}
+            onClose={() => setShowUserStatementForm(false)}
+          />
+        </>
+      )}
     </div>
   );
 };

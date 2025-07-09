@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 
@@ -32,13 +33,13 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         components={{
           // Custom components for RTL support
           p: ({ children }) => (
-            <p className="text-sm leading-relaxed mb-2 last:mb-0">{children}</p>
+            <p className="text-base leading-7 mb-3 last:mb-0">{children}</p>
           ),
           strong: ({ children }) => (
             <strong className="font-semibold text-foreground">{children}</strong>
           ),
           ul: ({ children }) => (
-            <ul className="list-disc list-inside space-y-1 mr-4">{children}</ul>
+            <ul className="list-disc list-inside space-y-2 mr-4 mb-4">{children}</ul>
           ),
           // Custom list item component for RTL support
           li: ({ children, ...props }) => {
@@ -49,7 +50,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             
             if (textOnly) {
               return (
-                <li className="text-sm leading-relaxed" {...props}>
+                <li className="text-base leading-7" {...props}>
                   {React.Children.map(children, child => 
                     React.isValidElement(child) && child.type === 'p' 
                       ? child.props.children 
@@ -59,7 +60,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
               );
             }
             
-            return <li className="text-sm leading-relaxed" {...props}>{children}</li>;
+            return <li className="text-base leading-7" {...props}>{children}</li>;
           }
         }}
       >

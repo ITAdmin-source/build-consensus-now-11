@@ -6,11 +6,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 
 interface StatementInfoProps {
+  statementContent: string;
   moreInfo: string;
   className?: string;
 }
 
 export const StatementInfo: React.FC<StatementInfoProps> = ({ 
+  statementContent,
   moreInfo, 
   className = '' 
 }) => {
@@ -27,14 +29,21 @@ export const StatementInfo: React.FC<StatementInfoProps> = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-96 max-w-md p-4 hebrew-text text-right" 
+        className="w-[500px] max-w-[90vw] p-6 hebrew-text text-right" 
         align="center"
         side="bottom"
       >
-        <div className="space-y-3">
-          <h4 className="font-medium text-sm text-foreground border-b pb-2">מידע נוסף</h4>
-          <div className="max-h-64 overflow-y-auto">
-            <MarkdownRenderer content={moreInfo} className="text-muted-foreground" />
+        <div className="space-y-4">
+          <div className="border-b pb-3">
+            <h4 className="font-semibold text-base text-foreground leading-relaxed">
+              {statementContent}
+            </h4>
+          </div>
+          <div className="max-h-80 overflow-y-auto">
+            <MarkdownRenderer 
+              content={moreInfo} 
+              className="text-muted-foreground text-base leading-relaxed" 
+            />
           </div>
         </div>
       </PopoverContent>
