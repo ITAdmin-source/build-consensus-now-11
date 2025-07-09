@@ -280,13 +280,17 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
                 {statement.content}
               </CardTitle>
               {statement.more_info && (
-                <div className="mr-4 flex-shrink-0">
-                  <StatementInfo 
-                    statementContent={statement.content}
-                    moreInfo={statement.more_info} 
-                  />
-                </div>
-              )}
+  <div className="mr-4 flex-shrink-0">
+    <div className="relative">
+      <StatementInfo 
+        statementContent={statement.content}
+        moreInfo={statement.more_info} 
+      />
+      {/* Add a subtle pulse animation */}
+      <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full animate-pulse opacity-60"></div>
+    </div>
+  </div>
+)}
             </div>
           </CardHeader>
           
