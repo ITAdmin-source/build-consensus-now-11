@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Check, X, Eye, AlertTriangle, Info } from 'lucide-react';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchStatementsByPollId, submitUserStatement } from '@/integrations/supabase/statements';
 import { fetchPendingStatements, approveStatement, rejectStatement } from '@/integrations/supabase/admin';
@@ -365,12 +366,10 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
               <label className="block text-sm font-medium text-gray-700 mb-2 hebrew-text">
                 מידע נוסף (אופציונלי)
               </label>
-              <Textarea
+              <RichTextEditor
                 value={newStatementMoreInfo}
-                onChange={(e) => setNewStatementMoreInfo(e.target.value)}
+                onChange={setNewStatementMoreInfo}
                 placeholder="הוסף מידע נוסף שיעזור למשתתפים להחליט כיצד להצביע..."
-                className="hebrew-text text-right min-h-[100px]"
-                rows={4}
               />
               <p className="text-xs text-gray-500 mt-1 hebrew-text">
                 מידע זה יוצג למשתתפים בלחיצה על סמל המידע ליד ההצהרה
@@ -568,15 +567,13 @@ export const StatementsManagement: React.FC<StatementsManagementProps> = ({ poll
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 hebrew-text">מידע נוסף (אופציונלי)</label>
-                <Textarea
+                <RichTextEditor
                   value={editingStatement.more_info || ''}
-                  onChange={(e) => setEditingStatement({
+                  onChange={(value) => setEditingStatement({
                     ...editingStatement,
-                    more_info: e.target.value
+                    more_info: value
                   })}
                   placeholder="הוסף מידע נוסף שיעזור למשתתפים להחליט כיצד להצביע..."
-                  className="hebrew-text text-right min-h-[100px]"
-                  rows={4}
                 />
                 <p className="text-xs text-gray-500 mt-1 hebrew-text">
                   מידע זה יוצג למשתתפים בלחיצה על סמל המידע ליד ההצהרה

@@ -3,6 +3,7 @@ import React from 'react';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 
 interface StatementInfoProps {
   moreInfo: string;
@@ -26,15 +27,15 @@ export const StatementInfo: React.FC<StatementInfoProps> = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-80 max-w-sm p-4 hebrew-text text-right" 
+        className="w-96 max-w-md p-4 hebrew-text text-right" 
         align="center"
         side="bottom"
       >
-        <div className="space-y-2">
-          <h4 className="font-medium text-sm text-gray-900">מידע נוסף</h4>
-          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-            {moreInfo}
-          </p>
+        <div className="space-y-3">
+          <h4 className="font-medium text-sm text-foreground border-b pb-2">מידע נוסף</h4>
+          <div className="max-h-64 overflow-y-auto">
+            <MarkdownRenderer content={moreInfo} className="text-muted-foreground" />
+          </div>
         </div>
       </PopoverContent>
     </Popover>
