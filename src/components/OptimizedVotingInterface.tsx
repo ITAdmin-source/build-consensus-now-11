@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef } from 'react';
 import { Poll, Statement } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { StatementInfo } from '@/components/StatementInfo';
 import { VotingProgress } from '@/components/VotingProgress';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown, HelpCircle, LogIn } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, HelpCircle, LogIn, Info } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getVotingButtonLabels } from '@/utils/votingButtonUtils';
 
@@ -275,20 +274,39 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           )}
           
           <CardHeader className="text-center pb-4">
-            <div className="flex items-start justify-between mb-4">
-              <CardTitle className="text-2xl font-bold leading-relaxed flex-1 text-center">
+            <div className="relative inline-block">
+              <CardTitle className="text-2xl font-bold leading-relaxed">
                 {statement.content}
               </CardTitle>
+              
+              {/* Info Badge - positioned next to statement text */}
               {statement.more_info && (
-                <div className="mr-4 flex-shrink-0">
-                  <StatementInfo moreInfo={statement.more_info} />
+                <div className="absolute -top-2 -right-8">
+                  <StatementInfo 
+                    moreInfo={statement.more_info}
+                    trigger={
+                      <button className="relative inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 group">
+                        <Info className="h-3.5 w-3.5 group-hover:rotate-12 transition-transform" />
+                        
+                        {/* Pulse animation ring */}
+                        <div className="absolute inset-0 rounded-full bg-blue-400 opacity-75 animate-ping"></div>
+                        
+                        {/* Tooltip on hover */}
+                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                          <div className="bg-gray-800 text-white text-xs rounded-lg px-2 py-1 whitespace-nowrap hebrew-text">
+                            רוצה לדעת עוד?
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                          </div>
+                        </div>
+                      </button>
+                    }
+                  />
                 </div>
               )}
             </div>
           </CardHeader>
           
           <CardContent>
-             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <Button 
                 onClick={() => handleOptimisticVote('support')} 
