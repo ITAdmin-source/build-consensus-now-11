@@ -77,8 +77,8 @@ export const PollsGrid: React.FC<PollsGridProps> = ({ polls, onJoinPoll }) => {
   return (
     <div className="container mx-auto px-4 py-12">
       
-      {/* Main Header 
-      <div className="text-center mb-12">
+      {/* Main Header */} 
+      <div className="text-center mb-12"> {/*
         <div className="flex justify-center items-center gap-4 mb-6">
           <div className="w-16 h-16 bg-gradient-to-r from-[#ec0081] to-[#66c8ca] rounded-full flex items-center justify-center">
             <Target className="h-8 w-8 text-white" />
