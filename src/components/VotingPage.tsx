@@ -31,7 +31,7 @@ export const VotingPage: React.FC<VotingPageProps> = ({
   isVoting = false
 }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-[#66c8ca]/8 via-white to-[#1a305b]/5">
       <NavigationHeader currentPage="voting" />
       
       <div className="container mx-auto px-4 py-6 max-w-4xl">

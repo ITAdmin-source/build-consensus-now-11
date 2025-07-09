@@ -168,10 +168,10 @@ const PollPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#66c8ca]/8 via-white to-[#1a305b]/5 flex items-center justify-center">
         <div className="text-center animate-fade-in">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-lg hebrew-text">טוען סקר...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#ec0081] mx-auto mb-4"></div>
+          <p className="text-lg hebrew-text text-[#1a305b]">טוען סקר...</p>
         </div>
       </div>
     );
@@ -179,14 +179,14 @@ const PollPage = () => {
 
   if (error || !poll) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#66c8ca]/8 via-white to-[#1a305b]/5 flex items-center justify-center">
         <div className="text-center animate-fade-in">
           <h1 className="text-2xl font-bold text-red-600 mb-4 hebrew-text">
             {error || 'סקר לא נמצא'}
           </h1>
           <button 
             onClick={handleBackToHome}
-            className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors hebrew-text"
+            className="bg-gradient-to-r from-[#66c8ca] to-[#ec0081] text-white px-6 py-3 rounded-lg hover:from-[#66c8ca]/90 hover:to-[#ec0081]/90 transition-colors hebrew-text"
           >
             חזור לעמוד הבית
           </button>

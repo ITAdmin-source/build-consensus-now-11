@@ -12,7 +12,7 @@ export const LiveIndicator: React.FC<LiveIndicatorProps> = ({ isLive, className 
   return (
     <Badge 
       variant={isLive ? "default" : "outline"} 
-      className={`animate-pulse ${isLive ? 'bg-green-500 text-white' : 'bg-gray-100'} ${className}`}
+      className={`animate-pulse ${isLive ? 'bg-[#ec0081] text-white' : 'bg-[#66c8ca]/20 text-[#1a305b] border-[#66c8ca]'} ${className}`}
     >
       {isLive ? (
         <>

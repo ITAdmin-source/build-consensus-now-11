@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef } from 'react';
 import { Poll, Statement } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -194,16 +193,16 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
   if (!statement) {
     return (
       <div className="space-y-6 animate-fade-in">
-        <div className="text-center p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-          <h3 className="text-xl font-bold text-green-800 mb-2 hebrew-text">
+        <div className="text-center p-6 bg-gradient-to-r from-[#66c8ca]/10 to-[#ec0081]/10 rounded-lg border border-[#66c8ca]/30">
+          <h3 className="text-xl font-bold text-[#1a305b] mb-2 hebrew-text">
             🎉 סיימת להצביע על כל ההצהרות!
           </h3>
-          <p className="text-green-700 mb-4 hebrew-text">
+          <p className="text-[#1a305b]/70 mb-4 hebrew-text">
             תודה על השתתפותך. כעת תוכל לראות את התוצאות ולגלות אילו נקודות חיבור נמצאו.
           </p>
           <Button 
             onClick={onViewResults} 
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
+            className="bg-gradient-to-r from-[#66c8ca] to-[#ec0081] hover:from-[#66c8ca]/90 hover:to-[#ec0081]/90 transition-all duration-300 text-white"
           >
             צפה בתוצאות
           </Button>
@@ -247,8 +246,8 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
         {isVoting && (
           <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 animate-fade-in">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-              <p className="text-sm text-gray-600 hebrew-text">מעבד הצבעה...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ec0081] mx-auto mb-2"></div>
+              <p className="text-sm text-[#1a305b]/70 hebrew-text">מעבד הצבעה...</p>
             </div>
           </div>
         )}
@@ -257,7 +256,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           ref={cardRef}
           className={`poll-card transition-all duration-300 cursor-grab active:cursor-grabbing select-none ${
             pendingVote ? 'scale-[0.98] opacity-80' : 'scale-100 opacity-100'
-          } ${swipeState.isDragging ? `${getSwipeIndicatorColor()} border-2` : ''} animate-scale-in`}
+          } ${swipeState.isDragging ? `${getSwipeIndicatorColor()} border-2` : ''} animate-scale-in bg-gradient-to-br from-white to-[#66c8ca]/5 border-[#66c8ca]/20`}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -277,7 +276,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           <CardHeader className="text-center pb-4">
             <div className="flex items-start justify-between mb-4">
               
-              <CardTitle className="text-2xl font-bold leading-relaxed flex-1 text-center flex items-start justify-center gap-3">
+              <CardTitle className="text-2xl font-bold leading-relaxed flex-1 text-center flex items-start justify-center gap-3 text-[#1a305b]">
                 <span>{statement.content}</span>
                 {statement.more_info && (
                   <StatementInfo 
@@ -286,15 +285,6 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
                   />
                 )}
               </CardTitle>
-              {/*statement.more_info && (
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                  <span className="hebrew-text">רוצה פרטים נוספים?</span>
-                  <StatementInfo 
-                    statementContent={statement.content}
-                    moreInfo={statement.more_info} 
-                  />
-                </div>
-              )*/}
             </div>
           </CardHeader>
           

@@ -17,17 +17,17 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage 
   };
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-white shadow-sm border-b border-[#66c8ca]/20">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="text-xl font-bold text-primary hebrew-text">
+          <Link to="/" className="text-xl font-bold text-[#1a305b] hebrew-text hover:text-[#ec0081] transition-colors">
             נקודות חיבור
           </Link>
           
           <nav className="flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-2 text-sm text-[#1a305b]/70">
                   <User className="h-4 w-4" />
                   <span className="hebrew-text">שלום, {user.email}</span>
                 </div>
@@ -35,7 +35,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage 
                   variant="outline"
                   size="sm"
                   onClick={handleSignOut}
-                  className="hebrew-text"
+                  className="hebrew-text border-[#ec0081] text-[#ec0081] hover:bg-[#ec0081] hover:text-white"
                 >
                   <LogOut className="h-4 w-4 ml-1" />
                   התנתק
@@ -43,7 +43,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage 
               </div>
             ) : (
               <Link to="/auth">
-                <Button variant="outline" size="sm" className="hebrew-text">
+                <Button variant="outline" size="sm" className="hebrew-text border-[#ec0081] text-[#ec0081] hover:bg-[#ec0081] hover:text-white">
                   <LogIn className="h-4 w-4 ml-1" />
                   התחבר
                 </Button>
