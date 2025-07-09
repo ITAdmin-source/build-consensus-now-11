@@ -286,7 +286,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
                   />
                 )}
               </CardTitle>
-              {statement.more_info && (
+              {/*statement.more_info && (
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <span className="hebrew-text">רוצה פרטים נוספים?</span>
                   <StatementInfo 
@@ -294,7 +294,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
                     moreInfo={statement.more_info} 
                   />
                 </div>
-              )}
+              )*/}
             </div>
           </CardHeader>
           
