@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -103,8 +104,9 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
         {/* User Statement Form */}
         {showStatementForm && (
           <UserStatementForm
-            onSubmit={onSubmitStatement}
-            onCancel={() => setShowStatementForm(false)}
+            poll={poll}
+            onSubmitStatement={onSubmitStatement}
+            onClose={() => setShowStatementForm(false)}
           />
         )}
       </div>
@@ -148,9 +150,10 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
     <div className="space-y-6">
       {/* Progress Section */}
       <VotingProgress
-        currentVote={userVoteCount + 1}
-        totalVotes={totalStatements}
-        progress={progress}
+        poll={poll}
+        userVoteCount={userVoteCount}
+        totalStatements={totalStatements}
+        remainingStatements={remainingStatements}
       />
 
       {/* Main Voting Card */}
@@ -163,7 +166,12 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
                 <Badge variant="outline" className="border-[#ec0081] text-[#ec0081] hebrew-text">
                   הצהרה {userVoteCount + 1} מתוך {totalStatements}
                 </Badge>
-                <StatementInfo statement={statement} />
+                {statement.more_info && (
+                  <StatementInfo 
+                    statementContent={statement.content}
+                    moreInfo={statement.more_info}
+                  />
+                )}
               </div>
 
               <div className="p-6 bg-gradient-to-r from-[#66c8ca]/5 to-[#ec0081]/5 rounded-lg border border-[#66c8ca]/20">
@@ -251,8 +259,9 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
       {/* User Statement Form */}
       {showStatementForm && (
         <UserStatementForm
-          onSubmit={onSubmitStatement}
-          onCancel={() => setShowStatementForm(false)}
+          poll={poll}
+          onSubmitStatement={onSubmitStatement}
+          onClose={() => setShowStatementForm(false)}
         />
       )}
     </div>
