@@ -162,7 +162,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
           <Separator className="my-8" />
           <UserStatementForm
             poll={poll}
-            onSubmit={onSubmitStatement}
+            onSubmitStatement={onSubmitStatement}
             onClose={() => setShowUserStatementForm(false)}
           />
         </>

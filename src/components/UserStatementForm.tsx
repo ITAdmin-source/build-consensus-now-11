@@ -6,16 +6,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Poll } from '@/types/poll';
-import { Plus, Send } from 'lucide-react';
+import { Plus, Send, X } from 'lucide-react';
 
 interface UserStatementFormProps {
   poll: Poll;
-  onSubmitStatement: (content: string, contentType: string) => void;
+  onSubmitStatement?: (content: string, contentType: string) => void;
+  onClose?: () => void;
 }
 
 export const UserStatementForm: React.FC<UserStatementFormProps> = ({
   poll,
-  onSubmitStatement
+  onSubmitStatement,
+  onClose
 }) => {
   const [content, setContent] = useState('');
   const [contentType, setContentType] = useState('text');
@@ -23,12 +25,13 @@ export const UserStatementForm: React.FC<UserStatementFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!content.trim() || !onSubmitStatement) return;
 
     setIsSubmitting(true);
     try {
       await onSubmitStatement(content.trim(), contentType);
       setContent('');
+      if (onClose) onClose();
       // Show success message or feedback
     } catch (error) {
       console.error('Error submitting statement:', error);
@@ -44,10 +47,22 @@ export const UserStatementForm: React.FC<UserStatementFormProps> = ({
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle className="hebrew-text flex items-center gap-2">
-          <Plus className="h-5 w-5" />
-          הוסף הצהרה משלך
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="hebrew-text flex items-center gap-2">
+            <Plus className="h-5 w-5" />
+            הוסף הצהרה משלך
+          </CardTitle>
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="hebrew-text"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground hebrew-text">
           {poll.auto_approve_statements 
             ? 'ההצהרה שלך תתווסף מיד לסקר'
