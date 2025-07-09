@@ -288,16 +288,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           </CardHeader>
           
           <CardContent>
-            {/* Swipe Instructions */}
-            <div className="text-center mb-6 p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 hebrew-text mb-2">
-                החלק כדי להצביע: ימינה = תמיכה, שמאלה = התנגדות, למטה = לא בטוח
-              </p>
-              <p className="text-xs text-gray-500 hebrew-text">
-                או השתמש בכפתורים למטה
-              </p>
-            </div>
-            
+             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <Button 
                 onClick={() => handleOptimisticVote('support')} 
