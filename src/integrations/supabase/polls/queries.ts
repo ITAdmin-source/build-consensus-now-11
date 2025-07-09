@@ -1,3 +1,4 @@
+
 import { supabase } from '../client';
 import { transformPollData } from './transformers';
 import { Poll } from '@/types/poll';

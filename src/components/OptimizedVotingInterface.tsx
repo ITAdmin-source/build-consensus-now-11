@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, HelpCircle, LogIn } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getVotingButtonLabels } from '@/utils/votingButtonUtils';
 
 interface OptimizedVotingInterfaceProps {
   poll: Poll;
@@ -36,6 +37,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
 }) => {
   const { user } = useAuth();
   const [pendingVote, setPendingVote] = useState<string | null>(null);
+  const buttonLabels = getVotingButtonLabels(poll);
 
   const handleOptimisticVote = (vote: string) => {
     if (!statement) return;
@@ -146,7 +148,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
                 size="lg"
               >
                 <ThumbsUp className="h-6 w-6 ml-2" />
-                <span className="hebrew-text text-lg">תומך</span>
+                <span className="hebrew-text text-lg">{buttonLabels.support}</span>
               </Button>
               
               <Button 
@@ -158,7 +160,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
                 size="lg"
               >
                 <HelpCircle className="h-6 w-6 ml-2" />
-                <span className="hebrew-text text-lg">לא בטוח</span>
+                <span className="hebrew-text text-lg">{buttonLabels.unsure}</span>
               </Button>
               
               <Button 
@@ -170,7 +172,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
                 size="lg"
               >
                 <ThumbsDown className="h-6 w-6 ml-2" />
-                <span className="hebrew-text text-lg">מתנגד</span>
+                <span className="hebrew-text text-lg">{buttonLabels.oppose}</span>
               </Button>
             </div>
           </CardContent>

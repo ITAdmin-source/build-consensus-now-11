@@ -1,4 +1,3 @@
-
 export interface Poll {
   poll_id: string;
   title: string;
@@ -43,6 +42,9 @@ export interface Poll {
   last_clustering_job_id?: string;
   clustering_status?: 'never_run' | 'pending' | 'running' | 'completed' | 'failed';
   last_clustered_at?: string;
+  support_button_label?: string;
+  unsure_button_label?: string;
+  oppose_button_label?: string;
 }
 
 export interface Statement {

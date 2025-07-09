@@ -80,5 +80,8 @@ export const transformPollData = (
       publish_status: poll.polis_rounds.publish_status as 'draft' | 'published',
       active_status: roundActiveStatus,
     } : undefined,
+    support_button_label: poll.support_button_label || 'תומך',
+    unsure_button_label: poll.unsure_button_label || 'לא בטוח',
+    oppose_button_label: poll.oppose_button_label || 'מתנגד',
   };
 };

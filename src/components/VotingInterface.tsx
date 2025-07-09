@@ -9,6 +9,7 @@ import { StatementInfo } from '@/components/StatementInfo';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, HelpCircle, Users, LogIn } from 'lucide-react';
+import { getVotingButtonLabels } from '@/utils/votingButtonUtils';
 
 interface VotingInterfaceProps {
   poll: Poll;
@@ -32,6 +33,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   onSubmitStatement
 }) => {
   const { user } = useAuth();
+  const buttonLabels = getVotingButtonLabels(poll);
 
   const handleVote = (vote: string) => {
     if (statement) {
@@ -120,7 +122,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
               size="lg"
             >
               <ThumbsUp className="h-6 w-6 ml-2" />
-              <span className="hebrew-text text-lg">תומך</span>
+              <span className="hebrew-text text-lg">{buttonLabels.support}</span>
             </Button>
             
             <Button 
@@ -129,7 +131,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
               size="lg"
             >
               <HelpCircle className="h-6 w-6 ml-2" />
-              <span className="hebrew-text text-lg">לא בטוח</span>
+              <span className="hebrew-text text-lg">{buttonLabels.unsure}</span>
             </Button>
             
             <Button 
@@ -138,7 +140,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
               size="lg"
             >
               <ThumbsDown className="h-6 w-6 ml-2" />
-              <span className="hebrew-text text-lg">מתנגד</span>
+              <span className="hebrew-text text-lg">{buttonLabels.oppose}</span>
             </Button>
           </div>
         </CardContent>

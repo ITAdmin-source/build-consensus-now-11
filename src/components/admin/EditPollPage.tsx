@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -14,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, Save, Settings, FileText, RefreshCw, ExternalLink, RotateCcw } from 'lucide-react';
+import { ArrowRight, Save, Settings, FileText, RefreshCw, ExternalLink, RotateCcw, ThumbsUp, ThumbsDown, HelpCircle } from 'lucide-react';
 import { StatementsManagement } from './StatementsManagement';
 import { ConfirmationDialog } from './ConfirmationDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -39,7 +38,10 @@ const editPollSchema = z.object({
   auto_approve_statements: z.boolean(),
   min_support_pct: z.number().min(0, 'מינימום 0%').max(100, 'מקסימום 100%'),
   max_opposition_pct: z.number().min(0, 'מינימום 0%').max(100, 'מקסימום 100%'),
-  min_votes_per_group: z.number().min(1, 'מינימום הצבעה אחת לקבוצה')
+  min_votes_per_group: z.number().min(1, 'מינימום הצבעה אחת לקבוצה'),
+  support_button_label: z.string().min(1, 'תווית כפתור תמיכה נדרשת').max(20, 'תווית ארוכה מדי'),
+  unsure_button_label: z.string().min(1, 'תווית כפתור לא בטוח נדרשת').max(20, 'תווית ארוכה מדי'),
+  oppose_button_label: z.string().min(1, 'תווית כפתור התנגדות נדרשת').max(20, 'תווית ארוכה מדי'),
 });
 
 type EditPollFormData = z.infer<typeof editPollSchema>;
@@ -66,7 +68,10 @@ export const EditPollPage: React.FC = () => {
       auto_approve_statements: false,
       min_support_pct: 60,
       max_opposition_pct: 30,
-      min_votes_per_group: 3
+      min_votes_per_group: 3,
+      support_button_label: 'תומך',
+      unsure_button_label: 'לא בטוח',
+      oppose_button_label: 'מתנגד',
     }
   });
 
@@ -95,6 +100,12 @@ export const EditPollPage: React.FC = () => {
       const generatedSlug = generateSlug(title);
       form.setValue('slug', generatedSlug);
     }
+  };
+
+  const handleResetButtonLabels = () => {
+    form.setValue('support_button_label', 'תומך');
+    form.setValue('unsure_button_label', 'לא בטוח');
+    form.setValue('oppose_button_label', 'מתנגד');
   };
 
   // Add the missing handleResetVotes function
@@ -167,7 +178,10 @@ export const EditPollPage: React.FC = () => {
           auto_approve_statements: data.auto_approve_statements,
           min_support_pct: data.min_support_pct,
           max_opposition_pct: data.max_opposition_pct,
-          min_votes_per_group: data.min_votes_per_group
+          min_votes_per_group: data.min_votes_per_group,
+          support_button_label: data.support_button_label.trim(),
+          unsure_button_label: data.unsure_button_label.trim(),
+          oppose_button_label: data.oppose_button_label.trim(),
         })
         .eq('poll_id', pollId)
         .select();
@@ -225,7 +239,10 @@ export const EditPollPage: React.FC = () => {
         auto_approve_statements: poll.auto_approve_statements ?? false,
         min_support_pct: poll.min_support_pct || 60,
         max_opposition_pct: poll.max_opposition_pct || 30,
-        min_votes_per_group: poll.min_votes_per_group || 3
+        min_votes_per_group: poll.min_votes_per_group || 3,
+        support_button_label: poll.support_button_label || 'תומך',
+        unsure_button_label: poll.unsure_button_label || 'לא בטוח',
+        oppose_button_label: poll.oppose_button_label || 'מתנגד',
       });
     }
   }, [poll, categories, rounds, form]);
@@ -282,7 +299,7 @@ export const EditPollPage: React.FC = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Badge variant={currentPollStatus === 'active' ? 'default' : 'secondary'}>
-                {currentPollStatus === 'active' ? 'פעיל' : currentPollStatus === 'completed' ? 'הושלם' : currentPollStatus === 'pending' ? 'ממתין' : 'טיוטה'}
+                {currentPollStatus === 'active' ? 'פעיל' : currentPollStatus === 'completed' ? 'הושלם' : currentPollStatus === 'pending' ? 'ממתין' : 'טיוטא'}
               </Badge>
               <span className="text-sm text-muted-foreground">
                 {poll.total_votes} הצבעות | {poll.current_consensus_points}/{poll.min_consensus_points_to_win} נק' חיבור
@@ -540,6 +557,107 @@ export const EditPollPage: React.FC = () => {
                             </FormItem>
                           )}
                         />
+                      </div>
+
+                      {/* Voting Button Labels Section */}
+                      <div className="space-y-4 border-t pt-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-md font-semibold hebrew-text">תוויות כפתורי הצבעה</h4>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm"
+                            onClick={handleResetButtonLabels}
+                            className="hebrew-text text-sm"
+                          >
+                            <RotateCcw className="h-3 w-3 ml-1" />
+                            איפוס לברירת מחדל
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="support_button_label"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="hebrew-text flex items-center gap-2">
+                                  <ThumbsUp className="h-4 w-4 text-green-600" />
+                                  כפתור תמיכה
+                                </FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    className="hebrew-text text-right"
+                                    placeholder="תומך"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="unsure_button_label"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="hebrew-text flex items-center gap-2">
+                                  <HelpCircle className="h-4 w-4 text-yellow-600" />
+                                  כפתור לא בטוח
+                                </FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    className="hebrew-text text-right"
+                                    placeholder="לא בטוח"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="oppose_button_label"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="hebrew-text flex items-center gap-2">
+                                  <ThumbsDown className="h-4 w-4 text-red-600" />
+                                  כפתור התנגדות
+                                </FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    className="hebrew-text text-right"
+                                    placeholder="מתנגד"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        {/* Button Preview */}
+                        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                          <p className="text-sm text-gray-600 hebrew-text mb-3">תצוגה מקדימה:</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded text-center text-sm">
+                              <ThumbsUp className="h-4 w-4 inline ml-1" />
+                              {form.watch('support_button_label') || 'תומך'}
+                            </div>
+                            <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-2 rounded text-center text-sm">
+                              <HelpCircle className="h-4 w-4 inline ml-1" />
+                              {form.watch('unsure_button_label') || 'לא בטוח'}
+                            </div>
+                            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-2 rounded text-center text-sm">
+                              <ThumbsDown className="h-4 w-4 inline ml-1" />
+                              {form.watch('oppose_button_label') || 'מתנגד'}
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
                       <div className="space-y-4">

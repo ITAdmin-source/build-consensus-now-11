@@ -800,12 +800,15 @@ export type Database = {
           min_consensus_points_to_win: number | null
           min_support_pct: number | null
           min_votes_per_group: number | null
+          oppose_button_label: string | null
           poll_id: string
           round_id: string
           slug: string | null
           status: Database["public"]["Enums"]["polis_poll_status"] | null
+          support_button_label: string | null
           title: string
           topic: string | null
+          unsure_button_label: string | null
         }
         Insert: {
           allow_user_statements?: boolean | null
@@ -828,12 +831,15 @@ export type Database = {
           min_consensus_points_to_win?: number | null
           min_support_pct?: number | null
           min_votes_per_group?: number | null
+          oppose_button_label?: string | null
           poll_id?: string
           round_id: string
           slug?: string | null
           status?: Database["public"]["Enums"]["polis_poll_status"] | null
+          support_button_label?: string | null
           title: string
           topic?: string | null
+          unsure_button_label?: string | null
         }
         Update: {
           allow_user_statements?: boolean | null
@@ -856,12 +862,15 @@ export type Database = {
           min_consensus_points_to_win?: number | null
           min_support_pct?: number | null
           min_votes_per_group?: number | null
+          oppose_button_label?: string | null
           poll_id?: string
           round_id?: string
           slug?: string | null
           status?: Database["public"]["Enums"]["polis_poll_status"] | null
+          support_button_label?: string | null
           title?: string
           topic?: string | null
+          unsure_button_label?: string | null
         }
         Relationships: [
           {
