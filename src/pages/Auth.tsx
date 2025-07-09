@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useReturnUrl } from '@/hooks/useReturnUrl';
 import AuthLayout from '@/components/auth/AuthLayout';
 import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
@@ -13,13 +14,15 @@ const Auth = () => {
   const navigate = useNavigate();
   const { signIn, signUp, user, loading } = useAuth();
   const { toast } = useToast();
+  const { getReturnUrl } = useReturnUrl();
 
-  // Redirect authenticated users to home
+  // Redirect authenticated users to their return URL or home
   useEffect(() => {
     if (user && !loading) {
-      navigate('/');
+      const returnUrl = getReturnUrl();
+      navigate(returnUrl);
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, getReturnUrl]);
 
   const onLoginSubmit = async (data: LoginFormData) => {
     console.log('Login form submitted:', data.email);

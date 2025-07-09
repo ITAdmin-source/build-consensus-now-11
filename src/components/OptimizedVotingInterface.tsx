@@ -6,10 +6,12 @@ import { UserStatementForm } from '@/components/UserStatementForm';
 import { StatementInfo } from '@/components/StatementInfo';
 import { VotingProgress } from '@/components/VotingProgress';
 import { useAuth } from '@/contexts/AuthContext';
+import { useReturnUrl } from '@/hooks/useReturnUrl';
 import { Link } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, HelpCircle, LogIn } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getVotingButtonLabels } from '@/utils/votingButtonUtils';
+
 interface OptimizedVotingInterfaceProps {
   poll: Poll;
   statement: Statement | null;
@@ -21,6 +23,7 @@ interface OptimizedVotingInterfaceProps {
   onSubmitStatement?: (content: string, contentType: string) => void;
   isVoting?: boolean;
 }
+
 export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> = React.memo(({
   poll,
   statement,
@@ -32,9 +35,8 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
   onSubmitStatement,
   isVoting = false
 }) => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
+  const { createAuthUrl } = useReturnUrl();
   const [pendingVote, setPendingVote] = useState<string | null>(null);
   const [swipeState, setSwipeState] = useState<{
     isDragging: boolean;
@@ -51,6 +53,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
     y: number;
   } | null>(null);
   const buttonLabels = getVotingButtonLabels(poll);
+
   const handleOptimisticVote = (vote: string) => {
     if (!statement) return;
 
@@ -65,6 +68,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
       setPendingVote(null);
     }, 300);
   };
+
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     startPos.current = {
@@ -77,6 +81,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
       distance: 0
     });
   };
+
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!startPos.current || !swipeState.isDragging) return;
     const touch = e.touches[0];
@@ -101,6 +106,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
       distance
     });
   };
+
   const handleTouchEnd = () => {
     if (!swipeState.isDragging || !statement) {
       setSwipeState({
@@ -132,6 +138,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
     });
     startPos.current = null;
   };
+
   const handleMouseStart = (e: React.MouseEvent) => {
     startPos.current = {
       x: e.clientX,
@@ -143,6 +150,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
       distance: 0
     });
   };
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!startPos.current || !swipeState.isDragging) return;
     const deltaX = e.clientX - startPos.current.x;
@@ -164,6 +172,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
       distance
     });
   };
+
   const handleMouseEnd = () => {
     if (!swipeState.isDragging || !statement) {
       setSwipeState({
@@ -203,7 +212,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
       return <div className="text-center p-4 rounded-lg border border-blue-200 bg-white">
           <LogIn className="h-8 w-8 mx-auto mb-2 text-blue-600" />
           <p className="text-blue-800 mb-3 hebrew-text">להוספת היגדים חדשים יש להירשם ולהתחבר</p>
-          <Link to="/auth">
+          <Link to={createAuthUrl()}>
             <Button variant="outline" size="sm">
               <LogIn className="h-4 w-4 ml-2" />
               התחבר למערכת
@@ -211,7 +220,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           </Link>
         </div>;
     }
-  }, [poll.allow_user_statements, user, onSubmitStatement, poll]);
+  }, [poll.allow_user_statements, user, onSubmitStatement, poll, createAuthUrl]);
 
   // Show completion message when no statement is available
   if (!statement) {
@@ -234,6 +243,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
         {userStatementSection}
       </div>;
   }
+
   const getSwipeIndicatorColor = () => {
     switch (swipeState.direction) {
       case 'right':
@@ -246,6 +256,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
         return '';
     }
   };
+
   const getSwipeIndicatorText = () => {
     switch (swipeState.direction) {
       case 'right':
@@ -258,6 +269,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
         return '';
     }
   };
+
   return <div className="space-y-6">
       {/* Statement Card with swipe functionality */}
       <div className="relative">
@@ -282,15 +294,6 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
                 <span>{statement.content}</span>
                 {statement.more_info && <StatementInfo statementContent={statement.content} moreInfo={statement.more_info} />}
               </CardTitle>
-              {/*statement.more_info && (
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                  <span className="hebrew-text">רוצה פרטים נוספים?</span>
-                  <StatementInfo 
-                    statementContent={statement.content}
-                    moreInfo={statement.more_info} 
-                  />
-                </div>
-               )*/}
             </div>
           </CardHeader>
           
@@ -322,4 +325,5 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
       {userStatementSection}
     </div>;
 });
+
 OptimizedVotingInterface.displayName = 'OptimizedVotingInterface';

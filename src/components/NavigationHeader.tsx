@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useReturnUrl } from '@/hooks/useReturnUrl';
 import { LogIn, LogOut, User } from 'lucide-react';
 
 interface NavigationHeaderProps {
@@ -11,6 +12,7 @@ interface NavigationHeaderProps {
 
 export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage }) => {
   const { user, signOut } = useAuth();
+  const { createAuthUrl } = useReturnUrl();
 
   const handleSignOut = async () => {
     await signOut();
@@ -42,7 +44,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage 
                 </Button>
               </div>
             ) : (
-              <Link to="/auth">
+              <Link to={createAuthUrl()}>
                 <Button variant="outline" size="sm" className="hebrew-text">
                   <LogIn className="h-4 w-4 ml-1" />
                   התחבר
