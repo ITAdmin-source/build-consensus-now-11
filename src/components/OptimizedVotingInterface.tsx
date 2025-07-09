@@ -276,8 +276,17 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           
           <CardHeader className="text-center pb-4">
             <div className="flex items-start justify-between mb-4">
-              <CardTitle className="text-2xl font-bold leading-relaxed flex-1 text-center">
+              {/*<CardTitle className="text-2xl font-bold leading-relaxed flex-1 text-center">
                 {statement.content}
+              </CardTitle>*/}
+              <CardTitle className="text-2xl font-bold leading-relaxed flex-1 text-center flex items-start justify-center gap-3">
+                <span>{statement.content}</span>
+                {statement.more_info && (
+                  <StatementInfo 
+                    statementContent={statement.content}
+                    moreInfo={statement.more_info} 
+                  />
+                )}
               </CardTitle>
               {statement.more_info && (
                 <div className="mr-4 flex-shrink-0">
