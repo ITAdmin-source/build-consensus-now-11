@@ -29,8 +29,8 @@ export const HowItWorks: React.FC = () => {
     {
       icon: Trophy,
       step: '3',
-      title: 'זכו יחד!',
-      description: 'כשמוצאים מספיק נקודות חיבור לפני שהזמן נגמר - כולם מנצחים במשחק!',
+      title: 'גלו תובנות',
+      description: ' גלו תובנות מעניינות על עצמכם המבוססות על הבחירות שלכם',
       color: '#ec0081',
       bgColor: 'bg-pink-50',
       borderColor: 'border-[#ec0081]/20'
@@ -38,12 +38,13 @@ export const HowItWorks: React.FC = () => {
     {
       icon: Trophy,
       step: '4',
-      title: 'תובנות אישיות',
-      description: ' גלו תובנות מעניינות על עצמכם המבוססות על הבחירות שלכם',
+      title: 'זכו יחד!',
+      description: 'כשמוצאים מספיק נקודות חיבור לפני שהזמן נגמר - כולם מנצחים במשחק!',
       color: '#ec0081',
       bgColor: 'bg-pink-50',
       borderColor: 'border-[#ec0081]/20'
     }
+    
   ];
 
   return (
