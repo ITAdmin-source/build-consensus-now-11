@@ -11,7 +11,7 @@ interface AuthContextType {
   loading: boolean;
   userRole: UserRole | null;
   isAuthenticated: boolean;
-  isAdmin: boolean; // poll_admin or super_admin
+  isAdmin: boolean;
   isSuperAdmin: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -31,7 +31,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Fetching role for user:', userId);
       
-      // Query the polis_user_roles table directly
       const { data, error } = await supabase
         .from('polis_user_roles')
         .select('role')
@@ -40,7 +39,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('Error fetching user role:', error);
-        // If no role found, default to participant
         if (error.code === 'PGRST116') {
           console.log('No role found, defaulting to participant');
           return 'participant';
@@ -73,14 +71,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     console.log('Setting up auth state listener');
     
-    // Set up auth state listener - NEVER use async function here
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state change:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Use setTimeout to defer async operations and prevent infinite loops
         if (session?.user) {
           setTimeout(async () => {
             try {
@@ -100,7 +96,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('Initial session:', session?.user?.email);
       setSession(session);
@@ -161,7 +156,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log('Signin response:', { data, error });
       
-      // Loading will be set to false by the auth state change handler
       return { error };
     } catch (error) {
       console.error('Error in signIn:', error);

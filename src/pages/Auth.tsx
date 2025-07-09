@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useReturnUrl } from '@/hooks/useReturnUrl';
 import AuthLayout from '@/components/auth/AuthLayout';
 import LoginForm from '@/components/auth/LoginForm';
 import SignupForm from '@/components/auth/SignupForm';
@@ -13,13 +14,15 @@ const Auth = () => {
   const navigate = useNavigate();
   const { signIn, signUp, user, loading } = useAuth();
   const { toast } = useToast();
+  const { getReturnUrlFromParams } = useReturnUrl();
 
-  // Redirect authenticated users to home
+  // Redirect authenticated users to return URL or home
   useEffect(() => {
     if (user && !loading) {
-      navigate('/');
+      const returnUrl = getReturnUrlFromParams();
+      navigate(returnUrl);
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, getReturnUrlFromParams]);
 
   const onLoginSubmit = async (data: LoginFormData) => {
     console.log('Login form submitted:', data.email);
@@ -40,6 +43,7 @@ const Auth = () => {
         title: 'התחברות הצליחה',
         description: 'ברוך הבא לנקודות חיבור',
       });
+      // Navigation will be handled by useEffect when user state updates
     }
   };
 
@@ -63,14 +67,16 @@ const Auth = () => {
         description: 'בדוק את האימייל שלך לאימות החשבון (או התחבר ישירות אם אימות אימייל מבוטל)',
       });
       console.log('Signup successful - check email for verification or login directly if email confirmation is disabled');
+      // If email confirmation is disabled, user will be automatically logged in
+      // and the useEffect will handle navigation
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#66c8ca]/8 via-white to-[#1a305b]/5 flex items-center justify-center">
         <div className="text-center hebrew-text">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ec0081] mx-auto mb-4"></div>
           <p>טוען...</p>
         </div>
       </div>
