@@ -171,7 +171,6 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
       setSwipeDirection('down');
       handleVote('unsure');
     },
-    preventDefaultTouchmoveEvent: true,
     trackMouse: false,
   });
 
@@ -239,6 +238,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            {...swipeHandlers}
           >
             {/* Swipe indicators */}
             {swipeDirection && (
