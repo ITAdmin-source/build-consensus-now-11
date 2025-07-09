@@ -2,7 +2,6 @@
 import React from 'react';
 import { NavigationHeader } from '@/components/NavigationHeader';
 import { HeroSection } from '@/components/HeroSection';
-import { QuickStats } from '@/components/QuickStats';
 import { PollsGrid } from '@/components/PollsGrid';
 import { HowItWorks } from '@/components/HowItWorks';
 import { Poll } from '@/types/poll';
@@ -18,7 +17,6 @@ export const HomePage: React.FC<HomePageProps> = ({ polls, onJoinPoll }) => {
       <NavigationHeader currentPage="home" />
       
       <HeroSection polls={polls} />
-      <QuickStats polls={polls} />
       <HowItWorks />
       <PollsGrid polls={polls} onJoinPoll={onJoinPoll} />
     </div>

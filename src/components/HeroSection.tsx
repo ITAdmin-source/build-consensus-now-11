@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Gamepad2, Zap, Users, Trophy, Target } from 'lucide-react';
+import { Gamepad2, Star, Medal, Trophy, Target } from 'lucide-react';
 import { HeroCountdown } from '@/components/HeroCountdown';
 import { Poll } from '@/types/poll';
 import { getPollStatus } from '@/utils/pollStatusUtils';
@@ -62,7 +62,67 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
     };
   };
 
+  // Calculate stats data
+  const getStatsData = () => {
+    const activeGames = polls.filter(p => {
+      const status = getPollStatus(p);
+      return status === 'active' || status === 'pending';
+    }).length;
+    
+    const totalVictoryPoints = polls.reduce((sum, p) => sum + p.current_consensus_points, 0);
+    const totalMoves = polls.reduce((sum, p) => sum + p.total_votes, 0);
+    const collectiveWins = polls.filter(p => p.current_consensus_points >= p.min_consensus_points_to_win).length;
+
+    return [
+      {
+        icon: Gamepad2,
+        value: activeGames,
+        label: 'משחקים פעילים',
+        color: '#66c8ca',
+        bgGradient: 'from-[#66c8ca]/30 to-blue-500/30',
+        pulseColor: 'bg-green-400',
+        description: 'משחקים שאתם יכולים לשחק בהם עכשיו'
+      },
+      {
+        icon: Star,
+        value: totalVictoryPoints,
+        label: 'נקודות חיבור',
+        color: '#ec0081',
+        bgGradient: 'from-[#ec0081]/30 to-purple-500/30',
+        pulseColor: 'bg-[#66c8ca]',
+        description: 'הסכמות שהושגו בכל המשחקים'
+      },
+      {
+        icon: Medal,
+        value: totalMoves,
+        label: 'הצבעות כולל',
+        color: '#1a305b',
+        bgGradient: 'from-[#1a305b]/30 to-blue-600/30',
+        pulseColor: 'bg-red-400',
+        description: 'כל ההצבעות במערכת'
+      },
+      {
+        icon: Trophy,
+        value: collectiveWins,
+        label: 'ניצחונות קבוצתיים',
+        color: '#f59e0b',
+        bgGradient: 'from-yellow-500/30 to-orange-500/30',
+        pulseColor: 'bg-yellow-400',
+        description: 'משחקים שהגיעו להסכמה מלאה'
+      }
+    ];
+  };
+
   const countdownInfo = getCountdownInfo();
+  const statsData = getStatsData();
+
+  // Format large numbers
+  const formatNumber = (num: number) => {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toLocaleString();
+  };
 
   return (
     <div className="relative bg-gradient-to-br from-[#1a305b] via-[#2a4a7b] to-[#1a305b] text-white overflow-hidden min-h-screen flex items-center">
@@ -122,42 +182,44 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
           </p>
         </div>
 
-        {/* Enhanced status indicators */}
-        <div className="flex flex-wrap justify-center items-center gap-6 mt-12">
-          <div className="group relative">
-            <div className="absolute -inset-2 bg-gradient-to-r from-[#66c8ca]/30 to-blue-500/30 rounded-full blur opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="relative flex items-center gap-3 bg-white/20 backdrop-blur-lg rounded-full px-6 py-3 border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-              <div className="relative">
-                <Users className="h-5 w-5 text-[#66c8ca]" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+        {/* Enhanced Stats Cards - Merged from QuickStats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 w-full max-w-6xl">
+          {statsData.map((stat, index) => {
+            const IconComponent = stat.icon;
+            return (
+              <div key={index} className="group relative">
+                {/* Gradient background blur effect */}
+                <div className={`absolute -inset-2 bg-gradient-to-r ${stat.bgGradient} rounded-2xl blur opacity-70 group-hover:opacity-100 transition-opacity duration-300`}></div>
+                
+                {/* Main card */}
+                <div className="relative bg-white/20 backdrop-blur-lg rounded-2xl p-6 border border-white/30 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 text-center">
+                  {/* Icon with pulsing indicator */}
+                  <div className="relative mb-4 flex justify-center">
+                    <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center shadow-lg border border-white/20">
+                      <IconComponent className="h-8 w-8 text-white" />
+                    </div>
+                    {/* Live indicator */}
+                    <div className={`absolute -top-1 -right-1 w-4 h-4 ${stat.pulseColor} rounded-full animate-pulse shadow-lg`}></div>
+                  </div>
+                  
+                  {/* Value */}
+                  <div className="text-3xl md:text-4xl font-bold mb-2 text-white drop-shadow-lg">
+                    {formatNumber(stat.value)}
+                  </div>
+                  
+                  {/* Label */}
+                  <div className="text-sm md:text-base font-semibold hebrew-text text-white/90 mb-2">
+                    {stat.label}
+                  </div>
+                  
+                  {/* Description - appears on hover */}
+                  <div className="text-xs text-white/70 hebrew-text opacity-0 group-hover:opacity-100 transition-opacity duration-300 max-h-0 group-hover:max-h-20 overflow-hidden transition-all duration-300">
+                    {stat.description}
+                  </div>
+                </div>
               </div>
-              <span className="text-sm font-semibold hebrew-text">שחקנים פעילים עכשיו</span>
-            </div>
-          </div>
-          
-          <div className="hidden md:block w-px h-8 bg-gradient-to-b from-transparent via-white/50 to-transparent"></div>
-          
-          <div className="group relative">
-            <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/30 to-[#66c8ca]/30 rounded-full blur opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="relative flex items-center gap-3 bg-white/20 backdrop-blur-lg rounded-full px-6 py-3 border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-              <div className="relative">
-                <Trophy className="h-5 w-5 text-yellow-400" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#66c8ca] rounded-full animate-pulse"></div>
-              </div>
-              <span className="text-sm font-semibold hebrew-text">משחקים פעילים</span>
-            </div>
-          </div>
-          
-          <div className="group relative">
-            <div className="absolute -inset-2 bg-gradient-to-r from-green-500/30 to-emerald-500/30 rounded-full blur opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="relative flex items-center gap-3 bg-white/20 backdrop-blur-lg rounded-full px-6 py-3 border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-              <div className="relative">
-                <Target className="h-5 w-5 text-green-400" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>
-              </div>
-              <span className="text-sm font-semibold hebrew-text">יעדים פתוחים</span>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
     </div>
