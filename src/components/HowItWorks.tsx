@@ -31,18 +31,18 @@ export const HowItWorks: React.FC = () => {
       step: '3',
       title: 'גלו תובנות',
       description: ' גלו תובנות מעניינות על עצמכם המבוססות על הבחירות שלכם',
-      color: '#66c8ca',
-      bgColor: 'bg-teal-50',
-      borderColor: 'border-[#66c8ca]/20'
+      color: '#ec0081',
+      bgColor: 'bg-pink-50',
+      borderColor: 'border-[#ec0081]/20'
     },
     {
       icon: Trophy,
       step: '4',
       title: 'זכו יחד!',
       description: 'כשמוצאים מספיק נקודות חיבור לפני שהזמן נגמר - כולם מנצחים במשחק!',
-      color: '#ec0081',
-      bgColor: 'bg-pink-50',
-      borderColor: 'border-[#ec0081]/20'
+      color: '#ff6b35',
+      bgColor: 'bg-orange-50',
+      borderColor: 'border-[#ff6b35]/20'
     }
     
   ];
