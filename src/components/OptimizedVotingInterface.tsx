@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSwipeable } from 'react-swipeable';
 
-import { fetchPoll } from '@/integrations/supabase/polls';
+import { fetchPollById } from '@/integrations/supabase/polls';
 import { submitVote } from '@/integrations/supabase/votes';
 import { fetchStatementsByPollId } from '@/integrations/supabase/statements';
 import { useToast } from '@/hooks/use-toast';
@@ -37,7 +38,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
   // Fetch poll details
   const { data: currentPoll, isLoading: pollLoading } = useQuery({
     queryKey: ['poll', pollId],
-    queryFn: () => fetchPoll(pollId),
+    queryFn: () => fetchPollById(pollId),
     enabled: !!pollId,
   });
 
@@ -46,51 +47,52 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
     queryKey: ['statements', pollId],
     queryFn: () => fetchStatementsByPollId(pollId),
     enabled: !!pollId,
-    onSuccess: (data) => {
-      if (data && data.length > 0) {
-        setCurrentStatement(data[0]);
-        if (totalStatements === 0) {
-          totalStatements = data.length;
-        }
-      }
-    }
   });
 
-  // Submit vote mutation
-  const { mutate: voteMutation, isLoading: isVoting } = useMutation(
-    (voteValue: 'support' | 'oppose' | 'unsure') => submitVote(currentStatement!.statement_id, voteValue),
-    {
-      onSuccess: () => {
-        setDragOffset({ x: 0, y: 0 });
-        setRotation(0);
-        setSwipeDirection(null);
-        
-        if (statements && currentStatementIndex < statements.length - 1) {
-          setCurrentStatementIndex(currentStatementIndex + 1);
-          setCurrentStatement(statements[currentStatementIndex + 1]);
-        } else {
-          // All statements voted
-          toast({
-            title: 'הצלחה',
-            description: 'הצבעת על כל ההצהרות!',
-          });
-        }
-      },
-      onError: (error: any) => {
-        toast({
-          title: 'שגיאה',
-          description: error.message || 'הייתה שגיאה בהצבעה. אנא נסה שוב.',
-          variant: 'destructive',
-        });
-      },
+  // Update current statement when statements are loaded
+  useEffect(() => {
+    if (statements && statements.length > 0) {
+      setCurrentStatement(statements[0]);
+      if (totalStatements === 0) {
+        totalStatements = statements.length;
+      }
     }
-  );
+  }, [statements, totalStatements]);
+
+  // Submit vote mutation
+  const voteMutation = useMutation({
+    mutationFn: (voteValue: 'support' | 'oppose' | 'unsure') => 
+      submitVote(currentStatement!.statement_id, voteValue),
+    onSuccess: () => {
+      setDragOffset({ x: 0, y: 0 });
+      setRotation(0);
+      setSwipeDirection(null);
+      
+      if (statements && currentStatementIndex < statements.length - 1) {
+        setCurrentStatementIndex(currentStatementIndex + 1);
+        setCurrentStatement(statements[currentStatementIndex + 1]);
+      } else {
+        // All statements voted
+        toast({
+          title: 'הצלחה',
+          description: 'הצבעת על כל ההצהרות!',
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'שגיאה',
+        description: error.message || 'הייתה שגיאה בהצבעה. אנא נסה שוב.',
+        variant: 'destructive',
+      });
+    },
+  });
 
   const isLoading = pollLoading || statementsLoading;
 
   const handleVote = (voteValue: 'support' | 'oppose' | 'unsure') => {
     if (!currentStatement) return;
-    voteMutation(voteValue);
+    voteMutation.mutate(voteValue);
   };
 
   // Drag functionality
@@ -276,7 +278,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           <div className="flex justify-center gap-4">
             <Button
               onClick={() => handleVote('oppose')}
-              disabled={isVoting}
+              disabled={voteMutation.isPending}
               variant="outline"
               className="flex-1 max-w-[120px] h-12 bg-red-50 border-red-200 text-red-700 hover:bg-red-100 hover:border-red-300"
             >
@@ -285,7 +287,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
             
             <Button
               onClick={() => handleVote('unsure')}
-              disabled={isVoting}
+              disabled={voteMutation.isPending}
               variant="outline"
               className="flex-1 max-w-[120px] h-12 bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100 hover:border-yellow-300"
             >
@@ -294,7 +296,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
             
             <Button
               onClick={() => handleVote('support')}
-              disabled={isVoting}
+              disabled={voteMutation.isPending}
               variant="outline"
               className="flex-1 max-w-[120px] h-12 bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:border-green-300"
             >
