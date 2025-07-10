@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReturnUrl } from '@/hooks/useReturnUrl';
-import { UserPointsDisplay } from '@/components/UserPointsDisplay';
 import { LogIn, LogOut, User } from 'lucide-react';
 
 interface NavigationHeaderProps {
@@ -28,8 +27,6 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage 
           </Link>
           
           <nav className="flex items-center space-x-4">
-            <UserPointsDisplay />
-            
             {user ? (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">

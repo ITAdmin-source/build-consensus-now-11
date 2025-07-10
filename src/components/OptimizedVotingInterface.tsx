@@ -5,10 +5,8 @@ import { Button } from '@/components/ui/button';
 import { UserStatementForm } from '@/components/UserStatementForm';
 import { StatementInfo } from '@/components/StatementInfo';
 import { VotingProgress } from '@/components/VotingProgress';
-import { PointAnimation } from '@/components/PointAnimation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReturnUrl } from '@/hooks/useReturnUrl';
-import { useUserPoints } from '@/hooks/useUserPoints';
 import { Link } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, HelpCircle, LogIn } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -39,9 +37,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
 }) => {
   const { user } = useAuth();
   const { createAuthUrl } = useReturnUrl();
-  const { incrementPoints } = useUserPoints();
   const [pendingVote, setPendingVote] = useState<string | null>(null);
-  const [showPointAnimation, setShowPointAnimation] = useState(false);
   const [swipeState, setSwipeState] = useState<{
     isDragging: boolean;
     direction: string | null;
@@ -64,12 +60,6 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
     // Set pending vote for immediate UI feedback
     setPendingVote(vote);
 
-    // Show point animation
-    setShowPointAnimation(true);
-    
-    // Optimistically increment points
-    incrementPoints();
-
     // Submit the actual vote
     onVote(statement.statement_id, vote);
 
@@ -77,10 +67,6 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
     setTimeout(() => {
       setPendingVote(null);
     }, 300);
-  };
-
-  const handleAnimationComplete = () => {
-    setShowPointAnimation(false);
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -104,10 +90,12 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     let direction = null;
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      // Horizontal swipe
       if (Math.abs(deltaX) > 50) {
         direction = deltaX > 0 ? 'right' : 'left';
       }
     } else {
+      // Vertical swipe
       if (Math.abs(deltaY) > 50) {
         direction = deltaY > 0 ? 'down' : 'up';
       }
@@ -129,6 +117,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
       return;
     }
 
+    // Execute vote based on swipe direction
     if (swipeState.direction && swipeState.distance > 80) {
       switch (swipeState.direction) {
         case 'right':
@@ -248,6 +237,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           </Button>
         </div>
         
+        {/* VotingProgress Component */}
         <VotingProgress poll={poll} userVoteCount={userVoteCount} totalStatements={totalStatements} remainingStatements={remainingStatements} />
         
         {userStatementSection}
@@ -281,8 +271,6 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
   };
 
   return <div className="space-y-6">
-      <PointAnimation show={showPointAnimation} onComplete={handleAnimationComplete} />
-      
       {/* Statement Card with swipe functionality */}
       <div className="relative">
         {isVoting && <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 animate-fade-in">
@@ -331,6 +319,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
         </Card>
       </div>
 
+      {/* VotingProgress Component */}
       <VotingProgress poll={poll} userVoteCount={userVoteCount} totalStatements={totalStatements} remainingStatements={remainingStatements} />
 
       {userStatementSection}
