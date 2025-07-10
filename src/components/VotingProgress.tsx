@@ -46,10 +46,6 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
                 : 'סיימת להצביע על כל ההצהרות!'
               }
             </p>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Trophy className="h-3 w-3 text-yellow-600" />
-              <span className="hebrew-text">{userPoints.total_points} נקודות כוללות</span>
-            </div>
           </div>
         </div>
       </CardContent>
