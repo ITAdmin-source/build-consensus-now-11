@@ -4,7 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Poll } from '@/types/poll';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Trophy } from 'lucide-react';
+import { useUserPoints } from '@/hooks/useUserPoints';
 
 interface VotingProgressProps {
   poll: Poll;
@@ -20,6 +21,7 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
   remainingStatements
 }) => {
   const personalProgress = (userVoteCount / totalStatements) * 100;
+  const { points } = useUserPoints();
 
   return (
     <Card className="mb-6">
@@ -36,12 +38,20 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
             </Badge>
           </div>
           <Progress value={personalProgress} className="h-2" />
-          <p className="text-xs text-muted-foreground hebrew-text">
-            {remainingStatements > 0 
-              ? `נותרו ${remainingStatements} הצהרות להצבעה`
-              : 'סיימת להצביע על כל ההצהרות!'
-            }
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground hebrew-text">
+              {remainingStatements > 0 
+                ? `נותרו ${remainingStatements} הצהרות להצבעה`
+                : 'סיימת להצביע על כל ההצהרות!'
+              }
+            </p>
+            {points && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Trophy className="h-3 w-3 text-yellow-600" />
+                <span className="hebrew-text">{points.total_points} נקודות כוללות</span>
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
