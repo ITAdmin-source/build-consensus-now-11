@@ -1,13 +1,10 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { getUserPoints, subscribeToPointsUpdates, UserPoints } from '@/integrations/supabase/userPoints';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useUserPoints = () => {
-  const [points, setPoints] = useState<UserPoints>({
-    total_points: 0,
-    votes_count: 0,
-    last_updated: new Date().toISOString()
-  });
+  const [points, setPoints] = useState<UserPoints | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -18,41 +15,42 @@ export const useUserPoints = () => {
       setPoints(userPoints);
     } catch (error) {
       console.error('Error fetching user points:', error);
-      // Keep default points structure on error
+      setPoints(null);
     } finally {
       setLoading(false);
     }
   }, []);
 
   const incrementPoints = useCallback(() => {
-    setPoints(prev => ({
-      ...prev,
-      total_points: prev.total_points + 1,
-      votes_count: prev.votes_count + 1,
-      last_updated: new Date().toISOString()
-    }));
+    setPoints(prev => {
+      if (!prev) return { total_points: 1, votes_count: 1, last_updated: new Date().toISOString() };
+      return {
+        ...prev,
+        total_points: prev.total_points + 1,
+        votes_count: prev.votes_count + 1,
+        last_updated: new Date().toISOString()
+      };
+    });
   }, []);
 
   useEffect(() => {
     fetchPoints();
-  }, [fetchPoints]);
+  }, [fetchPoints, user]);
 
   useEffect(() => {
-    let channel: any = null;
-    
     const setupSubscription = async () => {
-      channel = await subscribeToPointsUpdates((updatedPoints) => {
+      const channel = await subscribeToPointsUpdates((updatedPoints) => {
         setPoints(updatedPoints);
       });
+
+      return () => {
+        if (channel) {
+          channel.unsubscribe();
+        }
+      };
     };
 
     setupSubscription();
-
-    return () => {
-      if (channel) {
-        channel.unsubscribe();
-      }
-    };
   }, [user]);
 
   return {
