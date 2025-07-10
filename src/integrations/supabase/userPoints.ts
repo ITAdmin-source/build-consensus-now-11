@@ -33,10 +33,10 @@ export const getUserPoints = async (): Promise<UserPoints | null> => {
   return data;
 };
 
-export const subscribeToPointsUpdates = (
+export const subscribeToPointsUpdates = async (
   callback: (points: UserPoints) => void
 ) => {
-  const { data: { user } } = supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   const sessionId = sessionStorage.getItem('session_id');
 
   if (!user && !sessionId) return null;

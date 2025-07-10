@@ -38,15 +38,19 @@ export const useUserPoints = () => {
   }, [fetchPoints, user]);
 
   useEffect(() => {
-    const channel = subscribeToPointsUpdates((updatedPoints) => {
-      setPoints(updatedPoints);
-    });
+    const setupSubscription = async () => {
+      const channel = await subscribeToPointsUpdates((updatedPoints) => {
+        setPoints(updatedPoints);
+      });
 
-    return () => {
-      if (channel) {
-        channel.unsubscribe();
-      }
+      return () => {
+        if (channel) {
+          channel.unsubscribe();
+        }
+      };
     };
+
+    setupSubscription();
   }, [user]);
 
   return {
