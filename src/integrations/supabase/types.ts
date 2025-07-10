@@ -1100,6 +1100,36 @@ export type Database = {
           },
         ]
       }
+      polis_user_points: {
+        Row: {
+          created_at: string
+          id: string
+          last_updated: string
+          session_id: string | null
+          total_points: number
+          user_id: string | null
+          votes_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_updated?: string
+          session_id?: string | null
+          total_points?: number
+          user_id?: string | null
+          votes_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_updated?: string
+          session_id?: string | null
+          total_points?: number
+          user_id?: string | null
+          votes_count?: number
+        }
+        Relationships: []
+      }
       polis_user_roles: {
         Row: {
           assigned_at: string | null
