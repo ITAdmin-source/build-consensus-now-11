@@ -221,6 +221,7 @@ const PollPage = () => {
       unvotedStatements={statements.filter(s => !userVotes[s.statement_id])}
       totalStatements={statements.length}
       userVoteCount={Object.keys(userVotes).length}
+      userPoints={userPoints}
       onVote={handleVote}
       onViewResults={handleViewResults}
       onBackToHome={handleBackToHome}
