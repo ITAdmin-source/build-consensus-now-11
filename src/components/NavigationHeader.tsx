@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReturnUrl } from '@/hooks/useReturnUrl';
 import { UserPointsDisplay } from '@/components/UserPointsDisplay';
+import { UserPoints } from '@/integrations/supabase/userPoints';
 import { LogIn, LogOut, User } from 'lucide-react';
 
 interface NavigationHeaderProps {
   currentPage: 'home' | 'voting' | 'results' | 'admin';
+  userPoints?: UserPoints;
 }
 
-export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage }) => {
+export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage, userPoints }) => {
   const { user, signOut } = useAuth();
   const { createAuthUrl } = useReturnUrl();
 
@@ -28,7 +30,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage 
           </Link>
           
           <nav className="flex items-center space-x-4">
-            <UserPointsDisplay />
+            <UserPointsDisplay userPoints={userPoints} />
             
             {user ? (
               <div className="flex items-center space-x-4">

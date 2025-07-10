@@ -30,6 +30,7 @@ const PollPage = () => {
     groups,
     groupStats,
     userVotes,
+    userPoints,
     loading,
     error,
     isLive
@@ -204,6 +205,7 @@ const PollPage = () => {
         consensusPoints={consensusPoints}
         groups={groups}
         groupStats={groupStats}
+        userPoints={userPoints}
         onBackToHome={handleBackToHome}
         onNavigateToVoting={!pollCompleted && statements.length > 0 ? handleNavigateToVoting : undefined}
         isLive={!pollCompleted && isLive}

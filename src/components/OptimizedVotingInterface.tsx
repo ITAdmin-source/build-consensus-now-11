@@ -6,6 +6,7 @@ import { UserStatementForm } from '@/components/UserStatementForm';
 import { StatementInfo } from '@/components/StatementInfo';
 import { VotingProgress } from '@/components/VotingProgress';
 import { PointAnimation } from '@/components/PointAnimation';
+import { UserPoints } from '@/integrations/supabase/userPoints';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReturnUrl } from '@/hooks/useReturnUrl';
 import { useUserPoints } from '@/hooks/useUserPoints';
@@ -20,6 +21,7 @@ interface OptimizedVotingInterfaceProps {
   userVoteCount: number;
   totalStatements: number;
   remainingStatements: number;
+  userPoints: UserPoints;
   onVote: (statementId: string, vote: string) => void;
   onViewResults: () => void;
   onSubmitStatement?: (content: string, contentType: string) => void;
@@ -32,6 +34,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
   userVoteCount,
   totalStatements,
   remainingStatements,
+  userPoints,
   onVote,
   onViewResults,
   onSubmitStatement,
@@ -248,7 +251,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           </Button>
         </div>
         
-        <VotingProgress poll={poll} userVoteCount={userVoteCount} totalStatements={totalStatements} remainingStatements={remainingStatements} />
+        <VotingProgress poll={poll} userVoteCount={userVoteCount} totalStatements={totalStatements} remainingStatements={remainingStatements} userPoints={userPoints} />
         
         {userStatementSection}
       </div>;
@@ -331,7 +334,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
         </Card>
       </div>
 
-      <VotingProgress poll={poll} userVoteCount={userVoteCount} totalStatements={totalStatements} remainingStatements={remainingStatements} />
+      <VotingProgress poll={poll} userVoteCount={userVoteCount} totalStatements={totalStatements} remainingStatements={remainingStatements} userPoints={userPoints} />
 
       {userStatementSection}
     </div>;

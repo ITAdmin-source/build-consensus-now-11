@@ -5,6 +5,8 @@ import { fetchPollBySlug } from '@/integrations/supabase/polls';
 import { fetchStatementsByPollId } from '@/integrations/supabase/statements';
 import { fetchGroupsByPollId, fetchGroupStatsByPollId, fetchConsensusPointsByPollId } from '@/integrations/supabase/groups';
 import { getUserVotes } from '@/integrations/supabase/votes';
+import { getUserPoints, UserPoints } from '@/integrations/supabase/userPoints';
+import { getOrCreateSessionId } from '@/utils/sessionUtils';
 import { toast } from 'sonner';
 
 interface UseRealtimePollDataProps {
@@ -18,6 +20,7 @@ interface RealtimePollData {
   groups: Group[];
   groupStats: GroupStatementStats[];
   userVotes: Record<string, string>;
+  userPoints: UserPoints;
   loading: boolean;
   error: string | null;
   isLive: boolean;
@@ -32,6 +35,7 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
   const [groups, setGroups] = useState<Group[]>([]);
   const [groupStats, setGroupStats] = useState<GroupStatementStats[]>([]);
   const [userVotes, setUserVotes] = useState<Record<string, string>>({});
+  const [userPoints, setUserPoints] = useState<UserPoints>({ total_points: 0, votes_count: 0, last_updated: new Date().toISOString() });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
@@ -76,13 +80,14 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
       }
       lastUpdateRef.current = now;
 
-      const [pollData, statementsData, consensusPointsData, groupsData, groupStatsData, votesData] = await Promise.all([
+      const [pollData, statementsData, consensusPointsData, groupsData, groupStatsData, votesData, pointsData] = await Promise.all([
         fetchPollBySlug(slug),
         fetchStatementsByPollId(pollId),
         fetchConsensusPointsByPollId(pollId),
         fetchGroupsByPollId(pollId),
         fetchGroupStatsByPollId(pollId),
-        getUserVotes(pollId)
+        getUserVotes(pollId),
+        getUserPoints()
       ]);
 
       if (pollData) setPoll(pollData);
@@ -91,6 +96,7 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
       setGroups(groupsData);
       setGroupStats(groupStatsData);
       setUserVotes(votesData);
+      setUserPoints(pointsData);
 
       // Also fetch clustering job status
       await fetchClusteringJob(pollId);
@@ -119,12 +125,13 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
         
         pollIdRef.current = pollData.poll_id;
         
-        const [statementsData, consensusPointsData, groupsData, groupStatsData, votesData] = await Promise.all([
+        const [statementsData, consensusPointsData, groupsData, groupStatsData, votesData, pointsData] = await Promise.all([
           fetchStatementsByPollId(pollData.poll_id),
           fetchConsensusPointsByPollId(pollData.poll_id),
           fetchGroupsByPollId(pollData.poll_id),
           fetchGroupStatsByPollId(pollData.poll_id),
-          getUserVotes(pollData.poll_id)
+          getUserVotes(pollData.poll_id),
+          getUserPoints()
         ]);
 
         setPoll(pollData);
@@ -133,6 +140,7 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
         setGroups(groupsData);
         setGroupStats(groupStatsData);
         setUserVotes(votesData);
+        setUserPoints(pointsData);
 
         // Fetch initial clustering job status
         await fetchClusteringJob(pollData.poll_id);
@@ -265,6 +273,28 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'polis_user_points'
+        },
+        async (payload) => {
+          console.log('User points change detected:', payload);
+          const { data: { user } } = await supabase.auth.getUser();
+          const sessionId = getOrCreateSessionId();
+          
+          // Check if this update is for the current user/session
+          const newData = payload.new as any;
+          if (newData && 
+              ((user && newData.user_id === user.id) || 
+               (!user && newData.session_id === sessionId))) {
+            // Refresh points data
+            getUserPoints().then(setUserPoints);
+          }
+        }
+      )
       .subscribe((status) => {
         console.log('Real-time subscription status:', status);
         if (status === 'SUBSCRIBED') {
@@ -292,6 +322,7 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
     groups,
     groupStats,
     userVotes,
+    userPoints,
     loading,
     error,
     isLive,

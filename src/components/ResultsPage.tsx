@@ -9,6 +9,7 @@ import { useSmartClustering } from '@/hooks/useSmartClustering';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
+import { UserPoints } from '@/integrations/supabase/userPoints';
 
 interface ResultsPageProps {
   poll: Poll;
@@ -16,6 +17,7 @@ interface ResultsPageProps {
   consensusPoints: ConsensusPoint[];
   groups: Group[];
   groupStats: GroupStatementStats[];
+  userPoints: UserPoints;
   onBackToHome: () => void;
   onNavigateToVoting?: () => void;
   isLive?: boolean;
@@ -28,6 +30,7 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   consensusPoints,
   groups,
   groupStats,
+  userPoints,
   onBackToHome,
   onNavigateToVoting,
   isLive = false,
@@ -51,7 +54,7 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <NavigationHeader currentPage="results" />
+      <NavigationHeader currentPage="results" userPoints={userPoints} />
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Completed Poll Banner */}
