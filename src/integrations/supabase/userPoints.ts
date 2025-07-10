@@ -9,7 +9,13 @@ export interface UserPoints {
 
 export const getUserPoints = async (): Promise<UserPoints | null> => {
   const { data: { user } } = await supabase.auth.getUser();
-  const sessionId = sessionStorage.getItem('session_id');
+  
+  // Get or create session ID for anonymous users (similar to voting logic)
+  let sessionId = sessionStorage.getItem('session_id');
+  if (!sessionId && !user) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem('session_id', sessionId);
+  }
 
   let query = supabase
     .from('polis_user_points')
@@ -26,6 +32,14 @@ export const getUserPoints = async (): Promise<UserPoints | null> => {
   const { data, error } = await query.single();
 
   if (error) {
+    // If no points record exists yet, return default values instead of null
+    if (error.code === 'PGRST116') {
+      return {
+        total_points: 0,
+        votes_count: 0,
+        last_updated: new Date().toISOString()
+      };
+    }
     console.error('Error fetching user points:', error);
     return null;
   }
