@@ -2,6 +2,7 @@ import React from 'react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ParticipantsChart } from '@/components/ParticipantsChart';
@@ -32,6 +33,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   isPollCompleted = false
 }) => {
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
+  const consensusProgress = (poll.current_consensus_points / poll.min_consensus_points_to_win) * 100;
   
   // Sort statements: consensus points first, then by score
   const sortedStatements = [...statements].sort((a, b) => {
@@ -65,6 +67,37 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
               </CardContent>
             </Card>
           )}
+
+          {/* Consensus Progress */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="h-5 w-5 text-consensus-500" />
+                    <span className="font-medium hebrew-text">
+                      נקודות חיבור: {poll.current_consensus_points}/{poll.min_consensus_points_to_win}
+                    </span>
+                    {isWinning && (
+                      <Badge variant="default" className="text-xs">
+                        ניצחון!
+                      </Badge>
+                    )}
+                  </div>
+                  <Progress 
+                    value={consensusProgress} 
+                    className="h-3 consensus-gradient" 
+                  />
+                  <p className="text-xs text-muted-foreground hebrew-text mt-1">
+                    {isPollCompleted 
+                      ? (isWinning ? 'ניצחון קבוצתי הושג!' : 'התוצאות הסופיות')
+                      : (isWinning ? 'ניצחון קבוצתי!' : 'נקודות חיבור שנמצאו')
+                    }
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Poll Statistics */}
           <Card>

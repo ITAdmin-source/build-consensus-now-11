@@ -3,8 +3,9 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Poll } from '@/types/poll';
-import { CheckCircle, Trophy } from 'lucide-react';
+import { CheckCircle, BarChart3 } from 'lucide-react';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 
 interface VotingProgressProps {
@@ -13,6 +14,7 @@ interface VotingProgressProps {
   totalStatements: number;
   remainingStatements: number;
   userPoints: UserPoints;
+  onNavigateToResults?: () => void;
 }
 
 export const VotingProgress: React.FC<VotingProgressProps> = ({
@@ -20,7 +22,8 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
   userVoteCount,
   totalStatements,
   remainingStatements,
-  userPoints
+  userPoints,
+  onNavigateToResults
 }) => {
   const personalProgress = (userVoteCount / totalStatements) * 100;
 
@@ -46,6 +49,16 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
                 : 'סיימת להצביע על כל ההצהרות!'
               }
             </p>
+            {onNavigateToResults && (
+              <Button
+                onClick={onNavigateToResults}
+                size="sm"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 hebrew-text"
+              >
+                <BarChart3 className="h-3 w-3 ml-1" />
+                סיימתי
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>
