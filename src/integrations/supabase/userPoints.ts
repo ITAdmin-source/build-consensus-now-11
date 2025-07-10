@@ -63,13 +63,16 @@ export const subscribeToPointsUpdates = async (
         filter: user ? `user_id=eq.${user.id}` : `session_id=eq.${sessionId}`
       },
       (payload) => {
+        console.log('Points update received:', payload);
         const newData = payload.new as UserPoints;
         if (newData) {
           callback(newData);
         }
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log('Points subscription status:', status);
+    });
 
   return channel;
 };
