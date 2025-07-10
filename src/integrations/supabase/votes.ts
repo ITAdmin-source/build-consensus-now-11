@@ -1,15 +1,20 @@
 
 import { supabase } from './client';
 
-export const submitVote = async (statementId: string, voteValue: 'support' | 'oppose' | 'unsure') => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  // Get or create session ID for anonymous users
+const getOrCreateSessionId = (): string => {
   let sessionId = sessionStorage.getItem('session_id');
   if (!sessionId) {
     sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     sessionStorage.setItem('session_id', sessionId);
   }
+  return sessionId;
+};
+
+export const submitVote = async (statementId: string, voteValue: 'support' | 'oppose' | 'unsure') => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // Always ensure session ID exists
+  const sessionId = getOrCreateSessionId();
 
   // Get statement details to find poll_id
   const { data: statement, error: statementError } = await supabase
@@ -145,7 +150,7 @@ async function updateParticipantVector(
 
 export const getUserVotes = async (pollId: string) => {
   const { data: { user } } = await supabase.auth.getUser();
-  const sessionId = sessionStorage.getItem('session_id');
+  const sessionId = getOrCreateSessionId();
 
   let query = supabase
     .from('polis_votes')
@@ -154,10 +159,8 @@ export const getUserVotes = async (pollId: string) => {
 
   if (user) {
     query = query.eq('user_id', user.id);
-  } else if (sessionId) {
-    query = query.eq('session_id', sessionId);
   } else {
-    return {};
+    query = query.eq('session_id', sessionId);
   }
 
   const { data, error } = await query;

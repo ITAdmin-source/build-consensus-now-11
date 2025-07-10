@@ -7,9 +7,18 @@ export interface UserPoints {
   last_updated: string;
 }
 
-export const getUserPoints = async (): Promise<UserPoints | null> => {
+const getOrCreateSessionId = (): string => {
+  let sessionId = sessionStorage.getItem('session_id');
+  if (!sessionId) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem('session_id', sessionId);
+  }
+  return sessionId;
+};
+
+export const getUserPoints = async (): Promise<UserPoints> => {
   const { data: { user } } = await supabase.auth.getUser();
-  const sessionId = sessionStorage.getItem('session_id');
+  const sessionId = getOrCreateSessionId();
 
   let query = supabase
     .from('polis_user_points')
@@ -17,17 +26,19 @@ export const getUserPoints = async (): Promise<UserPoints | null> => {
 
   if (user) {
     query = query.eq('user_id', user.id);
-  } else if (sessionId) {
-    query = query.eq('session_id', sessionId);
   } else {
-    return null;
+    query = query.eq('session_id', sessionId);
   }
 
   const { data, error } = await query.single();
 
   if (error) {
-    console.error('Error fetching user points:', error);
-    return null;
+    // Return default points structure for new users/sessions
+    return {
+      total_points: 0,
+      votes_count: 0,
+      last_updated: new Date().toISOString()
+    };
   }
 
   return data;
@@ -37,7 +48,7 @@ export const subscribeToPointsUpdates = async (
   callback: (points: UserPoints) => void
 ) => {
   const { data: { user } } = await supabase.auth.getUser();
-  const sessionId = sessionStorage.getItem('session_id');
+  const sessionId = getOrCreateSessionId();
 
   if (!user && !sessionId) return null;
 
@@ -46,14 +57,16 @@ export const subscribeToPointsUpdates = async (
     .on(
       'postgres_changes',
       {
-        event: 'UPDATE',
+        event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
         schema: 'public',
         table: 'polis_user_points',
         filter: user ? `user_id=eq.${user.id}` : `session_id=eq.${sessionId}`
       },
       (payload) => {
         const newData = payload.new as UserPoints;
-        callback(newData);
+        if (newData) {
+          callback(newData);
+        }
       }
     )
     .subscribe();
