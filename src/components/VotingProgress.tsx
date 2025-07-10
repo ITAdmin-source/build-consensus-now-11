@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Poll } from '@/types/poll';
 import { CheckCircle, BarChart3 } from 'lucide-react';
 import { UserPoints } from '@/integrations/supabase/userPoints';
+import { CompletionDialog } from './CompletionDialog';
 
 interface VotingProgressProps {
   poll: Poll;
@@ -15,6 +16,7 @@ interface VotingProgressProps {
   remainingStatements: number;
   userPoints: UserPoints;
   onNavigateToResults?: () => void;
+  onNavigateToHome?: () => void;
 }
 
 export const VotingProgress: React.FC<VotingProgressProps> = ({
@@ -23,9 +25,16 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
   totalStatements,
   remainingStatements,
   userPoints,
-  onNavigateToResults
+  onNavigateToResults,
+  onNavigateToHome
 }) => {
   const personalProgress = (userVoteCount / totalStatements) * 100;
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+
+  const handlePersonalInsights = () => {
+    // Future implementation
+    console.log('Personal insights clicked - to be implemented');
+  };
 
   return (
     <Card className="mb-6">
@@ -51,7 +60,7 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
             </p>
             {onNavigateToResults && (
               <Button
-                onClick={onNavigateToResults}
+                onClick={() => setShowCompletionDialog(true)}
                 size="sm"
                 className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 hebrew-text"
               >
@@ -62,6 +71,14 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
           </div>
         </div>
       </CardContent>
+
+      <CompletionDialog
+        open={showCompletionDialog}
+        onOpenChange={setShowCompletionDialog}
+        onNavigateToResults={onNavigateToResults || (() => {})}
+        onNavigateToHome={onNavigateToHome || (() => {})}
+        onPersonalInsights={handlePersonalInsights}
+      />
     </Card>
   );
 };

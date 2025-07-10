@@ -251,7 +251,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
           </Button>
         </div>
         
-        <VotingProgress poll={poll} userVoteCount={userVoteCount} totalStatements={totalStatements} remainingStatements={remainingStatements} userPoints={userPoints} onNavigateToResults={onViewResults} />
+        <VotingProgress poll={poll} userVoteCount={userVoteCount} totalStatements={totalStatements} remainingStatements={remainingStatements} userPoints={userPoints} onNavigateToResults={onViewResults} onNavigateToHome={() => window.location.href = '/'} />
         
         {userStatementSection}
       </div>;
@@ -334,7 +334,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
         </Card>
       </div>
 
-      <VotingProgress poll={poll} userVoteCount={userVoteCount} totalStatements={totalStatements} remainingStatements={remainingStatements} userPoints={userPoints} onNavigateToResults={onViewResults} />
+      <VotingProgress poll={poll} userVoteCount={userVoteCount} totalStatements={totalStatements} remainingStatements={remainingStatements} userPoints={userPoints} onNavigateToResults={onViewResults} onNavigateToHome={() => window.location.href = '/'} />
 
       {userStatementSection}
     </div>;
