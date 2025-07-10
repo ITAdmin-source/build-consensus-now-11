@@ -1,9 +1,10 @@
+
 import { supabase } from './client';
 
 export const submitVote = async (statementId: string, voteValue: 'support' | 'oppose' | 'unsure') => {
   const { data: { user } } = await supabase.auth.getUser();
   
-  // Get or create session ID for anonymous users (consistent with points fetching)
+  // Get or create session ID for anonymous users
   let sessionId = sessionStorage.getItem('session_id');
   if (!sessionId) {
     sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

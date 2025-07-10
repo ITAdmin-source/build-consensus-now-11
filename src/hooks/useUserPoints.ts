@@ -33,12 +33,10 @@ export const useUserPoints = () => {
     });
   }, []);
 
-  // Fetch points on mount and when user status changes
   useEffect(() => {
     fetchPoints();
   }, [fetchPoints, user]);
 
-  // Set up real-time subscription
   useEffect(() => {
     const setupSubscription = async () => {
       const channel = await subscribeToPointsUpdates((updatedPoints) => {
