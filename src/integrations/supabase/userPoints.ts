@@ -1,20 +1,12 @@
 
 import { supabase } from './client';
+import { getOrCreateSessionId } from '@/utils/sessionUtils';
 
 export interface UserPoints {
   total_points: number;
   votes_count: number;
   last_updated: string;
 }
-
-const getOrCreateSessionId = (): string => {
-  let sessionId = sessionStorage.getItem('session_id');
-  if (!sessionId) {
-    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    sessionStorage.setItem('session_id', sessionId);
-  }
-  return sessionId;
-};
 
 export const getUserPoints = async (): Promise<UserPoints> => {
   const { data: { user } } = await supabase.auth.getUser();

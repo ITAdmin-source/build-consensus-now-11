@@ -1,14 +1,6 @@
 
 import { supabase } from './client';
-
-const getOrCreateSessionId = (): string => {
-  let sessionId = sessionStorage.getItem('session_id');
-  if (!sessionId) {
-    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    sessionStorage.setItem('session_id', sessionId);
-  }
-  return sessionId;
-};
+import { getOrCreateSessionId } from '@/utils/sessionUtils';
 
 export const submitVote = async (statementId: string, voteValue: 'support' | 'oppose' | 'unsure') => {
   const { data: { user } } = await supabase.auth.getUser();
