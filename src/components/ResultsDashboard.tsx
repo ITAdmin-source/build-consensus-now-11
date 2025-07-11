@@ -42,8 +42,21 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
     return b.score - a.score;
   });
 
-  // Calculate total participants from groups
-  const totalParticipants = groups.reduce((sum, group) => sum + group.member_count, 0);
+  // Use simple participant count from poll data (updated in real-time)
+  const totalParticipants = (() => {
+    // Primary: Use poll's total_participants (updated in real-time when users vote)
+    if (poll.total_participants) {
+      return poll.total_participants;
+    }
+    
+    // Fallback 1: Calculate from groups data if available (after clustering)
+    if (groups && groups.length > 0) {
+      return groups.reduce((sum, group) => sum + group.member_count, 0);
+    }
+    
+    // Fallback 2: Minimum of 1 if poll exists but no data yet
+    return 1;
+  })();
 
   const getGroupStatsForStatement = (statementId: string, groupId: string) => {
     return groupStats.find(stat => stat.statement_id === statementId && stat.group_id === groupId);
