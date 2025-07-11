@@ -242,7 +242,7 @@ const PollPage = () => {
       isVoting={isVoting}
       participantCount={participantCount}
       consensusPointsCount={consensusPoints.length}
-      totalVotes={Object.keys(userVotes).length}
+      totalVotes={poll.total_votes || 0}
       groups={groups}
       isLive={isLive}
     />
