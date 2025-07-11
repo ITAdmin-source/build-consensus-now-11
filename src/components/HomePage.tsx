@@ -17,7 +17,6 @@ export const HomePage: React.FC<HomePageProps> = ({ polls, onJoinPoll }) => {
       <NavigationHeader currentPage="home" />
       
       <HeroSection polls={polls} />
-      <HowItWorks />
       <div id="active-polls-section">
         <PollsGrid polls={polls} onJoinPoll={onJoinPoll} />
       </div>
