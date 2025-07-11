@@ -188,7 +188,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
             const IconComponent = stat.icon;
             return (
               <div key={index} className="group relative">
-                {/* Gradient background blur effect */}
+                {/* Gradient background blur effect 
                 <div className={`absolute -inset-2 bg-gradient-to-r ${stat.bgGradient} rounded-2xl blur opacity-70 group-hover:opacity-100 transition-opacity duration-300`}></div>
                 
                 {/* Main card 
