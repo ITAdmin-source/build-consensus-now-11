@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { VotingPage } from '@/components/VotingPage';
@@ -42,18 +43,21 @@ const PollPage = () => {
     return isPollCompleted(poll);
   }, [poll]);
 
-  // Calculate participant count from groups data (like ResultsDashboard)
+  // Use simple participant count from poll data (updated in real-time)
   const participantCount = useMemo(() => {
+    // Primary: Use poll's total_participants (updated in real-time when users vote)
+    if (poll?.total_participants) {
+      return poll.total_participants;
+    }
+    
+    // Fallback 1: Calculate from groups data if available (after clustering)
     if (groups && groups.length > 0) {
       return groups.reduce((sum, group) => sum + (group.member_count || 0), 0);
     }
     
-    // Fallback to estimating from votes if groups aren't available
-    if (!userVotes || Object.keys(userVotes).length === 0) return 1;
-    
-    // This is an approximation - actual participant count needs clustering
-    return Math.max(1, Math.ceil(Object.keys(userVotes).length / Math.max(1, statements.length / 3)));
-  }, [groups, userVotes, statements.length]);
+    // Fallback 2: Minimum of 1 if poll exists but no data yet
+    return poll ? 1 : 0;
+  }, [poll?.total_participants, groups]);
 
   // Force results view for completed polls
   useEffect(() => {
