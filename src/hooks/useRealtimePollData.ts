@@ -220,6 +220,20 @@ export const useRealtimePollData = ({ slug }: UseRealtimePollDataProps): Realtim
         },
         (payload) => {
           console.log('Groups change detected:', payload);
+          console.log('Current groups before refetch:', groups.length);
+          refetchPollData(pollId);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'polis_user_group_membership',
+          filter: `poll_id=eq.${pollId}`
+        },
+        (payload) => {
+          console.log('User group membership change detected:', payload);
           refetchPollData(pollId);
         }
       )
