@@ -62,7 +62,7 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
               <Button
                 onClick={() => setShowCompletionDialog(true)}
                 size="sm"
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-purple-700 hebrew-text"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 hebrew-text"
               >
                 <BarChart3 className="h-3 w-3 ml-1" />
                 סיימתי
