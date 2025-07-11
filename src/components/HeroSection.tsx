@@ -182,7 +182,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
           </p>
         </div>
 
-        {/* Enhanced Stats Cards - Merged from QuickStats */}
+        {/* Enhanced Stats Cards - Merged from QuickStats 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 w-full max-w-6xl">
           {statsData.map((stat, index) => {
             const IconComponent = stat.icon;
@@ -191,28 +191,28 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
                 {/* Gradient background blur effect */}
                 <div className={`absolute -inset-2 bg-gradient-to-r ${stat.bgGradient} rounded-2xl blur opacity-70 group-hover:opacity-100 transition-opacity duration-300`}></div>
                 
-                {/* Main card */}
+                {/* Main card 
                 <div className="relative bg-white/20 backdrop-blur-lg rounded-2xl p-6 border border-white/30 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 text-center">
-                  {/* Icon with pulsing indicator */}
+                  {/* Icon with pulsing indicator 
                   <div className="relative mb-4 flex justify-center">
                     <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center shadow-lg border border-white/20">
                       <IconComponent className="h-8 w-8 text-white" />
                     </div>
-                    {/* Live indicator */}
+                    {/* Live indicator 
                     <div className={`absolute -top-1 -right-1 w-4 h-4 ${stat.pulseColor} rounded-full animate-pulse shadow-lg`}></div>
                   </div>
                   
-                  {/* Value */}
+                  {/* Value 
                   <div className="text-3xl md:text-4xl font-bold mb-2 text-white drop-shadow-lg">
                     {formatNumber(stat.value)}
                   </div>
                   
-                  {/* Label */}
+                  {/* Label 
                   <div className="text-sm md:text-base font-semibold hebrew-text text-white/90 mb-2">
                     {stat.label}
                   </div>
                   
-                  {/* Description - appears on hover */}
+                  {/* Description - appears on hover
                   <div className="text-xs text-white/70 hebrew-text opacity-0 group-hover:opacity-100 transition-opacity duration-300 max-h-0 group-hover:max-h-20 overflow-hidden transition-all duration-300">
                     {stat.description}
                   </div>
@@ -220,7 +220,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
               </div>
             );
           })}
-        </div>
+        </div> */}
       </div>
     </div>
   );
