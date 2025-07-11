@@ -18,7 +18,9 @@ export const HomePage: React.FC<HomePageProps> = ({ polls, onJoinPoll }) => {
       
       <HeroSection polls={polls} />
       <HowItWorks />
-      <PollsGrid polls={polls} onJoinPoll={onJoinPoll} />
+      <div id="active-polls-section">
+        <PollsGrid polls={polls} onJoinPoll={onJoinPoll} />
+      </div>
     </div>
   );
 };

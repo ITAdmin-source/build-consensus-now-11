@@ -1,7 +1,9 @@
-
-import React from 'react';
-import { Gamepad2, Star, Medal, Trophy, Target } from 'lucide-react';
+import React, { useState } from 'react';
+import { Gamepad2, Star, Medal, Trophy, Target, ArrowDown, HelpCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { HeroCountdown } from '@/components/HeroCountdown';
+import { HowItWorks } from '@/components/HowItWorks';
 import { Poll } from '@/types/poll';
 import { getPollStatus } from '@/utils/pollStatusUtils';
 
@@ -10,6 +12,18 @@ interface HeroSectionProps {
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
+
+  const scrollToActivePolls = () => {
+    const activeSection = document.getElementById('active-polls-section');
+    if (activeSection) {
+      activeSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+
   // Helper function to determine countdown target and messaging
   const getCountdownInfo = () => {
     // Check for active rounds first
@@ -182,38 +196,73 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ polls }) => {
           </p>
         </div>
 
-        {/* Enhanced Stats Cards - Merged from QuickStats 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 w-full max-w-6xl">
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <Button 
+            onClick={scrollToActivePolls}
+            size="lg"
+            className="bg-[#66c8ca] hover:bg-[#66c8ca]/90 text-white px-8 py-6 text-xl font-bold hebrew-text rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-2 border-white/20"
+          >
+            <ArrowDown className="ml-2 h-6 w-6" />
+            קדימה
+          </Button>
+
+          <Dialog open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline"
+                size="lg"
+                className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border-white/30 hover:border-white/50 px-8 py-6 text-xl font-bold hebrew-text rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300"
+              >
+                <HelpCircle className="ml-2 h-6 w-6" />
+                איך משחקים?
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold hebrew-text text-[#1a305b] text-center">
+                  איך משחקים במשחקי ההסכמה?
+                </DialogTitle>
+              </DialogHeader>
+              <div className="mt-4">
+                <HowItWorks />
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Enhanced Stats Cards - Merged from QuickStats */}
+        {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 w-full max-w-6xl">
           {statsData.map((stat, index) => {
             const IconComponent = stat.icon;
             return (
               <div key={index} className="group relative">
-                {/* Gradient background blur effect 
-                <div className={`absolute -inset-2 bg-gradient-to-r ${stat.bgGradient} rounded-2xl blur opacity-70 group-hover:opacity-100 transition-opacity duration-300`}></div>
+                {/* Gradient background blur effect */}
+                {/* <div className={`absolute -inset-2 bg-gradient-to-r ${stat.bgGradient} rounded-2xl blur opacity-70 group-hover:opacity-100 transition-opacity duration-300`}></div>
                 
-                {/* Main card 
-                <div className="relative bg-white/20 backdrop-blur-lg rounded-2xl p-6 border border-white/30 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 text-center">
-                  {/* Icon with pulsing indicator 
-                  <div className="relative mb-4 flex justify-center">
+                {/* Main card */}
+                {/* <div className="relative bg-white/20 backdrop-blur-lg rounded-2xl p-6 border border-white/30 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 text-center">
+                  {/* Icon with pulsing indicator */}
+                  {/* <div className="relative mb-4 flex justify-center">
                     <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center shadow-lg border border-white/20">
                       <IconComponent className="h-8 w-8 text-white" />
                     </div>
-                    {/* Live indicator 
-                    <div className={`absolute -top-1 -right-1 w-4 h-4 ${stat.pulseColor} rounded-full animate-pulse shadow-lg`}></div>
+                    {/* Live indicator */}
+                    {/* <div className={`absolute -top-1 -right-1 w-4 h-4 ${stat.pulseColor} rounded-full animate-pulse shadow-lg`}></div>
                   </div>
                   
-                  {/* Value 
-                  <div className="text-3xl md:text-4xl font-bold mb-2 text-white drop-shadow-lg">
+                  {/* Value */}
+                  {/* <div className="text-3xl md:text-4xl font-bold mb-2 text-white drop-shadow-lg">
                     {formatNumber(stat.value)}
                   </div>
                   
-                  {/* Label 
-                  <div className="text-sm md:text-base font-semibold hebrew-text text-white/90 mb-2">
+                  {/* Label */}
+                  {/* <div className="text-sm md:text-base font-semibold hebrew-text text-white/90 mb-2">
                     {stat.label}
                   </div>
                   
-                  {/* Description - appears on hover
-                  <div className="text-xs text-white/70 hebrew-text opacity-0 group-hover:opacity-100 transition-opacity duration-300 max-h-0 group-hover:max-h-20 overflow-hidden transition-all duration-300">
+                  {/* Description - appears on hover */}
+                  {/* <div className="text-xs text-white/70 hebrew-text opacity-0 group-hover:opacity-100 transition-opacity duration-300 max-h-0 group-hover:max-h-20 overflow-hidden transition-all duration-300">
                     {stat.description}
                   </div>
                 </div>
