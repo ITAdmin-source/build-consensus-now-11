@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Users, Target, Zap } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Target, Zap, Vote, BarChart3 } from 'lucide-react';
+import { Group } from '@/types/poll';
 
 interface ActivityItem {
   id: string;
@@ -12,12 +14,18 @@ interface ActivityItem {
 interface LiveActivityFeedProps {
   participantCount: number;
   consensusPointsCount: number;
+  totalVotes?: number;
+  totalStatements?: number;
+  groups?: Group[];
   isLive?: boolean;
 }
 
 export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
   participantCount,
   consensusPointsCount,
+  totalVotes = 0,
+  totalStatements = 0,
+  groups = [],
   isLive = false
 }) => {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
@@ -105,27 +113,82 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
     }
   };
 
-  if (activities.length === 0) return null;
-
   return (
-    <div className="space-y-2">
-      <div className="text-xs font-medium text-muted-foreground hebrew-text mb-2">
-        פעילות אחרונה
-      </div>
-      <div className="space-y-1">
-        {activities.slice(0, 3).map((activity) => (
-          <Badge
-            key={activity.id}
-            variant="outline"
-            className={`w-full justify-start text-xs py-1 px-2 hebrew-text animate-fade-in ${getActivityColor(activity.type)}`}
-          >
+    <div className="space-y-4">
+      {/* Poll Statistics */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm hebrew-text">סטטיסטיקות</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {getActivityIcon(activity.type)}
-              <span className="flex-1 text-right">{activity.message}</span>
+              <Vote className="h-4 w-4 text-blue-500" />
+              <span className="text-sm hebrew-text">הצבעות</span>
             </div>
-          </Badge>
-        ))}
-      </div>
+            <span className="font-medium text-blue-600">{totalVotes}</span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-purple-500" />
+              <span className="text-sm hebrew-text">משתתפים</span>
+            </div>
+            <span className="font-medium text-purple-600">{participantCount}</span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-orange-500" />
+              <span className="text-sm hebrew-text">הצהרות</span>
+            </div>
+            <span className="font-medium text-orange-600">{totalStatements}</span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-green-500" />
+              <span className="text-sm hebrew-text">נקודות חיבור</span>
+            </div>
+            <span className="font-medium text-green-600">{consensusPointsCount}</span>
+          </div>
+          
+          {groups.length > 0 && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-gray-500" />
+                <span className="text-sm hebrew-text">קבוצות דעות</span>
+              </div>
+              <span className="font-medium text-gray-600">{groups.length}</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Live Activities */}
+      {activities.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm hebrew-text">פעילות אחרונה</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {activities.slice(0, 3).map((activity) => (
+                <Badge
+                  key={activity.id}
+                  variant="outline"
+                  className={`w-full justify-start text-xs py-2 px-3 hebrew-text animate-fade-in ${getActivityColor(activity.type)}`}
+                >
+                  <div className="flex items-center gap-2">
+                    {getActivityIcon(activity.type)}
+                    <span className="flex-1 text-right">{activity.message}</span>
+                  </div>
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

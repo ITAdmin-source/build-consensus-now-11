@@ -4,7 +4,7 @@ import { WelcomeOverlay } from '@/components/WelcomeOverlay';
 import { GameHeader } from '@/components/GameHeader';
 import { OptimizedVotingInterface } from '@/components/OptimizedVotingInterface';
 import { LiveActivityFeed } from '@/components/LiveActivityFeed';
-import { Poll, Statement } from '@/types/poll';
+import { Poll, Statement, Group } from '@/types/poll';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 
 interface VotingPageProps {
@@ -21,6 +21,8 @@ interface VotingPageProps {
   isVoting?: boolean;
   participantCount?: number;
   consensusPointsCount?: number;
+  totalVotes?: number;
+  groups?: Group[];
   isLive?: boolean;
 }
 
@@ -38,6 +40,8 @@ export const VotingPage: React.FC<VotingPageProps> = ({
   isVoting = false,
   participantCount = 1,
   consensusPointsCount = 0,
+  totalVotes = 0,
+  groups = [],
   isLive = false
 }) => {
   const [showWelcome, setShowWelcome] = useState(false);
@@ -108,6 +112,9 @@ export const VotingPage: React.FC<VotingPageProps> = ({
               <LiveActivityFeed
                 participantCount={participantCount}
                 consensusPointsCount={consensusPointsCount}
+                totalVotes={totalVotes}
+                totalStatements={totalStatements}
+                groups={groups}
                 isLive={isLive}
               />
             </div>

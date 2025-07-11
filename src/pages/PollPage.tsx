@@ -42,15 +42,18 @@ const PollPage = () => {
     return isPollCompleted(poll);
   }, [poll]);
 
-  // Calculate participant count from unique sessions/users in votes
+  // Calculate participant count from groups data (like ResultsDashboard)
   const participantCount = useMemo(() => {
+    if (groups && groups.length > 0) {
+      return groups.reduce((sum, group) => sum + (group.member_count || 0), 0);
+    }
+    
+    // Fallback to estimating from votes if groups aren't available
     if (!userVotes || Object.keys(userVotes).length === 0) return 1;
-    const uniqueParticipants = new Set();
-    Object.keys(userVotes).forEach(() => {
-      uniqueParticipants.add(user?.id || sessionStorage.getItem('session_id') || 'anonymous');
-    });
-    return Math.max(1, uniqueParticipants.size);
-  }, [userVotes, user?.id]);
+    
+    // This is an approximation - actual participant count needs clustering
+    return Math.max(1, Math.ceil(Object.keys(userVotes).length / Math.max(1, statements.length / 3)));
+  }, [groups, userVotes, statements.length]);
 
   // Force results view for completed polls
   useEffect(() => {
@@ -239,6 +242,8 @@ const PollPage = () => {
       isVoting={isVoting}
       participantCount={participantCount}
       consensusPointsCount={consensusPoints.length}
+      totalVotes={Object.keys(userVotes).length}
+      groups={groups}
       isLive={isLive}
     />
   );
