@@ -42,6 +42,16 @@ const PollPage = () => {
     return isPollCompleted(poll);
   }, [poll]);
 
+  // Calculate participant count from unique sessions/users in votes
+  const participantCount = useMemo(() => {
+    if (!userVotes || Object.keys(userVotes).length === 0) return 1;
+    const uniqueParticipants = new Set();
+    Object.keys(userVotes).forEach(() => {
+      uniqueParticipants.add(user?.id || sessionStorage.getItem('session_id') || 'anonymous');
+    });
+    return Math.max(1, uniqueParticipants.size);
+  }, [userVotes, user?.id]);
+
   // Force results view for completed polls
   useEffect(() => {
     if (pollCompleted && currentView === 'voting') {
@@ -213,15 +223,6 @@ const PollPage = () => {
       />
     );
   }
-
-  // Calculate participant count from unique sessions/users in votes
-  const participantCount = useMemo(() => {
-    const uniqueParticipants = new Set();
-    Object.keys(userVotes).forEach(() => {
-      uniqueParticipants.add(user?.id || sessionStorage.getItem('session_id') || 'anonymous');
-    });
-    return Math.max(1, uniqueParticipants.size);
-  }, [userVotes, user?.id]);
 
   return (
     <VotingPage
