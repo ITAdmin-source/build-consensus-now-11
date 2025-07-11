@@ -214,6 +214,15 @@ const PollPage = () => {
     );
   }
 
+  // Calculate participant count from unique sessions/users in votes
+  const participantCount = useMemo(() => {
+    const uniqueParticipants = new Set();
+    Object.keys(userVotes).forEach(() => {
+      uniqueParticipants.add(user?.id || sessionStorage.getItem('session_id') || 'anonymous');
+    });
+    return Math.max(1, uniqueParticipants.size);
+  }, [userVotes, user?.id]);
+
   return (
     <VotingPage
       poll={poll}
@@ -227,6 +236,9 @@ const PollPage = () => {
       onBackToHome={handleBackToHome}
       onSubmitStatement={handleSubmitStatement}
       isVoting={isVoting}
+      participantCount={participantCount}
+      consensusPointsCount={consensusPoints.length}
+      isLive={isLive}
     />
   );
 };

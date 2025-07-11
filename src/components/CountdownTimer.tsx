@@ -7,12 +7,14 @@ interface CountdownTimerProps {
   endTime: string;
   className?: string;
   showIcon?: boolean;
+  compact?: boolean;
 }
 
 export const CountdownTimer: React.FC<CountdownTimerProps> = ({ 
   endTime, 
   className = '', 
-  showIcon = true 
+  showIcon = true,
+  compact = false 
 }) => {
   const { days, hours, minutes, seconds, isExpired } = useTimer(endTime);
 
@@ -26,6 +28,14 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   }
 
   const isUrgent = days === 0 && hours < 2;
+
+  if (compact) {
+    return (
+      <div className={`text-xs font-mono ${isUrgent ? 'text-red-500 font-bold' : 'text-muted-foreground'} ${className}`}>
+        {days > 0 ? `${days}ד ${hours}ש` : `${hours}:${minutes.toString().padStart(2, '0')}`}
+      </div>
+    );
+  }
 
   return (
     <div className={`flex items-center gap-2 ${isUrgent ? 'timer-urgent' : 'text-gray-600'} ${className}`}>
