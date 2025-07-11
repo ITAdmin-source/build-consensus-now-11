@@ -102,7 +102,7 @@ export const VotingPage: React.FC<VotingPageProps> = ({
             />
           </div>
 
-          {/* Live Activity Sidebar */}
+          {/* Live Activity Sidebar
           <div className="lg:col-span-1 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <div className="sticky top-4 space-y-4">
               <LiveActivityFeed
@@ -111,7 +111,7 @@ export const VotingPage: React.FC<VotingPageProps> = ({
                 isLive={isLive}
               />
             </div>
-          </div>
+          </div>*/}
         </div>
       </div>
     </div>
