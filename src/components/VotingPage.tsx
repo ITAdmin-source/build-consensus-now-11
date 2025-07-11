@@ -85,7 +85,7 @@ export const VotingPage: React.FC<VotingPageProps> = ({
         </div>
         
         {/* Main Content Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Voting Interface - Main Content */}
           <div className="lg:col-span-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <OptimizedVotingInterface
@@ -102,7 +102,7 @@ export const VotingPage: React.FC<VotingPageProps> = ({
             />
           </div>
 
-          {/* Live Activity Sidebar
+          {/* Live Activity Sidebar */}
           <div className="lg:col-span-1 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <div className="sticky top-4 space-y-4">
               <LiveActivityFeed
@@ -111,7 +111,7 @@ export const VotingPage: React.FC<VotingPageProps> = ({
                 isLive={isLive}
               />
             </div>
-          </div>*/}
+          </div>
         </div>
       </div>
     </div>
