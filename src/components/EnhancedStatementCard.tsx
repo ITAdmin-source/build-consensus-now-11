@@ -194,10 +194,10 @@ export const EnhancedStatementCard: React.FC<EnhancedStatementCardProps> = ({
             </div>
           </div>
         )}
-        
+
         <CardHeader className="text-center pb-4">
-          <CardTitle className="text-xl md:text-2xl font-bold leading-relaxed flex items-start justify-center gap-3">
-            <span className="flex-1">{statement.content}</span>
+          <CardTitle className="text-xl md:text-2xl font-bold leading-relaxed flex items-start justify-center gap-1">
+            <span>{statement.content}</span>
             {statement.more_info && (
               <StatementInfo 
                 statementContent={statement.content} 
