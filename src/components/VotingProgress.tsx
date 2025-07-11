@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Poll } from '@/types/poll';
-import { CheckCircle, BarChart3, SquareCheck } from 'lucide-react';
+import { CheckCircle, BarChart3, SquareCheck, Check  } from 'lucide-react';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 import { CompletionDialog } from './CompletionDialog';
 
@@ -64,7 +64,7 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
                 size="sm"
                 className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 hebrew-text"
               >
-                <SquareCheck className="h-3 w-3 ml-1" />
+                <Check className="h-3 w-3 ml-1" />
                 סיימתי
               </Button>
             )}
