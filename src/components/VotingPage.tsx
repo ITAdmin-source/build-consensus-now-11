@@ -87,7 +87,7 @@ export const VotingPage: React.FC<VotingPageProps> = ({
         {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Voting Interface - Main Content */}
-          <div className="lg:col-span-3 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <div className="lg:col-span-4 animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <OptimizedVotingInterface
               poll={poll}
               statement={currentStatement}
