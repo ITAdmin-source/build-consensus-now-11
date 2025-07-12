@@ -1,8 +1,7 @@
 
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { NavigationHeader } from '@/components/NavigationHeader';
 import { PollHeader } from '@/components/PollHeader';
-import { ResultsDashboard } from '@/components/ResultsDashboard';
 import { LiveIndicator } from '@/components/LiveIndicator';
 import { CompletedPollBanner } from '@/components/CompletedPollBanner';
 import { useSmartClustering } from '@/hooks/useSmartClustering';
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 import { UserPoints } from '@/integrations/supabase/userPoints';
+import { ResultsStoryLayout } from '@/components/results/ResultsStoryLayout';
 
 interface ResultsPageProps {
   poll: Poll;
@@ -90,16 +90,16 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
           </div>
         </div>
         
-        <div className="py-6">
-          <ResultsDashboard
-            poll={poll}
-            statements={statements}
-            consensusPoints={consensusPoints}
-            groups={groups}
-            groupStats={groupStats}
-            isPollCompleted={isPollCompleted}
-          />
-        </div>
+        {/* New Story Layout */}
+        <ResultsStoryLayout
+          poll={poll}
+          statements={statements}
+          consensusPoints={consensusPoints}
+          groups={groups}
+          groupStats={groupStats}
+          userPoints={userPoints}
+          isPollCompleted={isPollCompleted}
+        />
       </div>
     </div>
   );
