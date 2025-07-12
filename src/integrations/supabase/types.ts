@@ -303,6 +303,69 @@ export type Database = {
         }
         Relationships: []
       }
+      content_generations: {
+        Row: {
+          additional_guidelines: string | null
+          ai_model: string
+          audience: string
+          content_length: string
+          created_at: string
+          goal: string
+          id: string
+          key_points: string | null
+          platform: string
+          topic: string
+          updated_at: string
+          version_1: string
+          version_1_feedback: string | null
+          version_1_rating: number | null
+          version_2: string
+          version_2_feedback: string | null
+          version_2_rating: number | null
+          visual_asset: string | null
+        }
+        Insert: {
+          additional_guidelines?: string | null
+          ai_model: string
+          audience: string
+          content_length: string
+          created_at?: string
+          goal: string
+          id?: string
+          key_points?: string | null
+          platform: string
+          topic: string
+          updated_at?: string
+          version_1: string
+          version_1_feedback?: string | null
+          version_1_rating?: number | null
+          version_2: string
+          version_2_feedback?: string | null
+          version_2_rating?: number | null
+          visual_asset?: string | null
+        }
+        Update: {
+          additional_guidelines?: string | null
+          ai_model?: string
+          audience?: string
+          content_length?: string
+          created_at?: string
+          goal?: string
+          id?: string
+          key_points?: string | null
+          platform?: string
+          topic?: string
+          updated_at?: string
+          version_1?: string
+          version_1_feedback?: string | null
+          version_1_rating?: number | null
+          version_2?: string
+          version_2_feedback?: string | null
+          version_2_rating?: number | null
+          visual_asset?: string | null
+        }
+        Relationships: []
+      }
       ideas: {
         Row: {
           appearances: number
