@@ -6,6 +6,7 @@ import { WelcomeOverview } from './WelcomeOverview';
 import { OpinionGroupsSection } from './OpinionGroupsSection';
 import { ConsensusAndDivides } from './ConsensusAndDivides';
 import { TakeawaysSection } from './TakeawaysSection';
+import { StatementsTable } from '@/components/StatementsTable';
 
 interface ResultsStoryLayoutProps {
   poll: Poll;
@@ -57,6 +58,15 @@ export const ResultsStoryLayout: React.FC<ResultsStoryLayoutProps> = ({
           groups={groups}
           groupStats={groupStats}
         />
+
+        {/* Section 3b: Detailed Statements Analysis */}
+        <div className="mt-12">
+          <StatementsTable 
+            statements={statements}
+            groups={groups}
+            groupStats={groupStats}
+          />
+        </div>
 
         {/* Section 4: Takeaways */}
         <TakeawaysSection 
