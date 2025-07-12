@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Poll, Statement, Group } from '@/types/poll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +13,7 @@ import {
   Users,
   Sparkles,
   ThumbsUp,
-  Surprise
+  Eye
 } from 'lucide-react';
 
 interface TakeawaysSectionProps {
