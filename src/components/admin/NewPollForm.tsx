@@ -19,7 +19,6 @@ import { Round } from '@/types/round';
 
 const pollSchema = z.object({
   title: z.string().min(1, 'כותרת נדרשת').max(100, 'כותרת ארוכה מדי'),
-  topic: z.string().min(1, 'נושא נדרש').max(50, 'נושא ארוך מदי'),
   description: z.string().min(10, 'תיאור חייב להכיל לפחות 10 תווים').max(500, 'תיאור ארוך מדי'),
   category: z.string().min(1, 'קטגוריה נדרשת'),
   slug: z.string().min(1, 'כתובת URL נדרשת').max(100, 'כתובת URL ארוכה מדי'),
@@ -60,7 +59,6 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
     resolver: zodResolver(pollSchema),
     defaultValues: {
       title: '',
-      topic: '',
       description: '',
       category: '',
       slug: '',
@@ -123,7 +121,6 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
 
       await createPoll({
         title: data.title,
-        topic: data.topic,
         description: data.description,
         category: data.category,
         slug: data.slug,
@@ -219,24 +216,6 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
                       <div className="text-xs text-muted-foreground hebrew-text">
                         הסקר יהיה זמין בכתובת: /poll/{form.watch('slug')}
                       </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="topic"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="hebrew-text">נושא</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="לדוגמה: חינוך" 
-                          className="hebrew-text text-right"
-                          {...field} 
-                        />
-                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

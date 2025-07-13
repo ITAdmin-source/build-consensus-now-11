@@ -23,7 +23,6 @@ export const createPoll = async (pollData: CreatePollData) => {
 
   const pollInsertData = {
     title: pollData.title,
-    topic: pollData.topic,
     description: pollData.description,
     category_id: categoryData.category_id,
     slug: pollData.slug,

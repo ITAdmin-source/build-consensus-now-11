@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -28,7 +29,6 @@ import type { Poll } from '@/types/poll';
 
 const editPollSchema = z.object({
   title: z.string().min(1, 'כותרת נדרשת').max(100, 'כותרת ארוכה מדי'),
-  topic: z.string().min(1, 'נושא נדרש').max(50, 'נושא ארוך מדי'),
   description: z.string().min(10, 'תיאור חייב להכיל לפחות 10 תווים').max(500, 'תיאור ארוך מדי'),
   category_id: z.string().min(1, 'קטגוריה נדרשת'),
   slug: z.string().min(1, 'כתובת URL נדרשת').max(100, 'כתובת URL ארוכה מדי'),
@@ -58,7 +58,6 @@ export const EditPollPage: React.FC = () => {
     resolver: zodResolver(editPollSchema),
     defaultValues: {
       title: '',
-      topic: '',
       description: '',
       category_id: '',
       slug: '',
@@ -151,7 +150,7 @@ export const EditPollPage: React.FC = () => {
       }
 
       // Validate required fields
-      if (!data.title || !data.topic || !data.description || !data.category_id || !data.slug || !data.round_id) {
+      if (!data.title || !data.description || !data.category_id || !data.slug || !data.round_id) {
         throw new Error('Missing required fields');
       }
 
@@ -168,7 +167,6 @@ export const EditPollPage: React.FC = () => {
         .from('polis_polls')
         .update({
           title: data.title.trim(),
-          topic: data.topic.trim(),
           description: data.description.trim(),
           category_id: data.category_id,
           slug: data.slug.trim(),
@@ -229,7 +227,6 @@ export const EditPollPage: React.FC = () => {
 
       form.reset({
         title: poll.title || '',
-        topic: poll.topic || '',
         description: poll.description || '',
         category_id: categoryId,
         slug: poll.slug || '',
@@ -391,20 +388,6 @@ export const EditPollPage: React.FC = () => {
                             <div className="text-xs text-muted-foreground hebrew-text">
                               הסקר זמין בכתובת: {pollUrl}
                             </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="topic"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="hebrew-text">נושא</FormLabel>
-                            <FormControl>
-                              <Input className="hebrew-text text-right" {...field} />
-                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}

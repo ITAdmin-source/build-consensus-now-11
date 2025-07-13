@@ -3,7 +3,6 @@ import { Poll } from '@/types/poll';
 
 export interface CreatePollData {
   title: string;
-  topic: string;
   description: string;
   category: string;
   slug: string;
@@ -19,7 +18,6 @@ export interface CreatePollData {
 export interface PollQueryResult {
   poll_id: string;
   title: string;
-  topic: string | null;
   description: string | null;
   min_consensus_points_to_win: number | null;
   allow_user_statements: boolean | null;

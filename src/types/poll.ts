@@ -1,7 +1,6 @@
 export interface Poll {
   poll_id: string;
   title: string;
-  topic: string;
   description: string;
   category: string;
   time_left: number;

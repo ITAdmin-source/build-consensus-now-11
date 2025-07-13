@@ -50,7 +50,6 @@ export const transformPollData = (
   return {
     poll_id: poll.poll_id,
     title: poll.title,
-    topic: poll.topic || '',
     description: poll.description || '',
     category: poll.polis_poll_categories?.name || 'כללי',
     slug: poll.slug || '',

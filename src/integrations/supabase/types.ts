@@ -870,7 +870,6 @@ export type Database = {
           status: Database["public"]["Enums"]["polis_poll_status"] | null
           support_button_label: string | null
           title: string
-          topic: string | null
           unsure_button_label: string | null
         }
         Insert: {
@@ -901,7 +900,6 @@ export type Database = {
           status?: Database["public"]["Enums"]["polis_poll_status"] | null
           support_button_label?: string | null
           title: string
-          topic?: string | null
           unsure_button_label?: string | null
         }
         Update: {
@@ -932,7 +930,6 @@ export type Database = {
           status?: Database["public"]["Enums"]["polis_poll_status"] | null
           support_button_label?: string | null
           title?: string
-          topic?: string | null
           unsure_button_label?: string | null
         }
         Relationships: [
