@@ -5,7 +5,7 @@ export const mockPolls: Poll[] = [
   {
     poll_id: '1',
     title: 'עתיד החינוך בישראל',
-    topic: 'חינוך',
+   
     description: 'דיון על כיוון החינוך הישראלי בעשור הקרוב',
     category: 'חינוך',
     time_left: Math.max(0, new Date('2024-07-01T23:59:59Z').getTime() - Date.now()),
@@ -36,7 +36,7 @@ export const mockPolls: Poll[] = [
   {
     poll_id: '2',
     title: 'תחבורה ציבורית ירוקה',
-    topic: 'תחבורה',
+   
     description: 'איך נוכל לשפר את התחבורה הציבורית ולהפוך אותה לידידותית יותר לסביבה?',
     category: 'איכות סביבה',
     time_left: Math.max(0, new Date('2024-06-28T23:59:59Z').getTime() - Date.now()),
@@ -67,7 +67,7 @@ export const mockPolls: Poll[] = [
   {
     poll_id: '3',
     title: 'דיור בר השגה לצעירים',
-    topic: 'דיור',
+
     description: 'פתרונות לבעיית הדיור הישראלית עבור הדור הצעיר',
     category: 'כלכלה',
     time_left: Math.max(0, new Date('2024-07-15T23:59:59Z').getTime() - Date.now()),
