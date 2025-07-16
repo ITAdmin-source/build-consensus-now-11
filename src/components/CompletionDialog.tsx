@@ -71,10 +71,9 @@ export const CompletionDialog: React.FC<CompletionDialogProps> = ({
             }}
             variant="outline"
             className="w-full hebrew-text"
-            disabled
           >
             <Brain className="h-4 w-4 ml-2" />
-            תובנות אישיות (בקרוב)
+            תובנות אישיות
           </Button>
         </div>
       </DialogContent>

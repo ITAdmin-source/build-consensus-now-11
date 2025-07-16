@@ -8,6 +8,8 @@ import { Poll } from '@/types/poll';
 import { CheckCircle, BarChart3, SquareCheck, Check, Activity  } from 'lucide-react';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 import { CompletionDialog } from './CompletionDialog';
+import { PersonalInsightsModal } from './PersonalInsightsModal';
+import { usePersonalInsights } from '@/hooks/usePersonalInsights';
 
 interface VotingProgressProps {
   poll: Poll;
@@ -30,10 +32,19 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
 }) => {
   const personalProgress = (userVoteCount / totalStatements) * 100;
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [showInsightsModal, setShowInsightsModal] = useState(false);
+  
+  const { isLoading, insights, error, generateInsights, clearInsights } = usePersonalInsights();
 
-  const handlePersonalInsights = () => {
-    // Future implementation
-    console.log('Personal insights clicked - to be implemented');
+  const handlePersonalInsights = async () => {
+    setShowInsightsModal(true);
+    clearInsights();
+    await generateInsights(poll);
+  };
+
+  const handleRetryInsights = async () => {
+    clearInsights();
+    await generateInsights(poll);
   };
 
   return (
@@ -78,6 +89,15 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
         onNavigateToResults={onNavigateToResults || (() => {})}
         onNavigateToHome={onNavigateToHome || (() => {})}
         onPersonalInsights={handlePersonalInsights}
+      />
+
+      <PersonalInsightsModal
+        open={showInsightsModal}
+        onOpenChange={setShowInsightsModal}
+        isLoading={isLoading}
+        insights={insights}
+        error={error}
+        onRetry={handleRetryInsights}
       />
     </Card>
   );

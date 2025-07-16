@@ -154,6 +154,7 @@ export type Database = {
       }
       consensus_processes: {
         Row: {
+          challenge: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -167,6 +168,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          challenge?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -180,6 +182,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          challenge?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
