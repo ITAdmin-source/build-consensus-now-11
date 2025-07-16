@@ -3,6 +3,7 @@ import { Poll } from '@/types/poll';
 import { Statement } from '@/types/poll';
 import { getUserVotes } from '@/integrations/supabase/votes';
 import { fetchStatementsByPollId } from '@/integrations/supabase/statements';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UserVoteData {
   statement: string;
@@ -90,23 +91,16 @@ ${userVoteData.map(vote => `הצהרה: "${vote.statement}"
       // Format user voting data
       const surveyResults = await formatSurveyData(poll);
 
-      // Call the survey_insight edge function
-      const response = await fetch('https://reuddlnprvkpgiirxqhr.supabase.co/functions/v1/survey_insight', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJldWRkbG5wcnZrcGdpaXJ4cWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3Mjk5MDUsImV4cCI6MjA2MzMwNTkwNX0.50JCjMuJ6WRQcrNjojqlpYUqdlVOVaDIgoI3lp1nBEs'
-        },
-        body: JSON.stringify({
+      // Call the survey_insight edge function using Supabase client
+      const { data: result, error: functionError } = await supabase.functions.invoke('survey_insight', {
+        body: {
           prompt: surveyResults
-        })
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`שגיאה ברשת: ${response.status}`);
+      if (functionError) {
+        throw new Error(functionError.message || 'שגיאה בקריאה לפונקציה');
       }
-
-      const result = await response.json();
       
       if (result.error) {
         throw new Error(result.error);

@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       consensus_documents: {
         Row: {
+          content_type: string | null
           created_at: string
           file_path: string | null
           file_size: number | null
@@ -26,9 +27,12 @@ export type Database = {
           process_id: string
           size: string
           storage_path: string | null
+          tags: Json | null
+          thumbnail_url: string | null
           type: string
         }
         Insert: {
+          content_type?: string | null
           created_at?: string
           file_path?: string | null
           file_size?: number | null
@@ -39,9 +43,12 @@ export type Database = {
           process_id: string
           size: string
           storage_path?: string | null
+          tags?: Json | null
+          thumbnail_url?: string | null
           type: string
         }
         Update: {
+          content_type?: string | null
           created_at?: string
           file_path?: string | null
           file_size?: number | null
@@ -52,6 +59,8 @@ export type Database = {
           process_id?: string
           size?: string
           storage_path?: string | null
+          tags?: Json | null
+          thumbnail_url?: string | null
           type?: string
         }
         Relationships: [
@@ -66,30 +75,39 @@ export type Database = {
       }
       consensus_external_links: {
         Row: {
+          content_type: string | null
           created_at: string
           description: string | null
           id: string
           name: string
           process_id: string
           sort_order: number
+          tags: Json | null
+          thumbnail_url: string | null
           url: string
         }
         Insert: {
+          content_type?: string | null
           created_at?: string
           description?: string | null
           id?: string
           name: string
           process_id: string
           sort_order: number
+          tags?: Json | null
+          thumbnail_url?: string | null
           url: string
         }
         Update: {
+          content_type?: string | null
           created_at?: string
           description?: string | null
           id?: string
           name?: string
           process_id?: string
           sort_order?: number
+          tags?: Json | null
+          thumbnail_url?: string | null
           url?: string
         }
         Relationships: [
