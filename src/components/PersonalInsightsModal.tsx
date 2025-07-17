@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import { Loader2, X, Brain } from 'lucide-react';
 
 interface PersonalInsightsModalProps {
@@ -66,10 +67,8 @@ export const PersonalInsightsModal: React.FC<PersonalInsightsModalProps> = ({
 
           {insights && !isLoading && !error && (
             <ScrollArea className="max-h-[50vh] pr-4">
-              <div className="prose prose-sm max-w-none hebrew-text" dir="rtl">
-                <div className="whitespace-pre-wrap leading-relaxed">
-                  {insights}
-                </div>
+              <div className="prose prose-sm max-w-none hebrew-text text-justify" dir="rtl">
+                <MarkdownRenderer content={insights} />
               </div>
             </ScrollArea>
           )}
