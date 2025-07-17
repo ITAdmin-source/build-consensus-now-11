@@ -120,6 +120,69 @@ export type Database = {
           },
         ]
       }
+      consensus_post_types: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          is_active: boolean
+          key: string
+          label: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key: string
+          label: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          label?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      consensus_process_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       consensus_process_posts: {
         Row: {
           author_id: string
@@ -168,10 +231,18 @@ export type Database = {
             referencedRelation: "consensus_processes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_post_type"
+            columns: ["post_type"]
+            isOneToOne: false
+            referencedRelation: "consensus_post_types"
+            referencedColumns: ["key"]
+          },
         ]
       }
       consensus_processes: {
         Row: {
+          category_id: string | null
           challenge: string | null
           created_at: string
           created_by: string | null
@@ -186,6 +257,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category_id?: string | null
           challenge?: string | null
           created_at?: string
           created_by?: string | null
@@ -200,6 +272,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category_id?: string | null
           challenge?: string | null
           created_at?: string
           created_by?: string | null
@@ -213,7 +286,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "consensus_processes_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_process_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       consensus_team_members: {
         Row: {
@@ -223,6 +304,7 @@ export type Database = {
           name: string
           process_id: string
           role: string
+          sort_order: number | null
         }
         Insert: {
           avatar?: string | null
@@ -231,6 +313,7 @@ export type Database = {
           name: string
           process_id: string
           role: string
+          sort_order?: number | null
         }
         Update: {
           avatar?: string | null
@@ -239,6 +322,7 @@ export type Database = {
           name?: string
           process_id?: string
           role?: string
+          sort_order?: number | null
         }
         Relationships: [
           {
@@ -427,6 +511,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      leadership_categories: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      leadership_members: {
+        Row: {
+          category_in_leadership: string | null
+          civic_occupation: string | null
+          created_at: string
+          gender: string | null
+          id: string
+          location: string | null
+          movement_occupation: string | null
+          name: string
+          profile_pic: string | null
+          role_in_leadership: string | null
+          updated_at: string
+        }
+        Insert: {
+          category_in_leadership?: string | null
+          civic_occupation?: string | null
+          created_at?: string
+          gender?: string | null
+          id?: string
+          location?: string | null
+          movement_occupation?: string | null
+          name: string
+          profile_pic?: string | null
+          role_in_leadership?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category_in_leadership?: string | null
+          civic_occupation?: string | null
+          created_at?: string
+          gender?: string | null
+          id?: string
+          location?: string | null
+          movement_occupation?: string | null
+          name?: string
+          profile_pic?: string | null
+          role_in_leadership?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       pending_ideas: {
         Row: {

@@ -106,8 +106,12 @@ ${userVoteData.map(vote => `הצהרה: "${vote.statement}"
         throw new Error(result.error);
       }
 
-      // Assuming the response contains the insights in a 'content' or 'message' field
-      const insightText = result.content || result.message || result.insight || JSON.stringify(result);
+      // Extract the content from the response
+      const insightText = result.content;
+      if (!insightText) {
+        throw new Error('לא התקבל תוכן מהשרת');
+      }
+      
       setInsights(insightText);
 
     } catch (err) {
