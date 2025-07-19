@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HomePage } from '@/components/HomePage';
+import { AuthTokenProcessor } from '@/components/AuthTokenProcessor';
 import { Poll } from '@/types/poll';
 import { fetchAllPolls } from '@/integrations/supabase/polls';
 import { isPollVisible } from '@/utils/pollStatusUtils';
@@ -26,7 +27,7 @@ const Index = () => {
       setPolls(visiblePolls);
     } catch (error) {
       console.error('Error loading polls:', error);
-      toast.error('שגיאה בטעينת הסקרים');
+      toast.error('שגיאה בטעינת הסקרים');
     } finally {
       setLoading(false);
     }
@@ -49,10 +50,13 @@ const Index = () => {
   }
 
   return (
-    <HomePage
-      polls={polls}
-      onJoinPoll={handleJoinPoll}
-    />
+    <>
+      <AuthTokenProcessor />
+      <HomePage
+        polls={polls}
+        onJoinPoll={handleJoinPoll}
+      />
+    </>
   );
 };
 

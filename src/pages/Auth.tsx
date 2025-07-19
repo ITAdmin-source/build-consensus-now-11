@@ -63,9 +63,10 @@ const Auth = () => {
     } else {
       toast({
         title: 'הרשמה הצליחה',
-        description: 'בדוק את האימייל שלך לאימות החשבון (או התחבר ישירות אם אימות אימייל מבוטל)',
+        description: 'קישור לאימות נשלח לאימייל שלך. לחץ על הקישור כדי להשלים את ההרשמה.',
+        duration: 8000,
       });
-      console.log('Signup successful - check email for verification or login directly if email confirmation is disabled');
+      console.log('Signup successful - confirmation email sent');
     }
   };
 
