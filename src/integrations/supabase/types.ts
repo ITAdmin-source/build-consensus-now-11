@@ -551,6 +551,7 @@ export type Database = {
           name: string
           profile_pic: string | null
           role_in_leadership: string | null
+          sort_order: number
           updated_at: string
         }
         Insert: {
@@ -564,6 +565,7 @@ export type Database = {
           name: string
           profile_pic?: string | null
           role_in_leadership?: string | null
+          sort_order?: number
           updated_at?: string
         }
         Update: {
@@ -577,6 +579,7 @@ export type Database = {
           name?: string
           profile_pic?: string | null
           role_in_leadership?: string | null
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
@@ -1361,6 +1364,36 @@ export type Database = {
           total_points?: number
           user_id?: string | null
           votes_count?: number
+        }
+        Relationships: []
+      }
+      polis_user_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
