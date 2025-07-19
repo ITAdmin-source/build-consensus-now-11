@@ -40,18 +40,13 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage,
               
               {user ? (
                 <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <UserAvatar
-                      avatarUrl={profile?.avatar_url}
-                      displayName={profile?.display_name}
-                      email={user.email}
-                      onClick={() => setShowProfileDialog(true)}
-                      className="cursor-pointer hover:ring-2 hover:ring-[#66c8ca] transition-all"
-                    />
-                    <span className="text-sm text-muted-foreground hebrew-text hidden sm:inline">
-                      שלום, {profile?.display_name || user.email}
-                    </span>
-                  </div>
+                  <UserAvatar
+                    avatarUrl={profile?.avatar_url}
+                    displayName={profile?.display_name}
+                    email={user.email}
+                    onClick={() => setShowProfileDialog(true)}
+                    className="cursor-pointer hover:ring-2 hover:ring-[#66c8ca] transition-all"
+                  />
                   <Button
                     variant="outline"
                     size="sm"
