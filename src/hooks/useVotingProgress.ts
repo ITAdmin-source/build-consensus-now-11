@@ -29,7 +29,12 @@ export const useVotingProgress = (
 
     // Summary Mode: Use provided progress data (for home page cards)
     if (summaryProgress) {
-      return summaryProgress;
+      // Ensure summary progress is also capped at 100%
+      return {
+        ...summaryProgress,
+        completionPercentage: Math.min(100, summaryProgress.completionPercentage),
+        isComplete: summaryProgress.votedCount >= summaryProgress.totalCount && summaryProgress.totalCount > 0,
+      };
     }
 
     // Detailed Mode: Calculate from statements and votes (for individual poll pages)
@@ -46,13 +51,19 @@ export const useVotingProgress = (
     const approvedStatements = statements.filter(s => s.is_approved);
     const totalCount = approvedStatements.length;
     const votedCount = approvedStatements.filter(s => userVotes[s.statement_id]).length;
-    const completionPercentage = totalCount > 0 ? Math.round((votedCount / totalCount) * 100) : 0;
+    
+    // Cap completion percentage at 100% to handle cases where statements were deleted after voting
+    const rawCompletionPercentage = totalCount > 0 ? (votedCount / totalCount) * 100 : 0;
+    const completionPercentage = Math.min(100, Math.round(rawCompletionPercentage));
+    
+    // Mark as complete if voted count meets or exceeds total count
+    const isComplete = votedCount >= totalCount && totalCount > 0;
     
     return {
       votedCount,
       totalCount,
       completionPercentage,
-      isComplete: completionPercentage === 100,
+      isComplete,
       isStarted: votedCount > 0,
     };
   }, [poll, statements, userVotes, summaryProgress]);

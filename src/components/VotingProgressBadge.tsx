@@ -32,7 +32,10 @@ export const VotingProgressBadge: React.FC<VotingProgressBadgeProps> = ({
 
   const sizeConfig = sizes[size];
   const circumference = 2 * Math.PI * sizeConfig.radius;
-  const strokeDashoffset = circumference - (completionPercentage / 100) * circumference;
+  
+  // Ensure completion percentage is capped at 100% for ring calculation
+  const cappedPercentage = Math.min(100, completionPercentage);
+  const strokeDashoffset = circumference - (cappedPercentage / 100) * circumference;
 
   const getTooltipContent = () => {
     if (isComplete) return `הושלם! הצבעת על כל ${totalCount} ההיגדים`;
@@ -40,8 +43,8 @@ export const VotingProgressBadge: React.FC<VotingProgressBadgeProps> = ({
     return `התחל להצביע על ${totalCount} היגדים`;
   };
 
-  // Complete state - green checkmark
-  if (isComplete) {
+  // Complete state - green checkmark (shows when voted >= total, even if over 100%)
+  if (isComplete || (votedCount >= totalCount && totalCount > 0)) {
     return (
       <div 
         className={cn(
@@ -98,9 +101,9 @@ export const VotingProgressBadge: React.FC<VotingProgressBadgeProps> = ({
             className="text-[#ec0081] transition-all duration-500 ease-out"
           />
         </svg>
-        {/* Percentage text */}
+        {/* Percentage text - always show capped percentage */}
         <span className={cn("font-bold text-[#1a305b] z-10", sizeConfig.text)}>
-          {completionPercentage}%
+          {cappedPercentage}%
         </span>
       </div>
     );

@@ -38,13 +38,19 @@ export const getUserVotingProgress = async (pollId: string): Promise<UserVotingP
 
     const total = totalCount || 0;
     const voted = votedCount || 0;
-    const completionPercentage = total > 0 ? Math.round((voted / total) * 100) : 0;
+    
+    // Cap completion percentage at 100% to handle cases where statements were deleted after voting
+    const rawCompletionPercentage = total > 0 ? (voted / total) * 100 : 0;
+    const completionPercentage = Math.min(100, Math.round(rawCompletionPercentage));
+    
+    // Mark as complete if voted count meets or exceeds total count
+    const isComplete = voted >= total && total > 0;
 
     return {
       votedCount: voted,
       totalCount: total,
       completionPercentage,
-      isComplete: completionPercentage === 100,
+      isComplete,
       isStarted: voted > 0,
     };
   } catch (error) {
