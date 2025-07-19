@@ -2,6 +2,7 @@
 import React from 'react';
 import { PollCardNew } from './PollCardNew';
 import { Poll } from '@/types/poll';
+import { usePollingVotingProgress } from '@/hooks/usePollingVotingProgress';
 
 interface PollSectionProps {
   title: string;
@@ -18,6 +19,10 @@ export const PollSection: React.FC<PollSectionProps> = ({
   onJoinPoll, 
   variant 
 }) => {
+  // Only fetch voting progress for active polls to show user progress
+  const activePollIds = variant === 'active' ? polls.map(poll => poll.poll_id) : [];
+  const { progressData, loading } = usePollingVotingProgress(activePollIds);
+
   return (
     <section className="space-y-8">
       <div className="text-center space-y-4">
@@ -36,9 +41,10 @@ export const PollSection: React.FC<PollSectionProps> = ({
             poll={poll}
             onJoinPoll={onJoinPoll}
             variant={variant}
-            // For grid context, we don't have detailed voting data
             statements={[]}
             userVotes={{}}
+            summaryProgress={progressData[poll.poll_id] || null}
+            progressLoading={loading[poll.poll_id] || false}
           />
         ))}
       </div>

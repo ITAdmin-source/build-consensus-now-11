@@ -4,6 +4,7 @@ import { Poll } from '@/types/poll';
 import { CountdownTimer } from './CountdownTimer';
 import { VotingProgressBadge } from './VotingProgressBadge';
 import { useVotingProgress } from '@/hooks/useVotingProgress';
+import { UserVotingProgress } from '@/integrations/supabase/userVotingProgress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,8 @@ interface PollCardNewProps {
   variant: 'active' | 'completed' | 'pending';
   statements?: any[];
   userVotes?: Record<string, string>;
+  summaryProgress?: UserVotingProgress | null;
+  progressLoading?: boolean;
 }
 
 export const PollCardNew: React.FC<PollCardNewProps> = ({ 
@@ -23,9 +26,11 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
   onJoinPoll, 
   variant,
   statements = [],
-  userVotes = {}
+  userVotes = {},
+  summaryProgress = null,
+  progressLoading = false
 }) => {
-  const votingProgress = useVotingProgress(poll, statements, userVotes);
+  const votingProgress = useVotingProgress(poll, statements, userVotes, summaryProgress);
   const consensusProgress = (poll.current_consensus_points / poll.min_consensus_points_to_win) * 100;
   const consensusAchieved = poll.current_consensus_points >= poll.min_consensus_points_to_win;
 
@@ -62,12 +67,10 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
     return (
       <Card className="w-full max-w-[320px] h-[180px] hebrew-text opacity-75 hover:opacity-90 transition-opacity">
         <CardContent className="p-3 h-full flex flex-col justify-between">
-          {/* Title */}
           <h3 className="text-lg font-bold text-right mb-1 leading-tight text-gray-700 line-clamp-2">
             {poll.title}
           </h3>
           
-          {/* Category Badge */}
           <Badge 
             variant="secondary" 
             className="self-end mb-2 bg-[#66c8ca]/20 text-[#66c8ca] border border-[#66c8ca]/30 opacity-60 text-sm"
@@ -75,7 +78,6 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
             {getCategoryEmoji(poll.category)} {poll.category || 'אתגר כללי'}
           </Badge>
           
-          {/* Countdown to Start */}
           <div className="text-center mb-2">
             <p className="text-sm text-gray-500 mb-1">מתחיל בעוד</p>
             <CountdownTimer 
@@ -85,7 +87,6 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
             />
           </div>
           
-          {/* Disabled Button */}
           <Button 
             disabled
             className="w-full bg-gray-400 cursor-not-allowed rounded-full py-2"
@@ -102,7 +103,6 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
     return (
       <Card className="w-full max-w-[320px] h-[280px] hebrew-text hover:shadow-lg transition-shadow border-[#66c8ca]/30">
         <CardContent className="p-3 h-full flex flex-col justify-between">
-          {/* Title */}
           <div className="flex items-start justify-between mb-2">
             <h3 className="text-lg font-bold text-right leading-tight flex-1 line-clamp-2">
               {poll.title}
@@ -112,7 +112,6 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
             )}
           </div>
           
-          {/* Category Badge */}
           <Badge 
             variant="secondary" 
             className="self-end mb-2 bg-[#66c8ca]/20 text-[#66c8ca] border border-[#66c8ca]/30 text-sm"
@@ -120,7 +119,6 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
             {getCategoryEmoji(poll.category)} {poll.category || 'אתגר כללי'}
           </Badge>
           
-          {/* Final Stats */}
           <div className="grid grid-cols-2 gap-2 mb-2">
             <div className="bg-gray-50 p-2 rounded-lg text-center">
               <Users className="h-4 w-4 mx-auto mb-1 text-[#1a305b]" />
@@ -134,7 +132,6 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
             </div>
           </div>
           
-          {/* Consensus Achievement */}
           <div className="mb-2">
             <div className="flex justify-between items-center text-sm mb-1">
               <span className="flex items-center gap-1">
@@ -155,7 +152,6 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
             )}
           </div>
           
-          {/* Results Button */}
           <Button 
             onClick={handleAction}
             className="w-full bg-[#66c8ca] hover:bg-[#66c8ca]/90 text-white rounded-full py-2"
@@ -174,22 +170,26 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
       <CardContent className="p-3 h-full flex flex-col justify-between relative">
         {/* Voting Progress Badge - Top Right */}
         <div className="absolute top-3 right-3 z-10">
-          <VotingProgressBadge
-            votedCount={votingProgress.votedCount}
-            totalCount={votingProgress.totalCount}
-            completionPercentage={votingProgress.completionPercentage}
-            isComplete={votingProgress.isComplete}
-            isStarted={votingProgress.isStarted}
-            size="lg"
-          />
+          {progressLoading ? (
+            <div className="w-14 h-14 rounded-full bg-gray-100 animate-pulse flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-gray-300 border-t-[#ec0081] rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <VotingProgressBadge
+              votedCount={votingProgress.votedCount}
+              totalCount={votingProgress.totalCount}
+              completionPercentage={votingProgress.completionPercentage}
+              isComplete={votingProgress.isComplete}
+              isStarted={votingProgress.isStarted}
+              size="lg"
+            />
+          )}
         </div>
         
-        {/* Title */}
         <h3 className="text-lg font-bold text-right mb-2 leading-tight pr-16 hover:text-[#ec0081] transition-colors line-clamp-2">
           {poll.title}
         </h3>
         
-        {/* Category Badge */}
         <Badge 
           variant="secondary" 
           className="self-end mb-2 bg-[#66c8ca]/20 text-[#66c8ca] border border-[#66c8ca]/30 text-sm"
@@ -197,7 +197,6 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
           {getCategoryEmoji(poll.category)} {poll.category || 'אתגר כללי'}
         </Badge>
         
-        {/* Time Left */}
         <div className="flex items-center justify-end gap-2 mb-2">
           <CountdownTimer 
             endTime={endTime} 
@@ -206,7 +205,6 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
           />
         </div>
         
-        {/* Voting Stats */}
         <div className="grid grid-cols-2 gap-2 mb-2">
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-2 rounded-lg text-center">
             <Users className="h-4 w-4 mx-auto mb-1 text-[#1a305b]" />
@@ -220,7 +218,6 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
           </div>
         </div>
         
-        {/* Participate Button */}
         <Button 
           onClick={handleAction}
           className="w-full py-2 text-base font-bold bg-[#ec0081] hover:bg-[#ec0081]/90 text-white rounded-full hover:shadow-lg transform transition-all duration-300 hover:scale-105"

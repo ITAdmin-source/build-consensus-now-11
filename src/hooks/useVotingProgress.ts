@@ -12,11 +12,28 @@ interface VotingProgress {
 
 export const useVotingProgress = (
   poll: Poll | null,
-  statements: Statement[],
-  userVotes: Record<string, string>
+  statements: Statement[] = [],
+  userVotes: Record<string, string> = {},
+  summaryProgress?: VotingProgress | null
 ): VotingProgress => {
   return useMemo(() => {
-    if (!poll || statements.length === 0) {
+    if (!poll) {
+      return {
+        votedCount: 0,
+        totalCount: 0,
+        completionPercentage: 0,
+        isComplete: false,
+        isStarted: false,
+      };
+    }
+
+    // Summary Mode: Use provided progress data (for home page cards)
+    if (summaryProgress) {
+      return summaryProgress;
+    }
+
+    // Detailed Mode: Calculate from statements and votes (for individual poll pages)
+    if (statements.length === 0) {
       return {
         votedCount: 0,
         totalCount: 0,
@@ -38,5 +55,5 @@ export const useVotingProgress = (
       isComplete: completionPercentage === 100,
       isStarted: votedCount > 0,
     };
-  }, [poll, statements, userVotes]);
+  }, [poll, statements, userVotes, summaryProgress]);
 };
