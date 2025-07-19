@@ -2,6 +2,8 @@
 import React from 'react';
 import { Poll } from '@/types/poll';
 import { CountdownTimer } from './CountdownTimer';
+import { VotingProgressBadge } from './VotingProgressBadge';
+import { useVotingProgress } from '@/hooks/useVotingProgress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,11 +14,22 @@ interface PollCardProps {
   poll: Poll;
   onJoinPoll: (pollSlug: string) => void;
   variant?: 'active' | 'completed' | 'pending';
+  statements?: any[];
+  userVotes?: Record<string, string>;
 }
 
-export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll, variant = 'active' }) => {
+export const PollCard: React.FC<PollCardProps> = ({ 
+  poll, 
+  onJoinPoll, 
+  variant = 'active',
+  statements = [],
+  userVotes = {}
+}) => {
   const progressPercentage = (poll.current_consensus_points / poll.min_consensus_points_to_win) * 100;
   const isWinning = poll.current_consensus_points >= poll.min_consensus_points_to_win;
+  
+  // Calculate voting progress
+  const votingProgress = useVotingProgress(poll, statements, userVotes);
   
   const handleAction = () => {
     onJoinPoll(poll.slug || poll.poll_id);
@@ -33,7 +46,7 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll, variant = 
           borderColor: 'border-[#ec0081]/30',
           accentColor: 'bg-[#ec0081]',
           buttonColor: 'bg-[#ec0081] hover:bg-[#ec0081]/90',
-          buttonText: 'שחק עכשיו!',
+          buttonText: getButtonText(),
           buttonIcon: <Gamepad2 className="h-5 w-5 ml-2" />,
           disabled: false
         };
@@ -58,12 +71,37 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onJoinPoll, variant = 
     }
   };
 
+  // Smart button text based on voting progress
+  const getButtonText = () => {
+    if (votingProgress.isComplete) {
+      return 'צפה בתוצאות';
+    }
+    if (votingProgress.isStarted) {
+      return 'המשך לשחק';
+    }
+    return 'שחק עכשיו!';
+  };
+
   const styles = getVariantStyles();
 
   return (
     <Card className={`poll-card hebrew-text relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-2 border-gray-100 hover:${styles.borderColor} ${variant === 'active' ? 'transform hover:scale-105' : ''}`}>
       {/* Variant accent line */}
       <div className={`absolute top-0 left-0 right-0 h-1 ${styles.accentColor}`}></div>
+      
+      {/* Voting Progress Badge - positioned in top-right */}
+      {variant === 'active' && (
+        <div className="absolute top-4 right-4 z-20">
+          <VotingProgressBadge
+            votedCount={votingProgress.votedCount}
+            totalCount={votingProgress.totalCount}
+            completionPercentage={votingProgress.completionPercentage}
+            isComplete={votingProgress.isComplete}
+            isStarted={votingProgress.isStarted}
+            size="md"
+          />
+        </div>
+      )}
       
       {/* Status indicators */}
       <div className="absolute top-4 left-4 z-10">
