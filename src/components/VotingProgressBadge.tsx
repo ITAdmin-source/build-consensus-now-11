@@ -25,14 +25,13 @@ export const VotingProgressBadge: React.FC<VotingProgressBadgeProps> = ({
   showTooltip = true
 }) => {
   const sizes = {
-    sm: { container: 'w-8 h-8', icon: 'w-3 h-3', text: 'text-xs', stroke: 2 },
-    md: { container: 'w-10 h-10', icon: 'w-4 h-4', text: 'text-sm', stroke: 2.5 },
-    lg: { container: 'w-12 h-12', icon: 'w-5 h-5', text: 'text-base', stroke: 3 }
+    sm: { container: 'w-8 h-8', icon: 'w-3 h-3', text: 'text-xs', stroke: 2, radius: 14 },
+    md: { container: 'w-10 h-10', icon: 'w-4 h-4', text: 'text-sm', stroke: 2.5, radius: 18 },
+    lg: { container: 'w-14 h-14', icon: 'w-6 w-6', text: 'text-base', stroke: 3, radius: 26 }
   };
 
   const sizeConfig = sizes[size];
-  const radius = size === 'sm' ? 14 : size === 'md' ? 18 : 22;
-  const circumference = 2 * Math.PI * radius;
+  const circumference = 2 * Math.PI * sizeConfig.radius;
   const strokeDashoffset = circumference - (completionPercentage / 100) * circumference;
 
   const getTooltipContent = () => {
@@ -59,6 +58,9 @@ export const VotingProgressBadge: React.FC<VotingProgressBadgeProps> = ({
 
   // In progress state - animated progress ring
   if (isStarted) {
+    const svgSize = size === 'lg' ? 56 : size === 'md' ? 44 : 32;
+    const center = svgSize / 2;
+    
     return (
       <div 
         className={cn(
@@ -71,12 +73,12 @@ export const VotingProgressBadge: React.FC<VotingProgressBadgeProps> = ({
         {/* Background circle */}
         <svg 
           className="absolute inset-0 w-full h-full -rotate-90" 
-          viewBox="0 0 44 44"
+          viewBox={`0 0 ${svgSize} ${svgSize}`}
         >
           <circle
-            cx="22"
-            cy="22"
-            r={radius}
+            cx={center}
+            cy={center}
+            r={sizeConfig.radius}
             fill="none"
             stroke="currentColor"
             strokeWidth={sizeConfig.stroke}
@@ -84,9 +86,9 @@ export const VotingProgressBadge: React.FC<VotingProgressBadgeProps> = ({
           />
           {/* Progress circle */}
           <circle
-            cx="22"
-            cy="22"
-            r={radius}
+            cx={center}
+            cy={center}
+            r={sizeConfig.radius}
             fill="none"
             stroke="currentColor"
             strokeWidth={sizeConfig.stroke}

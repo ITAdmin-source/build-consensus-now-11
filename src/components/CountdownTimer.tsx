@@ -31,7 +31,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
 
   if (compact) {
     return (
-      <div className={`text-xs font-mono ${isUrgent ? 'text-red-500 font-bold' : 'text-muted-foreground'} ${className}`}>
+      <div className={`text-sm font-mono ${isUrgent ? 'text-red-500 font-bold' : 'text-muted-foreground'} ${className}`}>
         {days > 0 ? `${days}ד ${hours}ש` : `${hours}:${minutes.toString().padStart(2, '0')}`}
       </div>
     );

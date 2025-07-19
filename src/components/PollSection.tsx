@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PollCard } from './PollCard';
+import { PollCardNew } from './PollCardNew';
 import { Poll } from '@/types/poll';
 
 interface PollSectionProps {
@@ -29,15 +29,14 @@ export const PollSection: React.FC<PollSectionProps> = ({
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="flex flex-wrap justify-center gap-6">
         {polls.map((poll) => (
-          <PollCard
+          <PollCardNew
             key={poll.poll_id}
             poll={poll}
             onJoinPoll={onJoinPoll}
             variant={variant}
-            // For now, we'll pass empty arrays since we don't have this data in the grid context
-            // The voting progress will show as "not started" state which is appropriate for the overview
+            // For grid context, we don't have detailed voting data
             statements={[]}
             userVotes={{}}
           />
