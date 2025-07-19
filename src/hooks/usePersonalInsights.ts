@@ -4,6 +4,7 @@ import { Statement } from '@/types/poll';
 import { getUserVotes } from '@/integrations/supabase/votes';
 import { fetchStatementsByPollId } from '@/integrations/supabase/statements';
 import { supabase } from '@/integrations/supabase/client';
+import { saveUserInsight } from '@/integrations/supabase/userInsights';
 
 interface UserVoteData {
   statement: string;
@@ -113,6 +114,19 @@ ${userVoteData.map(vote => `הצהרה: "${vote.statement}"
       }
       
       setInsights(insightText);
+
+      // Save the insight to the database
+      try {
+        await saveUserInsight(
+          poll.poll_id,
+          poll.title,
+          poll.description || null,
+          insightText
+        );
+      } catch (saveError) {
+        console.warn('Failed to save insight to database:', saveError);
+        // Don't fail the whole process if saving fails
+      }
 
     } catch (err) {
       console.error('Error generating insights:', err);

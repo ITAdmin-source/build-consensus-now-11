@@ -1337,6 +1337,42 @@ export type Database = {
           },
         ]
       }
+      polis_user_insights: {
+        Row: {
+          created_at: string
+          generated_at: string
+          insight_content: string
+          insight_id: string
+          poll_description: string | null
+          poll_id: string
+          poll_title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          generated_at?: string
+          insight_content: string
+          insight_id?: string
+          poll_description?: string | null
+          poll_id: string
+          poll_title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          generated_at?: string
+          insight_content?: string
+          insight_id?: string
+          poll_description?: string | null
+          poll_id?: string
+          poll_title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       polis_user_points: {
         Row: {
           created_at: string
@@ -1690,6 +1726,19 @@ export type Database = {
           voting_subtitle: string
           results_title: string
           results_subtitle: string
+        }[]
+      }
+      get_user_insights: {
+        Args: { user_id_param: string }
+        Returns: {
+          insight_id: string
+          poll_id: string
+          poll_title: string
+          poll_description: string
+          insight_content: string
+          generated_at: string
+          poll_slug: string
+          poll_status: Database["public"]["Enums"]["polis_poll_status"]
         }[]
       }
       get_user_poll_participation: {

@@ -3,6 +3,7 @@ import { NavigationHeader } from '@/components/NavigationHeader';
 import { UserAvatar } from '@/components/UserAvatar';
 import { UserPointsDisplay } from '@/components/UserPointsDisplay';
 import { UserPollParticipation } from '@/components/UserPollParticipation';
+import { PersonalInsightsCollection } from '@/components/PersonalInsightsCollection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -216,6 +217,11 @@ export const Account: React.FC = () => {
             loading={participationLoading}
             error={participationError}
           />
+        </div>
+        
+        {/* Personal Insights Section */}
+        <div className="mt-6">
+          <PersonalInsightsCollection />
         </div>
       </div>
     </div>
