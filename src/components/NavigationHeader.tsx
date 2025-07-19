@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,7 +7,6 @@ import { useReturnUrl } from '@/hooks/useReturnUrl';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { UserPointsDisplay } from '@/components/UserPointsDisplay';
 import { UserAvatar } from '@/components/UserAvatar';
-import { UserProfileDialog } from '@/components/UserProfileDialog';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 import { LogIn, LogOut } from 'lucide-react';
 
@@ -20,7 +19,6 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage,
   const { user, signOut } = useAuth();
   const { createAuthUrl } = useReturnUrl();
   const { profile } = useUserProfile();
-  const [showProfileDialog, setShowProfileDialog] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -41,14 +39,15 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage,
               
               {user ? (
                 <div className="flex items-center space-x-4">
-                  <UserAvatar
-                    key={user.id} // Force re-render when user changes
-                    avatarUrl={profile?.avatar_url}
-                    displayName={profile?.display_name}
-                    email={user.email}
-                    onClick={() => setShowProfileDialog(true)}
-                    className="cursor-pointer hover:ring-2 hover:ring-[#66c8ca] transition-all"
-                  />
+                  <Link to="/account">
+                    <UserAvatar
+                      key={user.id} // Force re-render when user changes
+                      avatarUrl={profile?.avatar_url}
+                      displayName={profile?.display_name}
+                      email={user.email}
+                      className="cursor-pointer hover:ring-2 hover:ring-[#66c8ca] transition-all"
+                    />
+                  </Link>
                   <Button
                     variant="outline"
                     size="sm"
@@ -72,13 +71,6 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage,
         </div>
       </header>
 
-      {user && (
-        <UserProfileDialog
-          key={user.id} // Force re-render when user changes
-          open={showProfileDialog}
-          onOpenChange={setShowProfileDialog}
-        />
-      )}
     </>
   );
 };

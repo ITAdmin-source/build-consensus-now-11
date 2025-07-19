@@ -11,6 +11,7 @@ import { EditPollPage } from "@/components/admin/EditPollPage";
 import Index from "./pages/Index";
 import PollPage from "./pages/PollPage";
 import Auth from "./pages/Auth";
+import { Account } from "./pages/Account";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -29,6 +30,7 @@ const App: React.FC = () => {
               <Route path="/" element={<Index />} />
               <Route path="/poll/:slug" element={<PollPage />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/account" element={<Account />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route 
                 path="/admin/dashboard" 

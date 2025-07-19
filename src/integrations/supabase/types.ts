@@ -1692,6 +1692,18 @@ export type Database = {
           results_subtitle: string
         }[]
       }
+      get_user_poll_participation: {
+        Args: { user_id_param: string }
+        Returns: {
+          poll_id: string
+          poll_title: string
+          poll_slug: string
+          poll_status: Database["public"]["Enums"]["polis_poll_status"]
+          vote_count: number
+          first_vote_at: string
+          last_vote_at: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
