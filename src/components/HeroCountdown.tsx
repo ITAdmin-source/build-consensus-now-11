@@ -9,7 +9,7 @@ interface HeroCountdownProps {
 }
 
 export const HeroCountdown: React.FC<HeroCountdownProps> = ({ endTime, title, subtitle }) => {
-  const { days, hours, minutes, seconds, isExpired } = useTimer(endTime);
+  const { days, hours, minutes, seconds, isExpired, phase } = useTimer(endTime);
 
   if (isExpired) {
     return null;
@@ -22,6 +22,18 @@ export const HeroCountdown: React.FC<HeroCountdownProps> = ({ endTime, title, su
     { value: days, label: 'ימים' }
   ];
 
+  // Add urgency styling for hero countdown
+  const getHeroPhaseStyles = () => {
+    switch (phase) {
+      case 'critical':
+        return 'animate-pulse-slow';
+      case 'final':
+        return 'timer-final';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="text-center">
       <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 hebrew-text">
@@ -31,7 +43,7 @@ export const HeroCountdown: React.FC<HeroCountdownProps> = ({ endTime, title, su
         {subtitle}
       </p>
       
-      <div className="flex justify-center items-center gap-4 md:gap-6">
+      <div className={`flex justify-center items-center gap-4 md:gap-6 ${getHeroPhaseStyles()}`}>
         {timeUnits.map((unit, index) => (
           <div key={index} className="flex flex-col items-center">
             <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center shadow-lg">

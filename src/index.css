@@ -105,6 +105,82 @@
   animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Enhanced Timer Animations */
+@keyframes timer-caution-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes timer-critical-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes timer-final-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes timer-gentle-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-1px); }
+  75% { transform: translateX(1px); }
+}
+
+/* Timer Phase Classes */
+.timer-calm {
+  color: hsl(var(--muted-foreground));
+}
+
+.timer-notice {
+  color: #66c8ca;
+  font-weight: 500;
+}
+
+.timer-caution {
+  color: #f59e0b;
+  font-weight: 600;
+  animation: timer-caution-pulse 3s ease-in-out infinite;
+  text-shadow: 0 0 4px rgba(245, 158, 11, 0.2);
+}
+
+.timer-critical {
+  color: #ec0081;
+  font-weight: 700;
+  animation: timer-critical-pulse 2s ease-in-out infinite;
+  text-shadow: 0 0 6px rgba(236, 0, 129, 0.3);
+}
+
+.timer-final {
+  color: #ef4444;
+  font-weight: 800;
+  animation: timer-final-pulse 0.8s ease-in-out infinite, timer-gentle-shake 3s ease-in-out infinite;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.timer-urgent {
+  color: #ef4444;
+  font-weight: 700;
+}
+
 /* Progress ring animations */
 @keyframes progress-ring {
   from {
