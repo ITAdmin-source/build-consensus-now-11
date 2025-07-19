@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { getUserPoints, subscribeToPointsUpdates, UserPoints } from '@/integrations/supabase/userPoints';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +13,17 @@ export const useUserPoints = () => {
   const { user } = useAuth();
 
   const fetchPoints = useCallback(async () => {
+    if (!user) {
+      // Reset to default for guest users
+      setPoints({
+        total_points: 0,
+        votes_count: 0,
+        last_updated: new Date().toISOString()
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const userPoints = await getUserPoints();
@@ -22,7 +34,7 @@ export const useUserPoints = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const incrementPoints = useCallback(() => {
     setPoints(prev => ({
@@ -41,6 +53,10 @@ export const useUserPoints = () => {
     let channel: any = null;
     
     const setupSubscription = async () => {
+      if (!user) {
+        return;
+      }
+      
       channel = await subscribeToPointsUpdates((updatedPoints) => {
         setPoints(updatedPoints);
       });

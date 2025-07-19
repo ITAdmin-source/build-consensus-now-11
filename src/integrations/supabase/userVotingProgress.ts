@@ -55,6 +55,7 @@ export const getUserVotingProgress = async (pollId: string): Promise<UserVotingP
     };
   } catch (error) {
     console.error('Error fetching user voting progress:', error);
+    // Return empty progress for errors or guest users without session
     return {
       votedCount: 0,
       totalCount: 0,
@@ -64,3 +65,43 @@ export const getUserVotingProgress = async (pollId: string): Promise<UserVotingP
     };
   }
 };
+
+export const subscribeToPointsUpdates = async (
+  callback: (points: UserPoints) => void
+) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  const sessionId = getOrCreateSessionId();
+
+  if (!user && !sessionId) return null;
+
+  const channel = supabase
+    .channel('user-points-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+        schema: 'public',
+        table: 'polis_user_points',
+        filter: user ? `user_id=eq.${user.id}` : `session_id=eq.${sessionId}`
+      },
+      (payload) => {
+        console.log('Points update received:', payload);
+        const newData = payload.new as UserPoints;
+        if (newData) {
+          callback(newData);
+        }
+      }
+    )
+    .subscribe((status) => {
+      console.log('Points subscription status:', status);
+    });
+
+  return channel;
+};
+
+// Add missing UserPoints interface import
+interface UserPoints {
+  total_points: number;
+  votes_count: number;
+  last_updated: string;
+}

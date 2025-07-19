@@ -36,11 +36,13 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage,
             </Link>
             
             <nav className="flex items-center space-x-4">
-              <UserPointsDisplay userPoints={userPoints} />
+              {/* Add key prop to force re-render when user changes */}
+              <UserPointsDisplay key={user?.id || 'guest'} userPoints={userPoints} />
               
               {user ? (
                 <div className="flex items-center space-x-4">
                   <UserAvatar
+                    key={user.id} // Force re-render when user changes
                     avatarUrl={profile?.avatar_url}
                     displayName={profile?.display_name}
                     email={user.email}
@@ -72,6 +74,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage,
 
       {user && (
         <UserProfileDialog
+          key={user.id} // Force re-render when user changes
           open={showProfileDialog}
           onOpenChange={setShowProfileDialog}
         />

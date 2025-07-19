@@ -1,10 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { getUserVotingProgress, UserVotingProgress } from '@/integrations/supabase/userVotingProgress';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const usePollingVotingProgress = (pollIds: string[]) => {
   const [progressData, setProgressData] = useState<Record<string, UserVotingProgress>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchProgressForPolls = async () => {
@@ -53,7 +55,15 @@ export const usePollingVotingProgress = (pollIds: string[]) => {
     };
 
     fetchProgressForPolls();
-  }, [pollIds.join(',')]); // Re-run when poll IDs change
+  }, [pollIds.join(','), user?.id]); // Add user dependency to re-fetch when user changes
+
+  // Reset progress data when user becomes null (logout)
+  useEffect(() => {
+    if (!user) {
+      setProgressData({});
+      setLoading({});
+    }
+  }, [user]);
 
   return { progressData, loading };
 };
