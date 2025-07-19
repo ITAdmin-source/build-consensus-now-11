@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -8,7 +9,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
-import { Loader2, X, Brain } from 'lucide-react';
+import { RegistrationCTA } from './RegistrationCTA';
+import { Loader2, X, Brain, Save, History } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PersonalInsightsModalProps {
   open: boolean;
@@ -27,6 +30,8 @@ export const PersonalInsightsModal: React.FC<PersonalInsightsModalProps> = ({
   error,
   onRetry
 }) => {
+  const { user } = useAuth();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[80vh]">
@@ -66,11 +71,36 @@ export const PersonalInsightsModal: React.FC<PersonalInsightsModalProps> = ({
           )}
 
           {insights && !isLoading && !error && (
-            <ScrollArea className="max-h-[50vh] pr-4">
-              <div className="prose prose-sm max-w-none hebrew-text text-justify" dir="rtl">
-                <MarkdownRenderer content={insights} />
-              </div>
-            </ScrollArea>
+            <div className="space-y-4">
+              <ScrollArea className="max-h-[50vh] pr-4">
+                <div className="prose prose-sm max-w-none hebrew-text text-justify" dir="rtl">
+                  <MarkdownRenderer content={insights} />
+                </div>
+              </ScrollArea>
+
+              {/* Registration incentive for guests */}
+              {!user && (
+                <div className="border-t pt-4">
+                  <RegistrationCTA context="insights" />
+                </div>
+              )}
+
+              {/* Enhanced features for registered users */}
+              {user && (
+                <div className="border-t pt-4 bg-muted/20 p-3 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Save className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium hebrew-text text-green-700">
+                      התובנה נשמרה בפרופיל שלך
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground hebrew-text">
+                    <History className="h-3 w-3" />
+                    <span>ניתן לצפות בכל התובנות שלך בעמוד החשבון</span>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
