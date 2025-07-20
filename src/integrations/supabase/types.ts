@@ -965,6 +965,48 @@ export type Database = {
           },
         ]
       }
+      polis_migration_audit: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          groups_migrated: number | null
+          id: string
+          insights_generated: boolean | null
+          migration_status: string
+          points_migrated: number | null
+          session_id: string
+          user_id: string
+          votes_migrated: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          groups_migrated?: number | null
+          id?: string
+          insights_generated?: boolean | null
+          migration_status?: string
+          points_migrated?: number | null
+          session_id: string
+          user_id: string
+          votes_migrated?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          groups_migrated?: number | null
+          id?: string
+          insights_generated?: boolean | null
+          migration_status?: string
+          points_migrated?: number | null
+          session_id?: string
+          user_id?: string
+          votes_migrated?: number | null
+        }
+        Relationships: []
+      }
       polis_participant_vectors: {
         Row: {
           cluster_affinity: Json
@@ -1697,6 +1739,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_migration_preview: {
+        Args: { p_session_id: string }
+        Returns: Json
+      }
       get_participant_count: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -1756,6 +1802,10 @@ export type Database = {
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      migrate_guest_to_user: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: Json
       }
       polis_can_manage_poll: {
         Args: { _user_id: string; _poll_id: string }

@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useMigrationManager, MigrationResult } from '@/hooks/useMigrationManager';
 
 type UserRole = 'participant' | 'poll_admin' | 'super_admin';
 
@@ -13,10 +14,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean; // poll_admin or super_admin
   isSuperAdmin: boolean;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any; migrationResult?: MigrationResult }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshUserRole: () => Promise<void>;
+  getMigrationPreview: () => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -30,7 +32,8 @@ const AuthContext = createContext<AuthContextType>({
   signUp: async () => ({ error: null }),
   signIn: async () => ({ error: null }),
   signOut: async () => {},
-  refreshUserRole: async () => {}
+  refreshUserRole: async () => {},
+  getMigrationPreview: async () => null
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -38,6 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const { getMigrationPreview: getPreview, migrateGuestData } = useMigrationManager();
 
   const fetchUserRole = async (userId: string): Promise<UserRole> => {
     try {
@@ -140,6 +144,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  const getMigrationPreview = async () => {
+    return await getPreview();
+  };
+
   const signUp = async (email: string, password: string, fullName?: string) => {
     console.log('Attempting signup for:', email, 'with name:', fullName);
     
@@ -159,7 +167,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     console.log('Signup response:', { data, error });
     
-    return { error };
+    // If signup successful and user created, migrate guest data
+    let migrationResult;
+    if (!error && data.user) {
+      try {
+        migrationResult = await migrateGuestData(data.user.id);
+        console.log('Migration completed:', migrationResult);
+      } catch (migrationError) {
+        console.error('Migration failed during signup:', migrationError);
+      }
+    }
+    
+    return { error, migrationResult };
   };
 
   const signIn = async (email: string, password: string) => {
@@ -213,7 +232,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signUp,
       signIn,
       signOut,
-      refreshUserRole
+      refreshUserRole,
+      getMigrationPreview
     }}>
       {children}
     </AuthContext.Provider>
