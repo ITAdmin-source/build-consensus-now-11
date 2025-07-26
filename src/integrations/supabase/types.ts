@@ -153,36 +153,6 @@ export type Database = {
         }
         Relationships: []
       }
-      consensus_process_categories: {
-        Row: {
-          color: string | null
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          sort_order: number
-          updated_at: string
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Update: {
-          color?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          name?: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
       consensus_process_posts: {
         Row: {
           author_id: string
@@ -242,7 +212,6 @@ export type Database = {
       }
       consensus_processes: {
         Row: {
-          category_id: string | null
           challenge: string | null
           created_at: string
           created_by: string | null
@@ -257,7 +226,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          category_id?: string | null
           challenge?: string | null
           created_at?: string
           created_by?: string | null
@@ -272,7 +240,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          category_id?: string | null
           challenge?: string | null
           created_at?: string
           created_by?: string | null
@@ -286,15 +253,7 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "consensus_processes_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "consensus_process_categories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       consensus_team_members: {
         Row: {
