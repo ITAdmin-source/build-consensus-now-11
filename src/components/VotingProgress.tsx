@@ -8,6 +8,7 @@ import { Poll } from '@/types/poll';
 import { CheckCircle, Activity } from 'lucide-react';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 import { CompletionDialog } from './CompletionDialog';
+import { EarlyCompletionConfirmDialog } from './EarlyCompletionConfirmDialog';
 import { PersonalInsightsModal } from './PersonalInsightsModal';
 import { usePersonalInsights } from '@/hooks/usePersonalInsights';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +21,7 @@ interface VotingProgressProps {
   userPoints: UserPoints;
   onNavigateToResults?: () => void;
   onNavigateToHome?: () => void;
+  shouldShowCompletion?: boolean;
 }
 
 export const VotingProgress: React.FC<VotingProgressProps> = ({
@@ -29,11 +31,13 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
   remainingStatements,
   userPoints,
   onNavigateToResults,
-  onNavigateToHome
+  onNavigateToHome,
+  shouldShowCompletion = false
 }) => {
   const { user } = useAuth();
   const personalProgress = (userVoteCount / totalStatements) * 100;
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [showEarlyCompletionConfirm, setShowEarlyCompletionConfirm] = useState(false);
   const [showInsightsModal, setShowInsightsModal] = useState(false);
   
   const { isLoading, insights, error, generateInsights, clearInsights } = usePersonalInsights();
@@ -51,6 +55,25 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
     clearInsights();
     await generateInsights(poll);
   };
+
+  const handleEndNowClick = () => {
+    if (remainingStatements > 0) {
+      setShowEarlyCompletionConfirm(true);
+    } else {
+      setShowCompletionDialog(true);
+    }
+  };
+
+  const handleEarlyCompletionConfirm = () => {
+    setShowCompletionDialog(true);
+  };
+
+  // Auto-show completion dialog when triggered from parent
+  React.useEffect(() => {
+    if (shouldShowCompletion) {
+      setShowCompletionDialog(true);
+    }
+  }, [shouldShowCompletion]);
 
   return (
     <div className="space-y-4">
@@ -81,7 +104,7 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
               </p>
               {canEndNow ? (
                 <Button
-                  onClick={() => setShowCompletionDialog(true)}
+                  onClick={handleEndNowClick}
                   size="sm"
                   variant="outline"
                   className="hebrew-text"
@@ -110,6 +133,14 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      <EarlyCompletionConfirmDialog
+        open={showEarlyCompletionConfirm}
+        onOpenChange={setShowEarlyCompletionConfirm}
+        remainingStatements={remainingStatements}
+        onContinueVoting={() => {}} // Just closes the dialog
+        onEndAnyway={handleEarlyCompletionConfirm}
+      />
 
       <CompletionDialog
         open={showCompletionDialog}

@@ -89,41 +89,8 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
     }
   }, [poll.allow_user_statements, user, onSubmitStatement, poll, createAuthUrl]);
 
-  // Show completion message when no statement is available
-  if (!statement) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="text-center p-8 bg-green-50 rounded-xl border border-green-200">
-          <div className="text-4xl mb-4">🎉</div>
-          <h3 className="text-xl font-bold text-green-800 mb-2 hebrew-text">
-            סיימת להצביע על כל ההצהרות!
-          </h3>
-          <p className="text-green-700 mb-6 hebrew-text">
-            תודה על השתתפותך. כעת תוכל לראות את התוצאות ולגלות אילו נקודות חיבור נמצאו.
-          </p>
-          <Button 
-            onClick={onViewResults} 
-            className="bg-primary hover:bg-primary/90 text-white px-8 py-3 text-lg hebrew-text"
-            size="lg"
-          >
-            צפה בתוצאות
-          </Button>
-        </div>
-        
-        <VotingProgress 
-          poll={poll} 
-          userVoteCount={userVoteCount} 
-          totalStatements={totalStatements} 
-          remainingStatements={remainingStatements} 
-          userPoints={userPoints} 
-          onNavigateToResults={onViewResults} 
-          onNavigateToHome={() => window.location.href = '/'} 
-        />
-        
-        {userStatementSection}
-      </div>
-    );
-  }
+  // Determine if completion dialog should be shown
+  const shouldShowCompletion = !statement;
 
   return (
     <div className="space-y-8">
@@ -152,6 +119,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
         userPoints={userPoints} 
         onNavigateToResults={onViewResults} 
         onNavigateToHome={() => window.location.href = '/'} 
+        shouldShowCompletion={shouldShowCompletion}
       />
 
       {userStatementSection}
