@@ -96,20 +96,22 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
     <div className="space-y-8">
       <PointAnimation show={showPointAnimation} onComplete={handleAnimationComplete} />
       
-      {/* Enhanced Statement Card - Made More Prominent */}
-      <div className="transform scale-105">
-        <EnhancedStatementCard
-          statement={statement}
-          onVote={handleOptimisticVote}
-          isVoting={isVoting}
-          pendingVote={pendingVote}
-          currentIndex={userVoteCount}
-          totalStatements={totalStatements}
-          supportLabel={buttonLabels.support}
-          opposeLabel={buttonLabels.oppose}
-          unsureLabel={buttonLabels.unsure}
-        />
-      </div>
+      {/* Enhanced Statement Card - Only show when statement exists */}
+      {statement && (
+        <div className="transform scale-105">
+          <EnhancedStatementCard
+            statement={statement}
+            onVote={handleOptimisticVote}
+            isVoting={isVoting}
+            pendingVote={pendingVote}
+            currentIndex={userVoteCount}
+            totalStatements={totalStatements}
+            supportLabel={buttonLabels.support}
+            opposeLabel={buttonLabels.oppose}
+            unsureLabel={buttonLabels.unsure}
+          />
+        </div>
+      )}
 
       <VotingProgress 
         poll={poll} 
