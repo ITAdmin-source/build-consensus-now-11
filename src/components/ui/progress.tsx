@@ -25,7 +25,7 @@ const Progress = React.forwardRef<
     />
     {threshold !== undefined && threshold > 0 && threshold < 100 && (
       <div
-        className="absolute top-0 h-full w-0.5 bg-amber-500 z-10 flex items-start justify-center"
+        className="absolute top-0 h-full w-0.5 bg-amber-500 z-10 flex items-center justify-center"
         style={{ right: `${100 - threshold}%` }}
         title="מינימום נדרש לסיום"
       >
