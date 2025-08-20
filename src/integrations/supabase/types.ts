@@ -1234,6 +1234,7 @@ export type Database = {
           last_clustering_job_id: string | null
           max_opposition_pct: number | null
           min_consensus_points_to_win: number | null
+          min_statements_voted_to_end: number
           min_support_pct: number | null
           min_votes_per_group: number | null
           oppose_button_label: string | null
@@ -1265,6 +1266,7 @@ export type Database = {
           last_clustering_job_id?: string | null
           max_opposition_pct?: number | null
           min_consensus_points_to_win?: number | null
+          min_statements_voted_to_end?: number
           min_support_pct?: number | null
           min_votes_per_group?: number | null
           oppose_button_label?: string | null
@@ -1296,6 +1298,7 @@ export type Database = {
           last_clustering_job_id?: string | null
           max_opposition_pct?: number | null
           min_consensus_points_to_win?: number | null
+          min_statements_voted_to_end?: number
           min_support_pct?: number | null
           min_votes_per_group?: number | null
           oppose_button_label?: string | null

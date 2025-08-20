@@ -38,6 +38,9 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
   
   const { isLoading, insights, error, generateInsights, clearInsights } = usePersonalInsights();
 
+  const minVotesToEnd = poll.min_statements_voted_to_end || 5;
+  const canEndNow = userVoteCount >= minVotesToEnd || remainingStatements === 0;
+
   const handlePersonalInsights = async () => {
     setShowInsightsModal(true);
     clearInsights();
@@ -72,16 +75,34 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
                   : 'סיימת להצביע על כל ההצהרות!'
                 }
               </p>
-              <Button
-                onClick={() => setShowCompletionDialog(true)}
-                size="sm"
-                variant="outline"
-                className="hebrew-text"
-              >
-                <CheckCircle className="h-4 w-4 ml-1" />
-                סיים עכשיו
-              </Button>
+              {canEndNow ? (
+                <Button
+                  onClick={() => setShowCompletionDialog(true)}
+                  size="sm"
+                  variant="outline"
+                  className="hebrew-text"
+                >
+                  <CheckCircle className="h-4 w-4 ml-1" />
+                  סיים עכשיו
+                </Button>
+              ) : (
+                <Button
+                  disabled
+                  size="sm"
+                  variant="outline"
+                  className="hebrew-text opacity-50 cursor-not-allowed"
+                  title={`עליך להצביע על לפחות ${minVotesToEnd - userVoteCount} הצהרות נוספות כדי לסיים`}
+                >
+                  <CheckCircle className="h-4 w-4 ml-1" />
+                  סיים עכשיו
+                </Button>
+              )}
             </div>
+            {!canEndNow && userVoteCount < minVotesToEnd && (
+              <div className="text-xs text-amber-600 hebrew-text">
+                עליך להצביע על לפחות {minVotesToEnd - userVoteCount} הצהרות נוספות לפני שתוכל לסיים ({userVoteCount}/{minVotesToEnd})
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -14,6 +14,7 @@ export interface CreatePollData {
   max_opposition_pct: number;
   min_votes_per_group: number;
   voting_goal: number;
+  min_statements_voted_to_end: number;
 }
 
 export interface PollQueryResult {

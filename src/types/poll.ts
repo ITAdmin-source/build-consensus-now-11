@@ -45,6 +45,7 @@ export interface Poll {
   unsure_button_label?: string;
   oppose_button_label?: string;
   voting_goal?: number;
+  min_statements_voted_to_end?: number;
 }
 
 export interface Statement {

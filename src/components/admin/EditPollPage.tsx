@@ -43,6 +43,7 @@ const editPollSchema = z.object({
   support_button_label: z.string().min(1, 'תווית כפתור תמיכה נדרשת').max(20, 'תווית ארוכה מדי'),
   unsure_button_label: z.string().min(1, 'תווית כפתור לא בטוח נדרשת').max(20, 'תווית ארוכה מדי'),
   oppose_button_label: z.string().min(1, 'תווית כפתור התנגדות נדרשת').max(20, 'תווית ארוכה מדי'),
+  min_statements_voted_to_end: z.number().min(1, 'מינימום הצהרה אחת להצבעה').max(50, 'מקסימום 50 הצהרות'),
 });
 
 type EditPollFormData = z.infer<typeof editPollSchema>;
@@ -73,6 +74,7 @@ export const EditPollPage: React.FC = () => {
       unsure_button_label: 'לא בטוח',
       oppose_button_label: 'מתנגד',
       voting_goal: 1000,
+      min_statements_voted_to_end: 5,
     }
   });
 
@@ -183,6 +185,7 @@ export const EditPollPage: React.FC = () => {
           unsure_button_label: data.unsure_button_label.trim(),
           oppose_button_label: data.oppose_button_label.trim(),
           voting_goal: data.voting_goal,
+          min_statements_voted_to_end: data.min_statements_voted_to_end,
         })
         .eq('poll_id', pollId)
         .select();
@@ -244,6 +247,7 @@ export const EditPollPage: React.FC = () => {
         unsure_button_label: poll.unsure_button_label || 'לא בטוח',
         oppose_button_label: poll.oppose_button_label || 'מתנגד',
         voting_goal: poll.voting_goal || 1000,
+        min_statements_voted_to_end: poll.min_statements_voted_to_end || 5,
       });
     }
   }, [poll, categories, rounds, form]);
@@ -563,6 +567,30 @@ export const EditPollPage: React.FC = () => {
                               </FormControl>
                               <div className="text-xs text-muted-foreground hebrew-text">
                                 מספר ההצבעות שהקהילה מתבקשת להשיג
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="min_statements_voted_to_end"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="hebrew-text">מינימום הצהרות להצבעה לסיום</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number"
+                                  min="1"
+                                  max="50"
+                                  placeholder="5"
+                                  {...field}
+                                  onChange={(e) => field.onChange(parseInt(e.target.value) || 5)}
+                                />
+                              </FormControl>
+                              <div className="text-xs text-muted-foreground hebrew-text">
+                                מספר ההצהרות המינימלי שמשתמש חייב להצביע עליהן לפני שיוכל לסיים
                               </div>
                               <FormMessage />
                             </FormItem>

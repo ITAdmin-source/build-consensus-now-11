@@ -29,7 +29,8 @@ const pollSchema = z.object({
   min_support_pct: z.number().min(0, 'מינימום 0%').max(100, 'מקסימום 100%'),
   max_opposition_pct: z.number().min(0, 'מינימום 0%').max(100, 'מקסימום 100%'),
   min_votes_per_group: z.number().min(1, 'מינימום הצבעה אחת לקבוצה'),
-  voting_goal: z.number().min(1, 'מטרת הצבעות חייבת להיות לפחות 1').max(100000, 'מטרת הצבעות גבוהה מדי')
+  voting_goal: z.number().min(1, 'מטרת הצבעות חייבת להיות לפחות 1').max(100000, 'מטרת הצבעות גבוהה מדי'),
+  min_statements_voted_to_end: z.number().min(1, 'מינימום הצהרה אחת להצבעה').max(50, 'מקסימום 50 הצהרות')
 });
 
 type PollFormData = z.infer<typeof pollSchema>;
@@ -70,7 +71,8 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
       min_support_pct: 60,
       max_opposition_pct: 30,
       min_votes_per_group: 3,
-      voting_goal: 1000
+      voting_goal: 1000,
+      min_statements_voted_to_end: 5
     }
   });
 
@@ -133,7 +135,8 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
         min_support_pct: data.min_support_pct,
         max_opposition_pct: data.max_opposition_pct,
         min_votes_per_group: data.min_votes_per_group,
-        voting_goal: data.voting_goal
+        voting_goal: data.voting_goal,
+        min_statements_voted_to_end: data.min_statements_voted_to_end
       });
       
       toast({
@@ -425,6 +428,30 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
                         </FormControl>
                         <div className="text-xs text-muted-foreground hebrew-text">
                           מספר ההצבעות שהקהילה מתבקשת להשיג
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="min_statements_voted_to_end"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="hebrew-text">מינימום הצהרות להצבעה לסיום</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            min="1"
+                            max="50"
+                            placeholder="5"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 5)}
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground hebrew-text">
+                          מספר ההצהרות המינימלי שמשתמש חייב להצביע עליהן לפני שיוכל לסיים
                         </div>
                         <FormMessage />
                       </FormItem>
