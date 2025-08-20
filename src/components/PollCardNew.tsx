@@ -9,7 +9,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Users, FileText, Target, Trophy, Eye, Clock, Play } from 'lucide-react';
+import { Users, FileText, Target, Trophy, Eye, Clock, Play, TrendingUp, Star } from 'lucide-react';
+import { calculateVotingProgress } from '@/utils/votingProgress';
 
 interface PollCardNewProps {
   poll: Poll;
@@ -33,6 +34,9 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
   const votingProgress = useVotingProgress(poll, statements, userVotes, summaryProgress);
   const consensusProgress = (poll.current_consensus_points / poll.min_consensus_points_to_win) * 100;
   const consensusAchieved = poll.current_consensus_points >= poll.min_consensus_points_to_win;
+
+  // Calculate voting goal progress
+  const votingGoalProgress = calculateVotingProgress(poll.total_votes || 0, poll.voting_goal || 1000);
 
   const handleAction = () => {
     onJoinPoll(poll.slug || poll.poll_id);
@@ -203,6 +207,27 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
             className="text-sm font-semibold text-[#1a305b]" 
             compact
           />
+        </div>
+
+        {/* Voting Goal Progress */}
+        <div className="mb-2">
+          <div className="flex justify-between items-center text-xs mb-1">
+            <span className={`flex items-center gap-1 ${votingGoalProgress.isGoalReached ? 'text-green-600' : 'text-gray-600'}`}>
+              {votingGoalProgress.isGoalReached ? (
+                <Star className="h-3 w-3" />
+              ) : (
+                <TrendingUp className="h-3 w-3" />
+              )}
+              {votingGoalProgress.displayText}
+            </span>
+          </div>
+          <Progress 
+            value={votingGoalProgress.percentage} 
+            className={`h-1.5 ${votingGoalProgress.isGoalReached ? 'bg-green-100' : 'bg-gray-200'}`}
+          />
+          {votingGoalProgress.isGoalReached && (
+            <div className="text-xs text-green-600 font-bold mt-1">יעד ההצבעות הושג!</div>
+          )}
         </div>
         
         <div className="grid grid-cols-2 gap-2 mb-2">
