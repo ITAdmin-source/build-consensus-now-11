@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Statement } from '@/types/poll';
 import { StatementInfo } from '@/components/StatementInfo';
 import { ThumbsUp, ThumbsDown, HelpCircle, ArrowRight, ArrowLeft, ArrowDown } from 'lucide-react';
-
 interface EnhancedStatementCardProps {
   statement: Statement;
   onVote: (vote: string) => void;
@@ -17,7 +16,6 @@ interface EnhancedStatementCardProps {
   opposeLabel: string;
   unsureLabel: string;
 }
-
 export const EnhancedStatementCard: React.FC<EnhancedStatementCardProps> = ({
   statement,
   onVote,
@@ -38,10 +36,11 @@ export const EnhancedStatementCard: React.FC<EnhancedStatementCardProps> = ({
     direction: null,
     distance: 0
   });
-  
   const cardRef = useRef<HTMLDivElement>(null);
-  const startPos = useRef<{ x: number; y: number } | null>(null);
-
+  const startPos = useRef<{
+    x: number;
+    y: number;
+  } | null>(null);
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     startPos.current = {
@@ -54,14 +53,12 @@ export const EnhancedStatementCard: React.FC<EnhancedStatementCardProps> = ({
       distance: 0
     });
   };
-
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!startPos.current || !swipeState.isDragging) return;
     const touch = e.touches[0];
     const deltaX = touch.clientX - startPos.current.x;
     const deltaY = touch.clientY - startPos.current.y;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    
     let direction = null;
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
       if (Math.abs(deltaX) > 50) {
@@ -72,14 +69,12 @@ export const EnhancedStatementCard: React.FC<EnhancedStatementCardProps> = ({
         direction = deltaY > 0 ? 'down' : 'up';
       }
     }
-    
     setSwipeState({
       isDragging: true,
       direction,
       distance
     });
   };
-
   const handleTouchEnd = () => {
     if (!swipeState.isDragging) {
       setSwipeState({
@@ -89,7 +84,6 @@ export const EnhancedStatementCard: React.FC<EnhancedStatementCardProps> = ({
       });
       return;
     }
-
     if (swipeState.direction && swipeState.distance > 80) {
       switch (swipeState.direction) {
         case 'right':
@@ -103,7 +97,6 @@ export const EnhancedStatementCard: React.FC<EnhancedStatementCardProps> = ({
           break;
       }
     }
-    
     setSwipeState({
       isDragging: false,
       direction: null,
@@ -111,7 +104,6 @@ export const EnhancedStatementCard: React.FC<EnhancedStatementCardProps> = ({
     });
     startPos.current = null;
   };
-
   const getSwipeIndicatorColor = () => {
     switch (swipeState.direction) {
       case 'right':
@@ -124,7 +116,6 @@ export const EnhancedStatementCard: React.FC<EnhancedStatementCardProps> = ({
         return '';
     }
   };
-
   const getSwipeIndicatorText = () => {
     switch (swipeState.direction) {
       case 'right':
@@ -137,7 +128,6 @@ export const EnhancedStatementCard: React.FC<EnhancedStatementCardProps> = ({
         return '';
     }
   };
-
   const getSwipeIndicatorIcon = () => {
     switch (swipeState.direction) {
       case 'right':
@@ -150,98 +140,49 @@ export const EnhancedStatementCard: React.FC<EnhancedStatementCardProps> = ({
         return null;
     }
   };
-
-  return (
-    <div className="relative">
+  return <div className="relative">
       {/* Loading overlay */}
-      {isVoting && (
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 animate-fade-in">
+      {isVoting && <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 animate-fade-in">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
             <p className="text-sm text-muted-foreground hebrew-text">מעבד הצבעה...</p>
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Statement position indicator */}
-      <div className="mb-4 flex items-center justify-between">
-        <Badge variant="outline" className="hebrew-text">
-          {currentIndex + 1} מתוך {totalStatements}
-        </Badge>
-        <div className="text-xs text-muted-foreground hebrew-text">
-          החליקו או לחצו כדי להצביע
-        </div>
-      </div>
+      
 
       {/* Main card */}
-      <Card 
-        ref={cardRef}
-        className={`transition-all duration-300 cursor-grab active:cursor-grabbing select-none ${
-          pendingVote ? 'scale-[0.98] opacity-80' : 'scale-100 opacity-100'
-        } ${
-          swipeState.isDragging ? `${getSwipeIndicatorColor()} border-2` : ''
-        } animate-scale-in shadow-lg hover:shadow-xl`}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
+      <Card ref={cardRef} className={`transition-all duration-300 cursor-grab active:cursor-grabbing select-none ${pendingVote ? 'scale-[0.98] opacity-80' : 'scale-100 opacity-100'} ${swipeState.isDragging ? `${getSwipeIndicatorColor()} border-2` : ''} animate-scale-in shadow-lg hover:shadow-xl`} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
         {/* Swipe indicator */}
-        {swipeState.isDragging && swipeState.direction && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20">
+        {swipeState.isDragging && swipeState.direction && <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20">
             <div className="bg-white px-3 py-1 rounded-full shadow-lg border-2 border-current text-sm font-medium hebrew-text flex items-center gap-2">
               {getSwipeIndicatorIcon()}
               {getSwipeIndicatorText()}
             </div>
-          </div>
-        )}
+          </div>}
 
         <CardHeader className="text-center pb-4">
           <CardTitle className="text-xl md:text-2xl font-bold leading-relaxed flex items-start justify-center gap-1">
             <span>{statement.content}</span>
-            {statement.more_info && (
-              <StatementInfo 
-                statementContent={statement.content} 
-                moreInfo={statement.more_info} 
-              />
-            )}
+            {statement.more_info && <StatementInfo statementContent={statement.content} moreInfo={statement.more_info} />}
           </CardTitle>
         </CardHeader>
         
         <CardContent className="space-y-4">
           {/* Voting buttons */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Button
-              onClick={() => onVote('support')}
-              disabled={!!pendingVote}
-              className={`h-14 bg-voting-support hover:bg-voting-support/90 text-white transition-all duration-300 ${
-                pendingVote === 'support' ? 'ring-4 ring-green-300 scale-105' : ''
-              }`}
-              size="lg"
-            >
+            <Button onClick={() => onVote('support')} disabled={!!pendingVote} className={`h-14 bg-voting-support hover:bg-voting-support/90 text-white transition-all duration-300 ${pendingVote === 'support' ? 'ring-4 ring-green-300 scale-105' : ''}`} size="lg">
               <ThumbsUp className="h-5 w-5 ml-2" />
               <span className="hebrew-text text-base font-medium">{supportLabel}</span>
             </Button>
             
-            <Button
-              onClick={() => onVote('unsure')}
-              disabled={!!pendingVote}
-              className={`h-14 bg-voting-unsure hover:bg-voting-unsure/90 text-white transition-all duration-300 ${
-                pendingVote === 'unsure' ? 'ring-4 ring-yellow-300 scale-105' : ''
-              }`}
-              size="lg"
-            >
+            <Button onClick={() => onVote('unsure')} disabled={!!pendingVote} className={`h-14 bg-voting-unsure hover:bg-voting-unsure/90 text-white transition-all duration-300 ${pendingVote === 'unsure' ? 'ring-4 ring-yellow-300 scale-105' : ''}`} size="lg">
               <HelpCircle className="h-5 w-5 ml-2" />
               <span className="hebrew-text text-base font-medium">{unsureLabel}</span>
             </Button>
             
-            <Button
-              onClick={() => onVote('oppose')}
-              disabled={!!pendingVote}
-              className={`h-14 bg-voting-oppose hover:bg-voting-oppose/90 text-white transition-all duration-300 ${
-                pendingVote === 'oppose' ? 'ring-4 ring-red-300 scale-105' : ''
-              }`}
-              size="lg"
-            >
+            <Button onClick={() => onVote('oppose')} disabled={!!pendingVote} className={`h-14 bg-voting-oppose hover:bg-voting-oppose/90 text-white transition-all duration-300 ${pendingVote === 'oppose' ? 'ring-4 ring-red-300 scale-105' : ''}`} size="lg">
               <ThumbsDown className="h-5 w-5 ml-2" />
               <span className="hebrew-text text-base font-medium">{opposeLabel}</span>
             </Button>
@@ -269,6 +210,5 @@ export const EnhancedStatementCard: React.FC<EnhancedStatementCardProps> = ({
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
