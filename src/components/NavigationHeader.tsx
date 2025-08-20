@@ -8,14 +8,16 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { UserPointsDisplay } from '@/components/UserPointsDisplay';
 import { UserAvatar } from '@/components/UserAvatar';
 import { UserPoints } from '@/integrations/supabase/userPoints';
+import { Poll } from '@/types/poll';
 import { LogIn, LogOut } from 'lucide-react';
 
 interface NavigationHeaderProps {
   currentPage: 'home' | 'voting' | 'results' | 'admin';
   userPoints?: UserPoints;
+  poll?: Poll;
 }
 
-export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage, userPoints }) => {
+export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage, userPoints, poll }) => {
   const { user, signOut } = useAuth();
   const { createAuthUrl } = useReturnUrl();
   const { profile } = useUserProfile();
@@ -32,6 +34,15 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage,
             <Link to="/" className="text-xl font-bold text-primary hebrew-text">
               נקודות חיבור
             </Link>
+            
+            {/* Poll Title in Center */}
+            {poll && currentPage === 'voting' && (
+              <div className="absolute left-1/2 transform -translate-x-1/2">
+                <h1 className="text-lg font-bold hebrew-text text-foreground">
+                  {poll.title}
+                </h1>
+              </div>
+            )}
             
             <nav className="flex items-center space-x-4">
               {/* Add key prop to force re-render when user changes */}

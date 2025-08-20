@@ -5,12 +5,10 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Poll } from '@/types/poll';
-import { CheckCircle, BarChart3, Activity  } from 'lucide-react';
+import { CheckCircle, Activity } from 'lucide-react';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 import { CompletionDialog } from './CompletionDialog';
 import { PersonalInsightsModal } from './PersonalInsightsModal';
-import { SocialProof } from './SocialProof';
-import { CompletionTracker } from './CompletionTracker';
 import { usePersonalInsights } from '@/hooks/usePersonalInsights';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -54,46 +52,39 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
   return (
     <div className="space-y-4">
       <Card className="mb-6">
-        <CardContent className="p-4">
+        <CardContent className="p-6">
           {/* Personal Progress */}
-          <div className="space-y-2">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 text-blue-500" />
-                <span className="text-sm font-medium hebrew-text">ההתקדמות שלך</span>
+                <Activity className="h-5 w-5 text-primary" />
+                <span className="text-base font-medium hebrew-text">ההתקדמות שלך</span>
               </div>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-sm px-3 py-1">
                 {userVoteCount}/{totalStatements}
               </Badge>
             </div>
-            <Progress value={personalProgress} className="h-2" />
+            <Progress value={personalProgress} className="h-3" />
             <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground hebrew-text">
+              <p className="text-sm text-muted-foreground hebrew-text">
                 {remainingStatements > 0 
                   ? `נותרו ${remainingStatements} הצהרות להצבעה`
                   : 'סיימת להצביע על כל ההצהרות!'
                 }
               </p>
-              {onNavigateToResults && (
-                <Button
-                  onClick={() => setShowCompletionDialog(true)}
-                  size="sm"
-                  className="bg-gradient-to-r from-blue-500 to-blue-500 hover:from-blue-600 hover:to-blue-600 hebrew-text"
-                >
-                  <CheckCircle className="h-3 w-3 ml-1" />
-                  סיימתי
-                </Button>
-              )}
+              <Button
+                onClick={() => setShowCompletionDialog(true)}
+                size="sm"
+                variant="outline"
+                className="hebrew-text"
+              >
+                <CheckCircle className="h-4 w-4 ml-1" />
+                סיים עכשיו
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
-
-      {/* Social Proof */}
-      <SocialProof variant="compact" showLive />
-
-      {/* Completion Tracker */}
-      <CompletionTracker />
 
       <CompletionDialog
         open={showCompletionDialog}

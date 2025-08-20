@@ -74,51 +74,23 @@ export const VotingPage: React.FC<VotingPageProps> = ({
         />
       )}
 
-      <NavigationHeader currentPage="voting" userPoints={userPoints} />
+      <NavigationHeader currentPage="voting" userPoints={userPoints} poll={poll} />
       
-      <div className="container mx-auto px-4 py-4 max-w-6xl">
-        {/* Enhanced Game Header */}
-        <div className="mb-6 animate-fade-in">
-          <GameHeader
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
+        {/* Simplified Single Column Layout */}
+        <div className="animate-fade-in">
+          <OptimizedVotingInterface
             poll={poll}
-            participantCount={participantCount}
-            consensusPointsCount={consensusPointsCount}
+            statement={currentStatement}
+            userVoteCount={userVoteCount}
+            totalStatements={totalStatements}
+            remainingStatements={unvotedStatements.length}
             userPoints={userPoints}
-            isLive={isLive}
+            onVote={onVote}
+            onViewResults={onViewResults}
+            onSubmitStatement={onSubmitStatement}
+            isVoting={isVoting}
           />
-        </div>
-        
-        {/* Main Content Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Voting Interface - Main Content */}
-          <div className="lg:col-span-3 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            <OptimizedVotingInterface
-              poll={poll}
-              statement={currentStatement}
-              userVoteCount={userVoteCount}
-              totalStatements={totalStatements}
-              remainingStatements={unvotedStatements.length}
-              userPoints={userPoints}
-              onVote={onVote}
-              onViewResults={onViewResults}
-              onSubmitStatement={onSubmitStatement}
-              isVoting={isVoting}
-            />
-          </div>
-
-          {/* Live Activity Sidebar */}
-          <div className="lg:col-span-1 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <div className="sticky top-4 space-y-4">
-              <LiveActivityFeed
-                participantCount={participantCount}
-                consensusPointsCount={consensusPointsCount}
-                totalVotes={totalVotes}
-                totalStatements={totalStatements}
-                groups={groups}
-                isLive={isLive}
-              />
-            </div>
-          </div>
         </div>
       </div>
     </div>
