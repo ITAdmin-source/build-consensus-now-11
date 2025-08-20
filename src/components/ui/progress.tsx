@@ -29,7 +29,7 @@ const Progress = React.forwardRef<
         style={{ right: `${100 - threshold}%` }}
         title="מינימום נדרש לסיום"
       >
-        <div className="w-2 h-2 bg-amber-500 rounded-full border-2 border-background shadow-sm" />
+        <div className="w-2 h-2 bg-amber-500 rounded-full shadow-sm" />
       </div>
     )}
   </ProgressPrimitive.Root>
