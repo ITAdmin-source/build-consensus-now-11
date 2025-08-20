@@ -13,6 +13,7 @@ export interface CreatePollData {
   min_support_pct: number;
   max_opposition_pct: number;
   min_votes_per_group: number;
+  voting_goal: number;
 }
 
 export interface PollQueryResult {

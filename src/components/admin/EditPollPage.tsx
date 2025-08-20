@@ -39,6 +39,7 @@ const editPollSchema = z.object({
   min_support_pct: z.number().min(0, 'מינימום 0%').max(100, 'מקסימום 100%'),
   max_opposition_pct: z.number().min(0, 'מינימום 0%').max(100, 'מקסימום 100%'),
   min_votes_per_group: z.number().min(1, 'מינימום הצבעה אחת לקבוצה'),
+  voting_goal: z.number().min(1, 'מטרת הצבעות חייבת להיות לפחות 1').max(100000, 'מטרת הצבעות גבוהה מדי'),
   support_button_label: z.string().min(1, 'תווית כפתור תמיכה נדרשת').max(20, 'תווית ארוכה מדי'),
   unsure_button_label: z.string().min(1, 'תווית כפתור לא בטוח נדרשת').max(20, 'תווית ארוכה מדי'),
   oppose_button_label: z.string().min(1, 'תווית כפתור התנגדות נדרשת').max(20, 'תווית ארוכה מדי'),
@@ -71,6 +72,7 @@ export const EditPollPage: React.FC = () => {
       support_button_label: 'תומך',
       unsure_button_label: 'לא בטוח',
       oppose_button_label: 'מתנגד',
+      voting_goal: 1000,
     }
   });
 
@@ -180,6 +182,7 @@ export const EditPollPage: React.FC = () => {
           support_button_label: data.support_button_label.trim(),
           unsure_button_label: data.unsure_button_label.trim(),
           oppose_button_label: data.oppose_button_label.trim(),
+          voting_goal: data.voting_goal,
         })
         .eq('poll_id', pollId)
         .select();
@@ -240,6 +243,7 @@ export const EditPollPage: React.FC = () => {
         support_button_label: poll.support_button_label || 'תומך',
         unsure_button_label: poll.unsure_button_label || 'לא בטוח',
         oppose_button_label: poll.oppose_button_label || 'מתנגד',
+        voting_goal: poll.voting_goal || 1000,
       });
     }
   }, [poll, categories, rounds, form]);
@@ -536,6 +540,30 @@ export const EditPollPage: React.FC = () => {
                                   onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                                 />
                               </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="voting_goal"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="hebrew-text">מטרת הצבעות</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number"
+                                  min="1"
+                                  max="100000"
+                                  placeholder="1000"
+                                  {...field}
+                                  onChange={(e) => field.onChange(parseInt(e.target.value) || 1000)}
+                                />
+                              </FormControl>
+                              <div className="text-xs text-muted-foreground hebrew-text">
+                                מספר ההצבעות שהקהילה מתבקשת להשיג
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}

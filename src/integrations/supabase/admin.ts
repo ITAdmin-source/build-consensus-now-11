@@ -33,6 +33,7 @@ export const createPoll = async (pollData: CreatePollData) => {
     min_support_pct: pollData.min_support_pct,
     max_opposition_pct: pollData.max_opposition_pct,
     min_votes_per_group: pollData.min_votes_per_group,
+    voting_goal: pollData.voting_goal,
     created_by: user.id,
     status: 'active' as const
   };

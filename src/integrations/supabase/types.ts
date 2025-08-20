@@ -7,13 +7,67 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
+      consensus_activities: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          period_data: Json
+          period_type: string
+          phase: string
+          process_id: string
+          process_stage_id: string | null
+          sort_order: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          period_data?: Json
+          period_type: string
+          phase: string
+          process_id: string
+          process_stage_id?: string | null
+          sort_order?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          period_data?: Json
+          period_type?: string
+          phase?: string
+          process_id?: string
+          process_stage_id?: string | null
+          sort_order?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_consensus_activities_process_id"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_consensus_activities_process_stage_id"
+            columns: ["process_stage_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_process_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consensus_documents: {
         Row: {
           content_type: string | null
@@ -25,6 +79,7 @@ export type Database = {
           name: string
           original_filename: string | null
           process_id: string
+          process_stage_id: string | null
           size: string
           storage_path: string | null
           tags: Json | null
@@ -41,6 +96,7 @@ export type Database = {
           name: string
           original_filename?: string | null
           process_id: string
+          process_stage_id?: string | null
           size: string
           storage_path?: string | null
           tags?: Json | null
@@ -57,6 +113,7 @@ export type Database = {
           name?: string
           original_filename?: string | null
           process_id?: string
+          process_stage_id?: string | null
           size?: string
           storage_path?: string | null
           tags?: Json | null
@@ -71,6 +128,13 @@ export type Database = {
             referencedRelation: "consensus_processes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "consensus_documents_process_stage_id_fkey"
+            columns: ["process_stage_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_process_stages"
+            referencedColumns: ["id"]
+          },
         ]
       }
       consensus_external_links: {
@@ -81,6 +145,7 @@ export type Database = {
           id: string
           name: string
           process_id: string
+          process_stage_id: string | null
           sort_order: number
           tags: Json | null
           thumbnail_url: string | null
@@ -93,6 +158,7 @@ export type Database = {
           id?: string
           name: string
           process_id: string
+          process_stage_id?: string | null
           sort_order: number
           tags?: Json | null
           thumbnail_url?: string | null
@@ -105,6 +171,7 @@ export type Database = {
           id?: string
           name?: string
           process_id?: string
+          process_stage_id?: string | null
           sort_order?: number
           tags?: Json | null
           thumbnail_url?: string | null
@@ -116,6 +183,13 @@ export type Database = {
             columns: ["process_id"]
             isOneToOne: false
             referencedRelation: "consensus_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consensus_external_links_process_stage_id_fkey"
+            columns: ["process_stage_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_process_stages"
             referencedColumns: ["id"]
           },
         ]
@@ -163,6 +237,7 @@ export type Database = {
           is_published: boolean
           post_type: string
           process_id: string
+          process_stage_id: string | null
           published_at: string | null
           title: string
           updated_at: string
@@ -176,6 +251,7 @@ export type Database = {
           is_published?: boolean
           post_type?: string
           process_id: string
+          process_stage_id?: string | null
           published_at?: string | null
           title: string
           updated_at?: string
@@ -189,6 +265,7 @@ export type Database = {
           is_published?: boolean
           post_type?: string
           process_id?: string
+          process_stage_id?: string | null
           published_at?: string | null
           title?: string
           updated_at?: string
@@ -202,11 +279,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "consensus_process_posts_process_stage_id_fkey"
+            columns: ["process_stage_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_process_stages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_post_type"
             columns: ["post_type"]
             isOneToOne: false
             referencedRelation: "consensus_post_types"
             referencedColumns: ["key"]
+          },
+        ]
+      }
+      consensus_process_stages: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          process_id: string
+          sort_order: number
+          stage_id: string
+          status: Database["public"]["Enums"]["stage_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          process_id: string
+          sort_order: number
+          stage_id: string
+          status?: Database["public"]["Enums"]["stage_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          process_id?: string
+          sort_order?: number
+          stage_id?: string
+          status?: Database["public"]["Enums"]["stage_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consensus_process_stages_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consensus_process_stages_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "consensus_stages"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -252,6 +387,30 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      consensus_stages: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          sort_order: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          sort_order?: number
+          title?: string
         }
         Relationships: []
       }
@@ -427,6 +586,42 @@ export type Database = {
           version_2_feedback?: string | null
           version_2_rating?: number | null
           visual_asset?: string | null
+        }
+        Relationships: []
+      }
+      courses: {
+        Row: {
+          created_at: string
+          description: string | null
+          difficulty: string
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          title: string
+          topics: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          title: string
+          topics?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          title?: string
+          topics?: string[] | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1049,6 +1244,7 @@ export type Database = {
           support_button_label: string | null
           title: string
           unsure_button_label: string | null
+          voting_goal: number
         }
         Insert: {
           allow_user_statements?: boolean | null
@@ -1079,6 +1275,7 @@ export type Database = {
           support_button_label?: string | null
           title: string
           unsure_button_label?: string | null
+          voting_goal?: number
         }
         Update: {
           allow_user_statements?: boolean | null
@@ -1109,6 +1306,7 @@ export type Database = {
           support_button_label?: string | null
           title?: string
           unsure_button_label?: string | null
+          voting_goal?: number
         }
         Relationships: [
           {
@@ -1503,6 +1701,39 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          department: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       surveys: {
         Row: {
           allow_user_submissions: boolean
@@ -1575,6 +1806,50 @@ export type Database = {
         }
         Relationships: []
       }
+      user_progress: {
+        Row: {
+          completed_at: string | null
+          course_id: string
+          created_at: string
+          id: string
+          progress_percentage: number
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          progress_percentage?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          progress_percentage?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       votes: {
         Row: {
           created_at: string
@@ -1644,14 +1919,14 @@ export type Database = {
     Functions: {
       assign_user_role: {
         Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["user_role"]
           _assigned_by: string
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
         }
         Returns: Json
       }
       calculate_consensus_points: {
-        Args: { poll_id_param: string; cluster_profiles_param: Json }
+        Args: { cluster_profiles_param: Json; poll_id_param: string }
         Returns: undefined
       }
       cleanup_expired_cluster_cache: {
@@ -1681,13 +1956,13 @@ export type Database = {
       get_all_users_with_roles: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
+          assigned_at: string
+          created_at: string
           email: string
           full_name: string
-          role: Database["public"]["Enums"]["user_role"]
-          created_at: string
-          assigned_at: string
+          id: string
           last_sign_in_at: string
+          role: Database["public"]["Enums"]["user_role"]
         }[]
       }
       get_category_poll_count: {
@@ -1708,9 +1983,9 @@ export type Database = {
       }
       get_round_active_status: {
         Args: {
-          p_start_time: string
           p_end_time: string
           p_publish_status: string
+          p_start_time: string
         }
         Returns: string
       }
@@ -1722,40 +1997,40 @@ export type Database = {
         Args: { p_survey_id: string }
         Returns: {
           allow_user_submissions: boolean
-          auto_approve_ideas: boolean
-          topic_title: string
-          topic_subtitle: string
-          attract_title: string
           attract_subtitle: string
-          voting_title: string
-          voting_subtitle: string
-          results_title: string
+          attract_title: string
+          auto_approve_ideas: boolean
           results_subtitle: string
+          results_title: string
+          topic_subtitle: string
+          topic_title: string
+          voting_subtitle: string
+          voting_title: string
         }[]
       }
       get_user_insights: {
         Args: { user_id_param: string }
         Returns: {
-          insight_id: string
-          poll_id: string
-          poll_title: string
-          poll_description: string
-          insight_content: string
           generated_at: string
+          insight_content: string
+          insight_id: string
+          poll_description: string
+          poll_id: string
           poll_slug: string
           poll_status: Database["public"]["Enums"]["polis_poll_status"]
+          poll_title: string
         }[]
       }
       get_user_poll_participation: {
         Args: { user_id_param: string }
         Returns: {
-          poll_id: string
-          poll_title: string
-          poll_slug: string
-          poll_status: Database["public"]["Enums"]["polis_poll_status"]
-          vote_count: number
           first_vote_at: string
           last_vote_at: string
+          poll_id: string
+          poll_slug: string
+          poll_status: Database["public"]["Enums"]["polis_poll_status"]
+          poll_title: string
+          vote_count: number
         }[]
       }
       get_user_role: {
@@ -1767,7 +2042,7 @@ export type Database = {
         Returns: Json
       }
       polis_can_manage_poll: {
-        Args: { _user_id: string; _poll_id: string }
+        Args: { _poll_id: string; _user_id: string }
         Returns: boolean
       }
       polis_get_user_management_stats: {
@@ -1781,6 +2056,7 @@ export type Database = {
               p_idea2_id: string
               p_selected_id: string
               p_session_id: string
+              p_survey_id?: string
               p_voting_session_id?: string
             }
           | {
@@ -1789,12 +2065,11 @@ export type Database = {
               p_selected_id: string
               p_session_id: string
               p_voting_session_id?: string
-              p_survey_id?: string
             }
         Returns: Json
       }
       remove_user_admin_role: {
-        Args: { _user_id: string; _removed_by: string }
+        Args: { _removed_by: string; _user_id: string }
         Returns: Json
       }
       reset_poll_data: {
@@ -1807,24 +2082,24 @@ export type Database = {
       }
       update_survey_settings: {
         Args: {
-          p_survey_id: string
           p_allow_user_submissions?: boolean
-          p_auto_approve_ideas?: boolean
-          p_topic_title?: string
-          p_topic_subtitle?: string
-          p_attract_title?: string
           p_attract_subtitle?: string
-          p_voting_title?: string
-          p_voting_subtitle?: string
-          p_results_title?: string
+          p_attract_title?: string
+          p_auto_approve_ideas?: boolean
           p_results_subtitle?: string
+          p_results_title?: string
+          p_survey_id: string
+          p_topic_subtitle?: string
+          p_topic_title?: string
+          p_voting_subtitle?: string
+          p_voting_title?: string
         }
         Returns: Json
       }
       user_has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
         }
         Returns: boolean
       }
@@ -1833,6 +2108,7 @@ export type Database = {
       polis_content_type: "text" | "image" | "audio" | "video"
       polis_poll_status: "draft" | "active" | "closed"
       polis_vote_value: "support" | "oppose" | "unsure"
+      stage_status: "not_started" | "active" | "completed"
       user_role: "participant" | "poll_admin" | "super_admin"
     }
     CompositeTypes: {
@@ -1964,6 +2240,7 @@ export const Constants = {
       polis_content_type: ["text", "image", "audio", "video"],
       polis_poll_status: ["draft", "active", "closed"],
       polis_vote_value: ["support", "oppose", "unsure"],
+      stage_status: ["not_started", "active", "completed"],
       user_role: ["participant", "poll_admin", "super_admin"],
     },
   },

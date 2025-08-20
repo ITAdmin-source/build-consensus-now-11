@@ -28,7 +28,8 @@ const pollSchema = z.object({
   auto_approve_statements: z.boolean(),
   min_support_pct: z.number().min(0, 'מינימום 0%').max(100, 'מקסימום 100%'),
   max_opposition_pct: z.number().min(0, 'מינימום 0%').max(100, 'מקסימום 100%'),
-  min_votes_per_group: z.number().min(1, 'מינימום הצבעה אחת לקבוצה')
+  min_votes_per_group: z.number().min(1, 'מינימום הצבעה אחת לקבוצה'),
+  voting_goal: z.number().min(1, 'מטרת הצבעות חייבת להיות לפחות 1').max(100000, 'מטרת הצבעות גבוהה מדי')
 });
 
 type PollFormData = z.infer<typeof pollSchema>;
@@ -68,7 +69,8 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
       auto_approve_statements: false,
       min_support_pct: 60,
       max_opposition_pct: 30,
-      min_votes_per_group: 3
+      min_votes_per_group: 3,
+      voting_goal: 1000
     }
   });
 
@@ -130,7 +132,8 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
         auto_approve_statements: data.auto_approve_statements,
         min_support_pct: data.min_support_pct,
         max_opposition_pct: data.max_opposition_pct,
-        min_votes_per_group: data.min_votes_per_group
+        min_votes_per_group: data.min_votes_per_group,
+        voting_goal: data.voting_goal
       });
       
       toast({
@@ -399,6 +402,30 @@ export const NewPollForm: React.FC<NewPollFormProps> = ({ onSuccess, onCancel })
                             onChange={(e) => field.onChange(parseInt(e.target.value))}
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="voting_goal"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="hebrew-text">מטרת הצבעות</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            min="1"
+                            max="100000"
+                            placeholder="1000"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1000)}
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground hebrew-text">
+                          מספר ההצבעות שהקהילה מתבקשת להשיג
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}

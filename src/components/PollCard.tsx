@@ -4,11 +4,12 @@ import { Poll } from '@/types/poll';
 import { CountdownTimer } from './CountdownTimer';
 import { VotingProgressBadge } from './VotingProgressBadge';
 import { useVotingProgress } from '@/hooks/useVotingProgress';
+import { calculateVotingProgress } from '@/utils/votingProgress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Users, Target, Star, Gamepad2, Trophy, Zap, Eye, Clock } from 'lucide-react';
+import { Users, Target, Star, Gamepad2, Trophy, Zap, Eye, Clock, TrendingUp } from 'lucide-react';
 
 interface PollCardProps {
   poll: Poll;
@@ -30,6 +31,9 @@ export const PollCard: React.FC<PollCardProps> = ({
   
   // Calculate voting progress
   const votingProgress = useVotingProgress(poll, statements, userVotes);
+  
+  // Calculate voting goal progress
+  const votingGoalProgress = calculateVotingProgress(poll.total_votes, poll.voting_goal || 1000);
   
   const handleAction = () => {
     onJoinPoll(poll.slug || poll.poll_id);
@@ -148,6 +152,35 @@ export const PollCard: React.FC<PollCardProps> = ({
         <div className="space-y-5">
           {/* Progress Section */}
           <div className="space-y-3">
+            {/* Voting Goal Progress */}
+            <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+              <div className="flex justify-between items-center text-sm mb-2">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-blue-600" />
+                  <span className="font-semibold text-blue-800">
+                    {votingGoalProgress.displayText}
+                  </span>
+                </div>
+                {votingGoalProgress.isGoalReached && (
+                  <div className="flex items-center gap-1 text-green-600 text-xs font-bold">
+                    <Star className="h-3 w-3 fill-current" />
+                    יעד הושג!
+                  </div>
+                )}
+              </div>
+              <div className="relative">
+                <Progress 
+                  value={votingGoalProgress.percentage} 
+                  className="h-2 rounded-full bg-blue-100"
+                />
+                <div 
+                  className={`absolute top-0 left-0 h-2 ${votingGoalProgress.isGoalReached ? 'bg-green-500' : 'bg-blue-500'} rounded-full transition-all duration-300`}
+                  style={{ width: `${Math.min(votingGoalProgress.percentage, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Consensus Progress */}
             <div className="flex justify-between items-center text-sm">
               <div className="flex items-center gap-2">
                 <Target className="h-4 w-4 text-[#66c8ca]" />
