@@ -105,53 +105,38 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
 
   if (variant === 'completed') {
     return (
-      <Card className="w-full max-w-[320px] h-[280px] hebrew-text hover:shadow-lg transition-shadow border-[#66c8ca]/30">
+      <Card className="w-full max-w-[320px] h-[200px] hebrew-text hover:shadow-lg transition-shadow border-[#66c8ca]/30">
         <CardContent className="p-3 h-full flex flex-col justify-between">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="text-lg font-bold text-right leading-tight flex-1 line-clamp-2">
-              {poll.title}
-            </h3>
-            {consensusAchieved && (
-              <Trophy className="h-5 w-5 text-orange-500 mr-2 flex-shrink-0" />
-            )}
-          </div>
+          <h3 className="text-lg font-bold text-right leading-tight line-clamp-2 mb-2">
+            {poll.title}
+          </h3>
           
           <Badge 
             variant="secondary" 
-            className="self-end mb-2 bg-[#66c8ca]/20 text-[#66c8ca] border border-[#66c8ca]/30 text-sm"
+            className="self-end mb-3 bg-[#66c8ca]/20 text-[#66c8ca] border border-[#66c8ca]/30 text-sm"
           >
             {getCategoryEmoji(poll.category)} {poll.category || 'אתגר כללי'}
           </Badge>
           
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <div className="bg-gray-50 p-2 rounded-lg text-center">
-              <Users className="h-4 w-4 mx-auto mb-1 text-[#1a305b]" />
-              <div className="text-sm font-bold">{poll.total_votes}</div>
-              <div className="text-xs text-gray-600">הצבעות</div>
-            </div>
-            <div className="bg-gray-50 p-2 rounded-lg text-center">
-              <FileText className="h-4 w-4 mx-auto mb-1 text-[#ec0081]" />
-              <div className="text-sm font-bold">{poll.total_statements}</div>
-              <div className="text-xs text-gray-600">היגדים</div>
-            </div>
-          </div>
-          
-          <div className="mb-2">
-            <div className="flex justify-between items-center text-sm mb-1">
-              <span className="flex items-center gap-1">
-                <Target className="h-4 w-4" />
-                {poll.current_consensus_points}/{poll.min_consensus_points_to_win}
+          {/* Voting Goal Progress */}
+          <div className="mb-3">
+            <div className="flex justify-between items-center text-xs mb-1">
+              <span className={`flex items-center gap-1 ${votingGoalProgress.isGoalReached ? 'text-green-600' : 'text-gray-600'}`}>
+                {votingGoalProgress.isGoalReached ? (
+                  <Star className="h-3 w-3" />
+                ) : (
+                  <TrendingUp className="h-3 w-3" />
+                )}
+                {votingGoalProgress.displayText}
               </span>
-              <span className="text-gray-600">נקודות הסכמה</span>
             </div>
             <Progress 
-              value={Math.min(consensusProgress, 100)} 
-              className="h-2 bg-gray-200"
+              value={votingGoalProgress.percentage} 
+              className={`h-2 ${votingGoalProgress.isGoalReached ? 'bg-green-100' : 'bg-gray-200'}`}
             />
-            {consensusAchieved && (
-              <div className="text-xs text-orange-600 font-bold mt-1 flex items-center gap-1">
-                <Trophy className="h-3 w-3" />
-                הקהילה זכתה במשחק!
+            {votingGoalProgress.isGoalReached && (
+              <div className="text-xs text-green-600 font-bold mt-1 flex items-center gap-1">
+                🎉 יעד ההצבעות הושג!
               </div>
             )}
           </div>
@@ -170,7 +155,7 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
 
   // Active Poll
   return (
-    <Card className="w-full max-w-[320px] h-[260px] hebrew-text hover:shadow-xl transition-all duration-300 hover:scale-105 border-[#ec0081]/30">
+    <Card className="w-full max-w-[320px] h-[200px] hebrew-text hover:shadow-xl transition-all duration-300 hover:scale-105 border-[#ec0081]/30">
       <CardContent className="p-3 h-full flex flex-col justify-between relative">
         {/* Voting Progress Badge - Top Right */}
         <div className="absolute top-3 right-3 z-10">
@@ -196,12 +181,12 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
         
         <Badge 
           variant="secondary" 
-          className="self-end mb-2 bg-[#66c8ca]/20 text-[#66c8ca] border border-[#66c8ca]/30 text-sm"
+          className="self-end mb-3 bg-[#66c8ca]/20 text-[#66c8ca] border border-[#66c8ca]/30 text-sm"
         >
           {getCategoryEmoji(poll.category)} {poll.category || 'אתגר כללי'}
         </Badge>
         
-        <div className="flex items-center justify-end gap-2 mb-2">
+        <div className="flex items-center justify-end gap-2 mb-3">
           <CountdownTimer 
             endTime={endTime} 
             className="text-sm font-semibold text-[#1a305b]" 
@@ -210,7 +195,7 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
         </div>
 
         {/* Voting Goal Progress */}
-        <div className="mb-2">
+        <div className="mb-3">
           <div className="flex justify-between items-center text-xs mb-1">
             <span className={`flex items-center gap-1 ${votingGoalProgress.isGoalReached ? 'text-green-600' : 'text-gray-600'}`}>
               {votingGoalProgress.isGoalReached ? (
@@ -226,21 +211,8 @@ export const PollCardNew: React.FC<PollCardNewProps> = ({
             className={`h-1.5 ${votingGoalProgress.isGoalReached ? 'bg-green-100' : 'bg-gray-200'}`}
           />
           {votingGoalProgress.isGoalReached && (
-            <div className="text-xs text-green-600 font-bold mt-1">יעד ההצבעות הושג!</div>
+            <div className="text-xs text-green-600 font-bold mt-1">🎯 יעד ההצבעות הושג!</div>
           )}
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-2 rounded-lg text-center">
-            <Users className="h-4 w-4 mx-auto mb-1 text-[#1a305b]" />
-            <div className="text-sm font-bold">{poll.total_votes}</div>
-            <div className="text-xs text-gray-600">הצבעות</div>
-          </div>
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-2 rounded-lg text-center">
-            <FileText className="h-4 w-4 mx-auto mb-1 text-[#ec0081]" />
-            <div className="text-sm font-bold">{poll.total_statements}</div>
-            <div className="text-xs text-gray-600">היגדים</div>
-          </div>
         </div>
         
         <Button 
