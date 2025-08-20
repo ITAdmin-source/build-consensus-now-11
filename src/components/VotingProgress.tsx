@@ -67,7 +67,11 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
                 {userVoteCount}/{totalStatements}
               </Badge>
             </div>
-            <Progress value={personalProgress} className="h-3" />
+            <Progress 
+              value={personalProgress} 
+              threshold={totalStatements > 0 ? (minVotesToEnd / totalStatements) * 100 : 0}
+              className="h-3" 
+            />
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground hebrew-text">
                 {remainingStatements > 0 
