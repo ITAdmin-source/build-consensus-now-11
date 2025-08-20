@@ -1,13 +1,12 @@
 import * as React from "react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
-
 import { cn } from "@/lib/utils"
 
 interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {
   threshold?: number;
 }
 
-const Progress = React.forwardRef<
+const Progress = React.forwardRef
   React.ElementRef<typeof ProgressPrimitive.Root>,
   ProgressProps
 >(({ className, value, threshold, ...props }, ref) => (
@@ -29,11 +28,12 @@ const Progress = React.forwardRef<
         style={{ right: `${100 - threshold}%` }}
         title="מינימום נדרש לסיום"
       >
-        <div className="w-2 h-2 bg-amber-500 rounded-full -mt-1 shadow-sm" />
+        <div className="w-1.5 h-1.5 bg-amber-500 rounded-full shadow-sm" />
       </div>
     )}
   </ProgressPrimitive.Root>
 ))
+
 Progress.displayName = ProgressPrimitive.Root.displayName
 
 export { Progress }
