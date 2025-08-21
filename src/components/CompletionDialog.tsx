@@ -26,7 +26,7 @@ export const CompletionDialog: React.FC<CompletionDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="sm:max-w-md text-center"
+        className="sm:max-w-md text-center [&>button]:hidden"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
