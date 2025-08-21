@@ -8,6 +8,7 @@ import { Poll } from '@/types/poll';
 import { CheckCircle, Activity } from 'lucide-react';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 import { CompletionDialog } from './CompletionDialog';
+import { MotivationDialog } from './MotivationDialog';
 import { EarlyCompletionConfirmDialog } from './EarlyCompletionConfirmDialog';
 import { PersonalInsightsModal } from './PersonalInsightsModal';
 import { usePersonalInsights } from '@/hooks/usePersonalInsights';
@@ -37,6 +38,7 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
   const { user } = useAuth();
   const personalProgress = (userVoteCount / totalStatements) * 100;
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [showMotivationDialog, setShowMotivationDialog] = useState(false);
   const [showEarlyCompletionConfirm, setShowEarlyCompletionConfirm] = useState(false);
   const [showInsightsModal, setShowInsightsModal] = useState(false);
   
@@ -44,6 +46,7 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
 
   const minVotesToEnd = poll.min_statements_voted_to_end || 5;
   const canEndNow = userVoteCount >= minVotesToEnd || remainingStatements === 0;
+  const isFullCompletion = remainingStatements === 0;
 
   const handlePersonalInsights = async () => {
     setShowInsightsModal(true);
@@ -66,6 +69,15 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
 
   const handleEarlyCompletionConfirm = () => {
     setShowCompletionDialog(true);
+  };
+
+  const handleNext = () => {
+    setShowMotivationDialog(true);
+  };
+
+  const handleShare = () => {
+    // Placeholder for share functionality
+    console.log('Share functionality to be implemented');
   };
 
   // Auto-show completion dialog when triggered from parent
@@ -148,6 +160,18 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
         onNavigateToResults={onNavigateToResults || (() => {})}
         onNavigateToHome={onNavigateToHome || (() => {})}
         onPersonalInsights={handlePersonalInsights}
+        onNext={handleNext}
+        isFullCompletion={isFullCompletion}
+        isAuthenticated={!!user}
+        pollSlug={poll.slug}
+      />
+
+      <MotivationDialog
+        open={showMotivationDialog}
+        onOpenChange={setShowMotivationDialog}
+        onShare={handleShare}
+        onNavigateToResults={onNavigateToResults || (() => {})}
+        onNavigateToHome={onNavigateToHome || (() => {})}
       />
 
       <PersonalInsightsModal

@@ -30,8 +30,19 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+  --radius: 0.5rem;
+}
+
+@keyframes confetti {
+  0% {
+    transform: translateY(-10vh) translateX(-50%) rotate(0deg);
+    opacity: 1;
   }
+  100% {
+    transform: translateY(100vh) translateX(calc(-50% + 200px * (var(--random, 0) - 0.5))) rotate(720deg);
+    opacity: 0;
+  }
+}
 
   .dark {
     --background: 222.2 84% 4.9%;
