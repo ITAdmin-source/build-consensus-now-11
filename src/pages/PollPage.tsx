@@ -249,6 +249,7 @@ const PollPage = () => {
       totalVotes={poll.total_votes || 0}
       groups={groups}
       isLive={isLive}
+      isDataLoading={loading}
     />
   );
 };

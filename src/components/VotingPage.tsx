@@ -24,6 +24,7 @@ interface VotingPageProps {
   totalVotes?: number;
   groups?: Group[];
   isLive?: boolean;
+  isDataLoading?: boolean;
 }
 
 export const VotingPage: React.FC<VotingPageProps> = ({
@@ -42,7 +43,8 @@ export const VotingPage: React.FC<VotingPageProps> = ({
   consensusPointsCount = 0,
   totalVotes = 0,
   groups = [],
-  isLive = false
+  isLive = false,
+  isDataLoading = false
 }) => {
   const [showWelcome, setShowWelcome] = useState(false);
 
@@ -90,6 +92,7 @@ export const VotingPage: React.FC<VotingPageProps> = ({
             onViewResults={onViewResults}
             onSubmitStatement={onSubmitStatement}
             isVoting={isVoting}
+            isDataLoading={isDataLoading}
           />
         </div>
       </div>

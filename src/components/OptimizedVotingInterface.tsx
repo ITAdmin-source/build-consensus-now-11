@@ -24,6 +24,7 @@ interface OptimizedVotingInterfaceProps {
   onViewResults: () => void;
   onSubmitStatement?: (content: string, contentType: string) => void;
   isVoting?: boolean;
+  isDataLoading?: boolean;
 }
 
 export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> = React.memo(({
@@ -36,7 +37,8 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
   onVote,
   onViewResults,
   onSubmitStatement,
-  isVoting = false
+  isVoting = false,
+  isDataLoading = false
 }) => {
   const { user } = useAuth();
   const { createAuthUrl } = useReturnUrl();
@@ -90,7 +92,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
   }, [poll.allow_user_statements, user, onSubmitStatement, poll, createAuthUrl]);
 
   // Determine if completion dialog should be shown
-  const shouldShowCompletion = !statement;
+  const shouldShowCompletion = !statement && !isDataLoading && totalStatements > 0;
 
   return (
     <div className="space-y-8">
