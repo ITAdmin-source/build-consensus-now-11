@@ -25,7 +25,11 @@ export const CompletionDialog: React.FC<CompletionDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md text-center">
+      <DialogContent 
+        className="sm:max-w-md text-center"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader className="space-y-4">
           <div className="flex justify-center">
             <div className="bg-gradient-to-r from-green-100 to-blue-100 p-4 rounded-full">
