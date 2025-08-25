@@ -111,11 +111,6 @@ export const MotivationDialog: React.FC<MotivationDialogProps> = ({
 
           {/* Enhanced Motivation Text */}
           <div className="text-center space-y-4 px-4">
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200/30 rounded-2xl p-4">
-              <p className="text-gray-700 hebrew-text text-sm leading-relaxed font-medium">
-                ככל שיותר אנשים ישתתפו בסקר, התוצאות יהיו מדויקות ומייצגות יותר.
-              </p>
-            </div>
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/30 rounded-2xl p-4">
               <p className="font-semibold text-purple-700 hebrew-text text-sm leading-relaxed">
                 שתף את הסקר עם חברים ובני משפחה וקבל תמונה מלאה יותר של דעת הקהל
