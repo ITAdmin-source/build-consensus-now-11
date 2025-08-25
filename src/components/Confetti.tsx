@@ -21,7 +21,7 @@ export const Confetti: React.FC<ConfettiProps> = ({ show, duration = 3000 }) => 
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-[60] overflow-hidden">
       {Array.from({ length: 50 }).map((_, i) => (
         <div
           key={i}
