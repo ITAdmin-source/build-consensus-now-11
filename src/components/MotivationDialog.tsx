@@ -37,42 +37,44 @@ export const MotivationDialog: React.FC<MotivationDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="sm:max-w-lg text-center [&>button]:hidden"
+        className="sm:max-w-md text-center [&>button]:hidden max-h-[90vh] overflow-y-auto"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogHeader className="space-y-6">
+        <DialogHeader className="space-y-4">
           <div className="flex justify-center">
-            <div className="bg-gradient-primary p-4 rounded-full">
-              <Users className="h-12 w-12 text-white" />
+            <div className="bg-gradient-primary p-3 rounded-full">
+              <Users className="h-10 w-10 text-white" />
             </div>
           </div>
           
-          <DialogTitle className="text-xl font-bold hebrew-text">
+          <DialogTitle className="text-lg font-bold hebrew-text">
             עזור לנו לקבל תוצאות מדויקות יותר
           </DialogTitle>
+        </DialogHeader>
 
+        <div className="space-y-4 mt-4">
           {/* Countdown Timer Section */}
-          <div className="bg-card border rounded-lg p-4 space-y-3">
+          <div className="bg-card border rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-center gap-2 text-muted-foreground">
               <Clock className="h-4 w-4" />
               <span className="text-sm hebrew-text">זמן שנותר לסיום הסקר</span>
             </div>
             <CountdownTimer 
               endTime={poll.round?.end_time || ''} 
-              className="text-lg font-bold justify-center"
+              className="text-base font-bold justify-center"
               showIcon={false}
             />
           </div>
 
           {/* Progress Section */}
-          <div className="bg-card border rounded-lg p-4 space-y-3">
+          <div className="bg-card border rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-center gap-2 text-muted-foreground">
               <TrendingUp className="h-4 w-4" />
               <span className="text-sm hebrew-text">התקדמות השתתפות כללית</span>
             </div>
             <div className="space-y-2">
-              <Progress value={votingProgress} className="h-3" />
+              <Progress value={votingProgress} className="h-2" />
               <div className="flex justify-between text-sm text-muted-foreground hebrew-text">
                 <span>{poll.total_votes} הצבעות</span>
                 <span>{Math.round(votingProgress)}% מהיעד</span>
@@ -80,17 +82,19 @@ export const MotivationDialog: React.FC<MotivationDialogProps> = ({
             </div>
           </div>
 
-          <div className="text-center space-y-3">
+          {/* Motivation Text */}
+          <div className="text-center space-y-2 px-2">
             <p className="text-muted-foreground hebrew-text text-sm">
               ככל שיותר אנשים ישתתפו בסקר, התוצאות יהיו מדויקות ומייצגות יותר.
             </p>
-            <p className="font-medium text-primary hebrew-text">
+            <p className="font-medium text-primary hebrew-text text-sm">
               שתף את הסקר עם חברים ובני משפחה וקבל תמונה מלאה יותר של דעת הקהל
             </p>
           </div>
-        </DialogHeader>
+        </div>
 
-        <div className="space-y-3 mt-6">
+        {/* Action Buttons */}
+        <div className="space-y-2 mt-6 pt-4 border-t">
           <Button
             onClick={() => {
               onShare();
