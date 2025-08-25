@@ -156,6 +156,7 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
         onShare={handleShare}
         onNavigateToResults={onNavigateToResults || (() => {})}
         onNavigateToHome={onNavigateToHome || (() => {})}
+        poll={poll}
       />
 
     </div>
