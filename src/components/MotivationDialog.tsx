@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CountdownTimer } from '@/components/CountdownTimer';
+import { SharePopup } from '@/components/SharePopup';
 import { Share2, BarChart3, Home, Users, Clock, TrendingUp, Target, Zap } from 'lucide-react';
 import type { Poll } from '@/types/poll';
 
@@ -28,6 +29,8 @@ export const MotivationDialog: React.FC<MotivationDialogProps> = ({
   onNavigateToHome,
   poll
 }) => {
+  const [showSharePopup, setShowSharePopup] = React.useState(false);
+  
   const votingProgress = poll.voting_goal && poll.voting_goal > 0 
     ? Math.min((poll.total_votes / poll.voting_goal) * 100, 100)
     : poll.total_participants > 0 
@@ -122,10 +125,7 @@ export const MotivationDialog: React.FC<MotivationDialogProps> = ({
         {/* Enhanced Action Buttons */}
         <div className="space-y-3 mt-8 pt-6 border-t border-gray-200/50">
           <Button
-            onClick={() => {
-              onShare();
-              onOpenChange(false);
-            }}
+            onClick={() => setShowSharePopup(true)}
             className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white hebrew-text font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] border-0"
           >
             <Share2 className="h-5 w-5 ml-2 drop-shadow-sm" />
@@ -157,6 +157,12 @@ export const MotivationDialog: React.FC<MotivationDialogProps> = ({
           </Button>
         </div>
       </DialogContent>
+
+      <SharePopup
+        open={showSharePopup}
+        onOpenChange={setShowSharePopup}
+        poll={poll}
+      />
     </Dialog>
   );
 };
