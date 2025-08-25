@@ -32,31 +32,17 @@ export const SharePopup: React.FC<SharePopupProps> = ({
 ${window.location.href}`;
 
   const handleWhatsAppShare = () => {
-    try {
-      // Detect mobile device
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      // Use appropriate WhatsApp URL
-      const whatsappUrl = isMobile 
-        ? `whatsapp://send?text=${encodeURIComponent(shareText)}`
-        : `https://web.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
-      
-      window.open(whatsappUrl, '_blank');
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        title: "שגיאה בשיתוף",
-        description: "נסה שוב או העתק את הקישור באופן ידני",
-        variant: "destructive",
-      });
-    }
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+    window.open(whatsappUrl, '_blank');
+    onOpenChange(false);
+    toast({
+      title: "שותף ב-WhatsApp",
+      description: "הסקר נשתף בהצלחה ב-WhatsApp",
+    });
   };
 
   const handleMoreOptions = async () => {
     try {
-      // Check if we're in a secure context for clipboard access
-      const isSecureContext = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost';
-      
       // Try Web Share API first (mobile/modern browsers)
       if (navigator.share) {
         await navigator.share({
@@ -69,8 +55,8 @@ ${window.location.href}`;
           title: "שותף בהצלחה",
           description: "הסקר נשתף בהצלחה",
         });
-      } else if (navigator.clipboard && isSecureContext) {
-        // Try clipboard API if available and in secure context
+      } else {
+        // Fallback to clipboard
         await navigator.clipboard.writeText(shareText);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
@@ -78,30 +64,6 @@ ${window.location.href}`;
           title: "הועתק ללוח",
           description: "טקסט השיתוף הועתק ללוח. אפשר להדביק בכל מקום",
         });
-      } else {
-        // Fallback for older browsers - create temporary textarea
-        const textArea = document.createElement('textarea');
-        textArea.value = shareText;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        const success = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
-        if (success) {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-          toast({
-            title: "הועתק ללוח",
-            description: "טקסט השיתוף הועתק ללוח. אפשר להדביק בכל מקום",
-          });
-        } else {
-          throw new Error('Copy command failed');
-        }
       }
     } catch (error) {
       toast({
