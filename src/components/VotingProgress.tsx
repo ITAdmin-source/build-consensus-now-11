@@ -10,8 +10,6 @@ import { UserPoints } from '@/integrations/supabase/userPoints';
 import { CompletionDialog } from './CompletionDialog';
 import { MotivationDialog } from './MotivationDialog';
 import { EarlyCompletionConfirmDialog } from './EarlyCompletionConfirmDialog';
-import { PersonalInsightsModal } from './PersonalInsightsModal';
-import { usePersonalInsights } from '@/hooks/usePersonalInsights';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface VotingProgressProps {
@@ -40,24 +38,11 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [showMotivationDialog, setShowMotivationDialog] = useState(false);
   const [showEarlyCompletionConfirm, setShowEarlyCompletionConfirm] = useState(false);
-  const [showInsightsModal, setShowInsightsModal] = useState(false);
-  
-  const { isLoading, insights, error, generateInsights, clearInsights } = usePersonalInsights();
 
   const minVotesToEnd = poll.min_statements_voted_to_end || 5;
   const canEndNow = userVoteCount >= minVotesToEnd || remainingStatements === 0;
   const isFullCompletion = remainingStatements === 0;
 
-  const handlePersonalInsights = async () => {
-    setShowInsightsModal(true);
-    clearInsights();
-    await generateInsights(poll);
-  };
-
-  const handleRetryInsights = async () => {
-    clearInsights();
-    await generateInsights(poll);
-  };
 
   const handleEndNowClick = () => {
     if (remainingStatements > 0) {
@@ -159,11 +144,10 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
         onOpenChange={setShowCompletionDialog}
         onNavigateToResults={onNavigateToResults || (() => {})}
         onNavigateToHome={onNavigateToHome || (() => {})}
-        onPersonalInsights={handlePersonalInsights}
         onNext={handleNext}
         isFullCompletion={isFullCompletion}
         isAuthenticated={!!user}
-        pollSlug={poll.slug}
+        poll={poll}
       />
 
       <MotivationDialog
@@ -174,14 +158,6 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
         onNavigateToHome={onNavigateToHome || (() => {})}
       />
 
-      <PersonalInsightsModal
-        open={showInsightsModal}
-        onOpenChange={setShowInsightsModal}
-        isLoading={isLoading}
-        insights={insights}
-        error={error}
-        onRetry={handleRetryInsights}
-      />
     </div>
   );
 };
