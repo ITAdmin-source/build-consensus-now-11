@@ -11,7 +11,7 @@ import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/t
 import { UserPoints } from '@/integrations/supabase/userPoints';
 import { ResultsStoryLayout } from '@/components/results/ResultsStoryLayout';
 
-interface ResultsPageProps {
+interface DetailedResultsPageProps {
   poll: Poll;
   statements: Statement[];
   consensusPoints: ConsensusPoint[];
@@ -20,11 +20,12 @@ interface ResultsPageProps {
   userPoints: UserPoints;
   onBackToHome: () => void;
   onNavigateToVoting?: () => void;
+  onBackToSimplified?: () => void;
   isLive?: boolean;
   isPollCompleted?: boolean;
 }
 
-export const ResultsPage: React.FC<ResultsPageProps> = ({
+export const DetailedResultsPage: React.FC<DetailedResultsPageProps> = ({
   poll,
   statements,
   consensusPoints,
@@ -33,6 +34,7 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   userPoints,
   onBackToHome,
   onNavigateToVoting,
+  onBackToSimplified,
   isLive = false,
   isPollCompleted = false
 }) => {
@@ -74,6 +76,17 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
             />
           </div>
           <div className="flex items-center gap-2">
+            {onBackToSimplified && (
+              <Button
+                onClick={onBackToSimplified}
+                variant="outline"
+                size="sm"
+                className="hebrew-text"
+              >
+                <div className="h-4 w-4 ml-2">←</div>
+                חזור לתצוגה פשוטה
+              </Button>
+            )}
             {!isPollCompleted && (
               <Button
                 onClick={handleManualClustering}

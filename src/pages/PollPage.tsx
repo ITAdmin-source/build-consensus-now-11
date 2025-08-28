@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { VotingPage } from '@/components/VotingPage';
-import { ResultsPage } from '@/components/ResultsPage';
+import { SimplifiedResultsPage } from '@/components/SimplifiedResultsPage';
 import { submitVote } from '@/integrations/supabase/votes';
 import { submitUserStatement } from '@/integrations/supabase/statements';
 import { useAuth } from '@/contexts/AuthContext';
@@ -216,7 +216,7 @@ const PollPage = () => {
   // Force results view for completed polls
   if (pollCompleted || currentView === 'results') {
     return (
-      <ResultsPage
+      <SimplifiedResultsPage
         poll={poll}
         statements={statements}
         consensusPoints={consensusPoints}
