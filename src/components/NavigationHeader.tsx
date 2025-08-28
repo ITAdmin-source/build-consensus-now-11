@@ -36,7 +36,7 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({ currentPage,
             </Link>
             
             {/* Poll Title in Center */}
-            {poll && currentPage === 'voting' && (
+            {poll && (currentPage === 'voting' || currentPage === 'results') && (
               <div className="absolute left-1/2 transform -translate-x-1/2">
                 <h1 className="text-lg font-bold hebrew-text text-foreground">
                   {poll.title}
