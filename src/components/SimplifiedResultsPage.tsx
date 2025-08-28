@@ -71,31 +71,31 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         {/* Results Section */}
         <Card className="mb-6">
-          <CardHeader>
-            <h2 className="text-xl font-bold hebrew-text">תוצאות הסקר</h2>
-            {isPollCompleted && consensusPoints.length > 0 && (
-              <p className="text-sm text-muted-foreground hebrew-text">
-                {consensusPoints.length} נקודות קונצנזוס זוהו
-              </p>
-            )}
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold hebrew-text">תוצאות הסקר</h2>
+              {isPollCompleted && consensusPoints.length > 0 && (
+                <p className="text-sm text-muted-foreground hebrew-text">
+                  {consensusPoints.length} נקודות קונצנזוס זוהו
+                </p>
+              )}
+            </div>
+            <Button
+              onClick={() => setShowDetailedResults(true)}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 hebrew-text"
+            >
+              <Eye className="h-4 w-4" />
+              צפה בתוצאות מפורטות
+            </Button>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             {/* Statements List */}
             <SimplifiedStatementsTable
               statements={statements}
               consensusPoints={consensusPoints}
             />
-            
-            {/* View Full Results Button */}
-            <div className="flex justify-center pt-4 border-t">
-              <Button
-                onClick={() => setShowDetailedResults(true)}
-                className="flex items-center gap-2 hebrew-text"
-              >
-                <Eye className="h-4 w-4" />
-                צפה בתוצאות מפורטות
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
