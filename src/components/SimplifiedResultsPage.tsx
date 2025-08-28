@@ -96,7 +96,7 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
             {!isPollCompleted && poll.time_left > 0 && (
               <div className="flex justify-center">
                 <CountdownTimer 
-                  endTime={new Date(Date.now() + poll.time_left * 1000).toISOString()} 
+                  endTime={new Date(Date.now() + poll.time_left).toISOString()} 
                   className="text-lg font-medium"
                 />
               </div>
