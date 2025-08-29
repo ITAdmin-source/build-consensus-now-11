@@ -1,22 +1,22 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { NavigationHeader } from '@/components/NavigationHeader';
-import { AccountHeader } from '@/components/account/AccountHeader';
-import { AccountTabs } from '@/components/account/AccountTabs';
-import { ProfileTab } from '@/components/account/ProfileTab';
-import { ActivityTab } from '@/components/account/ActivityTab';
-import { InsightsTab } from '@/components/account/InsightsTab';
-import { SettingsTab } from '@/components/account/SettingsTab';
+import { ProfileHeader } from '@/components/profile/ProfileHeader';
+import { ProfileStats } from '@/components/profile/ProfileStats';
+import { PollParticipationGrid } from '@/components/profile/PollParticipationGrid';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useUserPoints } from '@/hooks/useUserPoints';
+import { useUserParticipation } from '@/hooks/useUserParticipation';
+import { useUserInsights } from '@/hooks/useUserInsights';
 import { Card, CardContent } from '@/components/ui/card';
 
 export const Account: React.FC = () => {
   const { user } = useAuth();
   const { profile } = useUserProfile();
   const { points } = useUserPoints();
-  const [activeTab, setActiveTab] = useState('profile');
+  const { participation, loading: participationLoading, error: participationError } = useUserParticipation();
+  const { insights, loading: insightsLoading } = useUserInsights();
 
   if (!user) {
     return (
@@ -33,43 +33,33 @@ export const Account: React.FC = () => {
     );
   }
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'profile':
-        return <ProfileTab user={user} profile={profile} points={points} />;
-      case 'activity':
-        return <ActivityTab />;
-      case 'insights':
-        return <InsightsTab />;
-      case 'settings':
-        return <SettingsTab user={user} profile={profile} />;
-      default:
-        return <ProfileTab user={user} profile={profile} points={points} />;
-    }
-  };
+  const loading = participationLoading || insightsLoading;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50" dir="rtl">
       <NavigationHeader currentPage="home" userPoints={points} />
       
       <div className="container mx-auto px-4 pt-8 max-w-6xl">
-        {/* Header Section */}
-        <AccountHeader 
+        {/* Profile Header */}
+        <ProfileHeader 
           user={user} 
           profile={profile} 
           points={points} 
         />
         
-        {/* Tab Navigation & Content */}
-        <div className="mt-8">
-          <AccountTabs 
-            activeTab={activeTab} 
-            onTabChange={setActiveTab} 
+        {/* Stats and Participation Grid */}
+        <div className="mt-8 space-y-8">
+          <ProfileStats 
+            points={points} 
+            participation={participation} 
           />
           
-          <div className="mt-6">
-            {renderTabContent()}
-          </div>
+          <PollParticipationGrid 
+            participation={participation}
+            insights={insights}
+            loading={loading}
+            error={participationError}
+          />
         </div>
       </div>
     </div>

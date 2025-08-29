@@ -8,6 +8,8 @@ export interface UserPollParticipation {
   vote_count: number;
   first_vote_at: string;
   last_vote_at: string;
+  total_statements: number;
+  is_completed: boolean;
 }
 
 export async function getUserPollParticipation(): Promise<UserPollParticipation[]> {

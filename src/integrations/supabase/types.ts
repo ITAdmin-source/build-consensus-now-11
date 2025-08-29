@@ -2024,15 +2024,28 @@ export type Database = {
           poll_title: string
         }[]
       }
+      get_user_leaderboard: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          display_name: string
+          rank_position: number
+          total_points: number
+          user_id: string
+          votes_count: number
+        }[]
+      }
       get_user_poll_participation: {
         Args: { user_id_param: string }
         Returns: {
           first_vote_at: string
+          is_completed: boolean
           last_vote_at: string
           poll_id: string
           poll_slug: string
           poll_status: Database["public"]["Enums"]["polis_poll_status"]
           poll_title: string
+          total_statements: number
           vote_count: number
         }[]
       }
