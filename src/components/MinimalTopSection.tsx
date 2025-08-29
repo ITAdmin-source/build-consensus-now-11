@@ -20,8 +20,7 @@ export const MinimalTopSection: React.FC<MinimalTopSectionProps> = ({
   const progress = calculateVotingProgress(poll.total_votes || 0, poll.voting_goal || 1000);
 
   return (
-    <div className="bg-white border-b border-border">
-      <div className="container mx-auto px-4 py-4">
+    <div>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Progress Section */}
           <div className="flex items-center gap-4 flex-1">
@@ -67,7 +66,6 @@ export const MinimalTopSection: React.FC<MinimalTopSectionProps> = ({
             <span className="hidden sm:inline">שתף</span>
           </Button>
         </div>
-      </div>
     </div>
   );
 };
