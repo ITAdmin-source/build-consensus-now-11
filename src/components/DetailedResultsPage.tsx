@@ -1,11 +1,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { NavigationHeader } from '@/components/NavigationHeader';
-import { PollHeader } from '@/components/PollHeader';
-import { LiveIndicator } from '@/components/LiveIndicator';
 import { CompletedPollBanner } from '@/components/CompletedPollBanner';
 import { useSmartClustering } from '@/hooks/useSmartClustering';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { RefreshCw } from 'lucide-react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 import { UserPoints } from '@/integrations/supabase/userPoints';
@@ -19,9 +18,7 @@ interface DetailedResultsPageProps {
   groupStats: GroupStatementStats[];
   userPoints: UserPoints;
   onBackToHome: () => void;
-  onNavigateToVoting?: () => void;
   onBackToSimplified?: () => void;
-  isLive?: boolean;
   isPollCompleted?: boolean;
 }
 
@@ -33,9 +30,7 @@ export const DetailedResultsPage: React.FC<DetailedResultsPageProps> = ({
   groupStats,
   userPoints,
   onBackToHome,
-  onNavigateToVoting,
   onBackToSimplified,
-  isLive = false,
   isPollCompleted = false
 }) => {
   const { manualTrigger, isRunning, isChecking } = useSmartClustering({
@@ -56,7 +51,7 @@ export const DetailedResultsPage: React.FC<DetailedResultsPageProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <NavigationHeader currentPage="results" userPoints={userPoints} />
+      <NavigationHeader currentPage="results" userPoints={userPoints} poll={poll} />
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Completed Poll Banner */}
@@ -66,42 +61,38 @@ export const DetailedResultsPage: React.FC<DetailedResultsPageProps> = ({
           </div>
         )}
 
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <PollHeader
-              poll={poll}
-              currentPage="results"
-              onNavigateToVoting={onNavigateToVoting}
-              isPollCompleted={isPollCompleted}
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            {onBackToSimplified && (
-              <Button
-                onClick={onBackToSimplified}
-                variant="outline"
-                size="sm"
-                className="hebrew-text"
-              >
-                <div className="h-4 w-4 ml-2">←</div>
-                חזור לתצוגה פשוטה
-              </Button>
-            )}
-            {!isPollCompleted && (
-              <Button
-                onClick={handleManualClustering}
-                disabled={isRunning || isChecking}
-                variant="outline"
-                size="sm"
-                className="hebrew-text"
-              >
-                <RefreshCw className={`h-4 w-4 ml-2 ${(isRunning || isChecking) ? 'animate-spin' : ''}`} />
-                {isRunning ? 'מעבד...' : isChecking ? 'בודק...' : 'רענן קבצה'}
-              </Button>
-            )}
-            <LiveIndicator isLive={!isPollCompleted && isLive} className="mr-2" />
-          </div>
-        </div>
+        {/* Action Buttons Section */}
+        <Card className="mb-6 bg-slate-50/50 border-slate-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                {onBackToSimplified && (
+                  <Button
+                    onClick={onBackToSimplified}
+                    variant="outline"
+                    size="sm"
+                    className="hebrew-text"
+                  >
+                    <div className="h-4 w-4 ml-2">←</div>
+                    חזור לתצוגה פשוטה
+                  </Button>
+                )}
+                {!isPollCompleted && (
+                  <Button
+                    onClick={handleManualClustering}
+                    disabled={isRunning || isChecking}
+                    variant="outline"
+                    size="sm"
+                    className="hebrew-text"
+                  >
+                    <RefreshCw className={`h-4 w-4 ml-2 ${(isRunning || isChecking) ? 'animate-spin' : ''}`} />
+                    {isRunning ? 'מעבד...' : isChecking ? 'בודק...' : 'רענן קבצה'}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         
         {/* New Story Layout */}
         <ResultsStoryLayout

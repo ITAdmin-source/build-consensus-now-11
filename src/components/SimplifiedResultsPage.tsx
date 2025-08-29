@@ -41,19 +41,17 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
   // If detailed results are requested, render the detailed page
   if (showDetailedResults) {
     return (
-      <DetailedResultsPage
-        poll={poll}
-        statements={statements}
-        consensusPoints={consensusPoints}
-        groups={groups}
-        groupStats={groupStats}
-        userPoints={userPoints}
-        onBackToHome={onBackToHome}
-        onNavigateToVoting={onNavigateToVoting}
-        onBackToSimplified={() => setShowDetailedResults(false)}
-        isLive={isLive}
-        isPollCompleted={isPollCompleted}
-      />
+        <DetailedResultsPage
+          poll={poll}
+          statements={statements}
+          consensusPoints={consensusPoints}
+          groups={groups}
+          groupStats={groupStats}
+          userPoints={userPoints}
+          onBackToHome={onBackToHome}
+          onBackToSimplified={() => setShowDetailedResults(false)}
+          isPollCompleted={isPollCompleted}
+        />
     );
   }
 
