@@ -33,11 +33,11 @@ export const PollDetailsModal: React.FC<PollDetailsModalProps> = ({
   const getVoteIcon = (voteValue: string) => {
     switch (voteValue) {
       case 'support':
-        return <Heart className="h-4 w-4 text-green-600" />;
+        return <Heart className="h-3 w-3 text-green-600" />;
       case 'oppose':
-        return <X className="h-4 w-4 text-red-600" />;
+        return <X className="h-3 w-3 text-red-600" />;
       case 'unsure':
-        return <HelpCircle className="h-4 w-4 text-yellow-600" />;
+        return <HelpCircle className="h-3 w-3 text-yellow-600" />;
       default:
         return null;
     }
@@ -90,12 +90,12 @@ export const PollDetailsModal: React.FC<PollDetailsModalProps> = ({
               </h3>
               
               {loading && (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 border rounded-lg">
-                      <Skeleton className="h-4 w-4" />
-                      <Skeleton className="h-4 flex-1" />
-                      <Skeleton className="h-6 w-16" />
+                    <div key={i} className="flex items-center gap-2 py-1">
+                      <Skeleton className="h-3 w-3" />
+                      <Skeleton className="h-3 flex-1" />
+                      <Skeleton className="h-4 w-12" />
                     </div>
                   ))}
                 </div>
@@ -108,14 +108,14 @@ export const PollDetailsModal: React.FC<PollDetailsModalProps> = ({
               )}
               
               {!loading && !error && votes.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {votes.map((vote) => (
-                    <div key={vote.statement_id} className="flex items-start gap-3 p-3 border rounded-lg">
+                    <div key={vote.statement_id} className="flex items-center gap-2 py-1">
                       {getVoteIcon(vote.vote_value)}
-                      <p className="hebrew-text text-sm flex-1 leading-relaxed">
+                      <p className="hebrew-text text-xs flex-1 leading-tight truncate">
                         {vote.statement_text}
                       </p>
-                      <Badge className={`${getVoteColor(vote.vote_value)} text-xs shrink-0`}>
+                      <Badge className={`${getVoteColor(vote.vote_value)} text-xs shrink-0 px-1.5 py-0`}>
                         {getVoteText(vote.vote_value)}
                       </Badge>
                     </div>
