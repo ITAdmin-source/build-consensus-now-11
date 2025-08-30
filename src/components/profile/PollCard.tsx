@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Vote, Eye, CheckCircle } from 'lucide-react';
 import { UserPollParticipation } from '@/integrations/supabase/userParticipation';
 import { UserInsight } from '@/integrations/supabase/userInsights';
 import { extractTextExcerpt } from '@/utils/textExcerpt';
+import { PollDetailsModal } from './PollDetailsModal';
 
 interface PollCardProps {
   poll: UserPollParticipation;
@@ -14,6 +15,8 @@ interface PollCardProps {
 }
 
 export const PollCard: React.FC<PollCardProps> = ({ poll, insight }) => {
+  const [showModal, setShowModal] = useState(false);
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -42,9 +45,22 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, insight }) => {
 
   const insightExcerpt = insight ? extractTextExcerpt(insight.insight_content) : null;
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't open modal if clicking on action buttons
+    const target = e.target as Element;
+    if (target.closest('button') || target.closest('a')) {
+      return;
+    }
+    setShowModal(true);
+  };
+
   return (
-    <Card className="h-full hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
+    <>
+      <Card 
+        className="h-full hover:shadow-md transition-shadow cursor-pointer" 
+        onClick={handleCardClick}
+      >
+        <CardContent className="p-4">
         <div className="space-y-3">
           {/* Poll Title and Status */}
           <div className="flex items-start justify-between gap-2">
@@ -103,5 +119,13 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, insight }) => {
         </div>
       </CardContent>
     </Card>
+
+    <PollDetailsModal
+      poll={poll}
+      insight={insight}
+      open={showModal}
+      onClose={() => setShowModal(false)}
+    />
+    </>
   );
 };

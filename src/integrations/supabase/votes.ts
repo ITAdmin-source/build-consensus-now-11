@@ -167,3 +167,42 @@ export const getUserVotes = async (pollId: string) => {
     return acc;
   }, {} as Record<string, string>) || {};
 };
+
+export interface UserVoteWithStatement {
+  statement_text: string;
+  vote_value: 'support' | 'oppose' | 'unsure';
+  statement_id: string;
+}
+
+export const getUserVotesWithStatements = async (pollId: string): Promise<UserVoteWithStatement[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  const sessionId = getOrCreateSessionId();
+
+  let query = supabase
+    .from('polis_votes')
+    .select(`
+      statement_id,
+      vote_value,
+      polis_statements(statement_text)
+    `)
+    .eq('poll_id', pollId);
+
+  if (user) {
+    query = query.eq('user_id', user.id);
+  } else {
+    query = query.eq('session_id', sessionId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching user votes with statements:', error);
+    throw error;
+  }
+
+  return data?.map(vote => ({
+    statement_id: vote.statement_id,
+    statement_text: (vote.polis_statements as any)?.statement_text || '',
+    vote_value: vote.vote_value as 'support' | 'oppose' | 'unsure'
+  })) || [];
+};
