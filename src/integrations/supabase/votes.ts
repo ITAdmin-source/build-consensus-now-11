@@ -183,7 +183,7 @@ export const getUserVotesWithStatements = async (pollId: string): Promise<UserVo
     .select(`
       statement_id,
       vote_value,
-      polis_statements(statement_text)
+      polis_statements(content)
     `)
     .eq('poll_id', pollId);
 
@@ -202,7 +202,7 @@ export const getUserVotesWithStatements = async (pollId: string): Promise<UserVo
 
   return data?.map(vote => ({
     statement_id: vote.statement_id,
-    statement_text: (vote.polis_statements as any)?.statement_text || '',
+    statement_text: (vote.polis_statements as any)?.content || '',
     vote_value: vote.vote_value as 'support' | 'oppose' | 'unsure'
   })) || [];
 };
