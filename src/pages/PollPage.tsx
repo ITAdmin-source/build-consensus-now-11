@@ -19,6 +19,7 @@ const PollPage = () => {
   const { user } = useAuth();
   const [currentView, setCurrentView] = useState<'voting' | 'insights' | 'motivation' | 'results'>('voting');
   const [isVoting, setIsVoting] = useState(false);
+  const [isActiveSession, setIsActiveSession] = useState(false); // Track if user is actively voting
   const [currentTransition, setCurrentTransition] = useState<StatementTransition>({
     current: null,
     next: null,
@@ -61,6 +62,19 @@ const PollPage = () => {
     return poll ? 1 : 0;
   }, [poll?.total_participants, groups]);
 
+  // Smart entry point logic - redirect completed users to results on entry
+  useEffect(() => {
+    if (poll && statements.length > 0 && !isActiveSession) {
+      const userVoteCount = Object.keys(userVotes).length;
+      const totalStatements = statements.length;
+      
+      // If user has completed voting and this is their first load, go to results
+      if (userVoteCount >= totalStatements && currentView === 'voting') {
+        setCurrentView('results');
+      }
+    }
+  }, [poll, statements, userVotes, isActiveSession, currentView]);
+
   // Force results view for completed polls
   useEffect(() => {
     if (pollCompleted && (currentView === 'voting' || currentView === 'insights' || currentView === 'motivation')) {
@@ -68,9 +82,9 @@ const PollPage = () => {
     }
   }, [pollCompleted, currentView]);
 
-  // Automatic completion trigger - navigate to insights when voting is complete
+  // Automatic completion trigger - only for active voting sessions
   useEffect(() => {
-    if (!pollCompleted && currentView === 'voting' && statements.length > 0) {
+    if (!pollCompleted && currentView === 'voting' && statements.length > 0 && isActiveSession) {
       const userVoteCount = Object.keys(userVotes).length;
       const totalStatements = statements.length;
       
@@ -78,7 +92,7 @@ const PollPage = () => {
         setCurrentView('insights');
       }
     }
-  }, [userVotes, statements, currentView, pollCompleted]);
+  }, [userVotes, statements, currentView, pollCompleted, isActiveSession]);
 
   // Enhanced statement manager with routing capabilities
   const statementManager = useMemo(() => {
@@ -131,6 +145,7 @@ const PollPage = () => {
     }
 
     setIsVoting(true);
+    setIsActiveSession(true); // Mark as active session when user starts voting
     
     try {
       await submitVote(statementId, vote as 'support' | 'oppose' | 'unsure');
@@ -272,6 +287,8 @@ const PollPage = () => {
         userPoints={userPoints}
         onBackToHome={handleBackToHome}
         onNavigateToVoting={!pollCompleted && statements.length > 0 ? handleNavigateToVoting : undefined}
+        onNavigateToInsights={Object.keys(userVotes).length >= statements.length ? handleNavigateToInsights : undefined}
+        onNavigateToMotivation={Object.keys(userVotes).length >= statements.length ? handleNavigateToMotivation : undefined}
         isLive={!pollCompleted && isLive}
         isPollCompleted={pollCompleted}
       />

@@ -19,6 +19,8 @@ interface SimplifiedResultsPageProps {
   userPoints: UserPoints;
   onBackToHome: () => void;
   onNavigateToVoting?: () => void;
+  onNavigateToInsights?: () => void;
+  onNavigateToMotivation?: () => void;
   isLive?: boolean;
   isPollCompleted?: boolean;
 }
@@ -32,6 +34,8 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
   userPoints,
   onBackToHome,
   onNavigateToVoting,
+  onNavigateToInsights,
+  onNavigateToMotivation,
   isLive = false,
   isPollCompleted = false
 }) => {
@@ -99,6 +103,37 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
             />
           </CardContent>
         </Card>
+
+        {/* Navigation Options */}
+        {(onNavigateToInsights || onNavigateToMotivation) && (
+          <Card className="mb-6">
+            <CardHeader>
+              <h3 className="text-lg font-semibold hebrew-text">עבור לעמודים נוספים</h3>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3 flex-wrap">
+                {onNavigateToInsights && (
+                  <Button
+                    onClick={onNavigateToInsights}
+                    variant="outline"
+                    className="flex-1 hebrew-text"
+                  >
+                    התובנות שלי
+                  </Button>
+                )}
+                {onNavigateToMotivation && (
+                  <Button
+                    onClick={onNavigateToMotivation}
+                    variant="outline"
+                    className="flex-1 hebrew-text"
+                  >
+                    מניעים למעורבות
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* All Polls Button */}
         <div className="flex justify-center">
