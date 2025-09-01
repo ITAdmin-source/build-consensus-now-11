@@ -3,6 +3,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { VotingPage } from '@/components/VotingPage';
 import { SimplifiedResultsPage } from '@/components/SimplifiedResultsPage';
+import { PersonalInsightsPage } from '@/components/PersonalInsightsPage';
+import { MotivationPage } from '@/components/MotivationPage';
 import { submitVote } from '@/integrations/supabase/votes';
 import { submitUserStatement } from '@/integrations/supabase/statements';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,7 +17,7 @@ const PollPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [currentView, setCurrentView] = useState<'voting' | 'results'>('voting');
+  const [currentView, setCurrentView] = useState<'voting' | 'insights' | 'motivation' | 'results'>('voting');
   const [isVoting, setIsVoting] = useState(false);
   const [currentTransition, setCurrentTransition] = useState<StatementTransition>({
     current: null,
@@ -61,7 +63,7 @@ const PollPage = () => {
 
   // Force results view for completed polls
   useEffect(() => {
-    if (pollCompleted && currentView === 'voting') {
+    if (pollCompleted && (currentView === 'voting' || currentView === 'insights' || currentView === 'motivation')) {
       setCurrentView('results');
     }
   }, [pollCompleted, currentView]);
@@ -184,6 +186,14 @@ const PollPage = () => {
     setCurrentView('voting');
   };
 
+  const handleNavigateToInsights = () => {
+    setCurrentView('insights');
+  };
+
+  const handleNavigateToMotivation = () => {
+    setCurrentView('motivation');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -213,7 +223,32 @@ const PollPage = () => {
     );
   }
 
-  // Force results view for completed polls
+  // Handle different views based on current state
+  if (currentView === 'insights') {
+    const totalStatementsCount = statements.length;
+    const userVoteCount = Object.keys(userVotes).length;
+    const isFullCompletion = userVoteCount >= totalStatementsCount;
+    
+    return (
+      <PersonalInsightsPage
+        poll={poll}
+        isFullCompletion={isFullCompletion}
+        onNavigateToMotivation={handleNavigateToMotivation}
+        onNavigateToHome={handleBackToHome}
+      />
+    );
+  }
+
+  if (currentView === 'motivation') {
+    return (
+      <MotivationPage
+        poll={poll}
+        onNavigateToResults={handleViewResults}
+        onNavigateToHome={handleBackToHome}
+      />
+    );
+  }
+
   if (pollCompleted || currentView === 'results') {
     return (
       <SimplifiedResultsPage
@@ -240,7 +275,7 @@ const PollPage = () => {
       userVoteCount={Object.keys(userVotes).length}
       userPoints={userPoints}
       onVote={handleVote}
-      onViewResults={handleViewResults}
+      onViewResults={handleNavigateToInsights} // Change to go to insights instead of results
       onBackToHome={handleBackToHome}
       onSubmitStatement={handleSubmitStatement}
       isVoting={isVoting}
