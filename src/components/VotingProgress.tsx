@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Poll } from '@/types/poll';
 import { CheckCircle, Activity } from 'lucide-react';
 import { UserPoints } from '@/integrations/supabase/userPoints';
+import { EarlyCompletionConfirmDialog } from './EarlyCompletionConfirmDialog';
 
 interface VotingProgressProps {
   poll: Poll;
@@ -28,8 +29,18 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
   const personalProgress = (userVoteCount / totalStatements) * 100;
   const minVotesToEnd = poll.min_statements_voted_to_end || 5;
   const canEndNow = userVoteCount >= minVotesToEnd || remainingStatements === 0;
+  const [showEarlyCompletionConfirm, setShowEarlyCompletionConfirm] = useState(false);
 
   const handleEndNowClick = () => {
+    if (remainingStatements > 0) {
+      setShowEarlyCompletionConfirm(true);
+    } else {
+      onEndNow?.();
+    }
+  };
+
+  const handleEarlyCompletionConfirm = () => {
+    setShowEarlyCompletionConfirm(false);
     onEndNow?.();
   };
 
@@ -91,6 +102,14 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      <EarlyCompletionConfirmDialog
+        open={showEarlyCompletionConfirm}
+        onOpenChange={setShowEarlyCompletionConfirm}
+        remainingStatements={remainingStatements}
+        onContinueVoting={() => {}} // Just closes the dialog
+        onEndAnyway={handleEarlyCompletionConfirm}
+      />
 
     </div>
   );

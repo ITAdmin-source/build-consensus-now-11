@@ -68,6 +68,18 @@ const PollPage = () => {
     }
   }, [pollCompleted, currentView]);
 
+  // Automatic completion trigger - navigate to insights when voting is complete
+  useEffect(() => {
+    if (!pollCompleted && currentView === 'voting' && statements.length > 0) {
+      const userVoteCount = Object.keys(userVotes).length;
+      const totalStatements = statements.length;
+      
+      if (userVoteCount >= totalStatements) {
+        setCurrentView('insights');
+      }
+    }
+  }, [userVotes, statements, currentView, pollCompleted]);
+
   // Enhanced statement manager with routing capabilities
   const statementManager = useMemo(() => {
     if (statements.length === 0) return null;
