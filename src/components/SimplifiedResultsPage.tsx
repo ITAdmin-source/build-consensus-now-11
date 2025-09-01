@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { NavigationHeader } from '@/components/NavigationHeader';
-import { MinimalTopSection } from '@/components/MinimalTopSection';
 import { SharePopup } from '@/components/SharePopup';
 import { SimplifiedStatementsTable } from '@/components/SimplifiedStatementsTable';
 import { DetailedResultsPage } from '@/components/DetailedResultsPage';
+import { UnifiedLayoutWrapper } from '@/components/UnifiedLayoutWrapper';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Eye, Home } from 'lucide-react';
+import { Eye, Home, Brain, Share2 } from 'lucide-react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 
@@ -45,114 +44,114 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
   // If detailed results are requested, render the detailed page
   if (showDetailedResults) {
     return (
-        <DetailedResultsPage
-          poll={poll}
-          statements={statements}
-          consensusPoints={consensusPoints}
-          groups={groups}
-          groupStats={groupStats}
-          userPoints={userPoints}
-          onBackToHome={onBackToHome}
-          onBackToSimplified={() => setShowDetailedResults(false)}
-          isPollCompleted={isPollCompleted}
-        />
+      <DetailedResultsPage
+        poll={poll}
+        statements={statements}
+        consensusPoints={consensusPoints}
+        groups={groups}
+        groupStats={groupStats}
+        userPoints={userPoints}
+        onBackToHome={onBackToHome}
+        onBackToSimplified={() => setShowDetailedResults(false)}
+        isPollCompleted={isPollCompleted}
+      />
     );
   }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <NavigationHeader currentPage="results" userPoints={userPoints} poll={poll} />
-      
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Progress Section */}
-        <div className="mb-6">
-          <MinimalTopSection 
-            poll={poll}
-            isPollCompleted={isPollCompleted}
-            onShareClick={() => setShowSharePopup(true)}
-          />
-        </div>
-        {/* Results Section */}
-        <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold hebrew-text">תוצאות הסקר</h2>
-              {isPollCompleted && consensusPoints.length > 0 && (
-                <p className="text-sm text-muted-foreground hebrew-text">
-                  {consensusPoints.length} נקודות קונצנזוס זוהו
-                </p>
-              )}
-            </div>
-            <Button
-              onClick={() => setShowDetailedResults(true)}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 hebrew-text"
-            >
-              <Eye className="h-4 w-4" />
-              צפה בתוצאות מפורטות
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {/* Statements List */}
-            <SimplifiedStatementsTable
-              statements={statements}
-              consensusPoints={consensusPoints}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Navigation Options */}
-        {(onNavigateToInsights || onNavigateToMotivation) && (
-          <Card className="mb-6">
-            <CardHeader>
-              <h3 className="text-lg font-semibold hebrew-text">עבור לעמודים נוספים</h3>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-3 flex-wrap">
-                {onNavigateToInsights && (
-                  <Button
-                    onClick={onNavigateToInsights}
-                    variant="outline"
-                    className="flex-1 hebrew-text"
-                  >
-                    התובנות שלי
-                  </Button>
-                )}
-                {onNavigateToMotivation && (
-                  <Button
-                    onClick={onNavigateToMotivation}
-                    variant="outline"
-                    className="flex-1 hebrew-text"
-                  >
-                    מניעים למעורבות
-                  </Button>
+    <>
+      <UnifiedLayoutWrapper
+        poll={poll}
+        userPoints={userPoints}
+        currentState="results"
+        containerWidth="wide" 
+        showTopSection={true}
+        showBreadcrumb={true}
+        isPollCompleted={isPollCompleted}
+        onShareClick={() => setShowSharePopup(true)}
+      >
+          {/* Results Section */}
+          <Card className="mb-6 bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01] rounded-2xl">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold hebrew-text">תוצאות הסקר</h2>
+                {isPollCompleted && consensusPoints.length > 0 && (
+                  <p className="text-sm text-muted-foreground hebrew-text">
+                    {consensusPoints.length} נקודות קונצנזוס זוהו
+                  </p>
                 )}
               </div>
+              <Button
+                onClick={() => setShowDetailedResults(true)}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 hebrew-text border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300"
+              >
+                <Eye className="h-4 w-4" />
+                צפה בתוצאות מפורטות
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <SimplifiedStatementsTable
+                statements={statements}
+                consensusPoints={consensusPoints}
+              />
             </CardContent>
           </Card>
-        )}
 
-        {/* All Polls Button */}
-        <div className="flex justify-center">
-          <Button
-            onClick={onBackToHome}
-            variant="outline"
-            size="lg"
-            className="flex items-center gap-2 hebrew-text"
-          >
-            <Home className="h-4 w-4" />
-            כל הסקרים
-          </Button>
-        </div>
-      </div>
+          {/* Navigation Options */}
+          {(onNavigateToInsights || onNavigateToMotivation) && (
+            <Card className="mb-6 bg-white/60 backdrop-blur-sm border border-gray-100/50 rounded-xl">
+              <CardHeader>
+                <h3 className="text-lg font-semibold hebrew-text">עבור לעמודים נוספים</h3>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {onNavigateToInsights && (
+                    <Button
+                      onClick={onNavigateToInsights}
+                      variant="outline"
+                      size="lg"
+                      className="hebrew-text font-semibold py-4 rounded-xl border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-300 transform hover:scale-[1.02] bg-white/50 backdrop-blur-sm"
+                    >
+                      <Brain className="h-6 w-6 ml-2 text-purple-600" />
+                      התובנות שלי
+                    </Button>
+                  )}
+                  {onNavigateToMotivation && (
+                    <Button
+                      onClick={onNavigateToMotivation}
+                      variant="outline"
+                      size="lg"
+                      className="hebrew-text font-semibold py-4 rounded-xl border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all duration-300 transform hover:scale-[1.02] bg-white/50 backdrop-blur-sm"
+                    >
+                      <Share2 className="h-6 w-6 ml-2 text-green-600" />
+                      מניעים למעורבות
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Share Popup */}
+          {/* All Polls Button */}
+          <div className="flex justify-center">
+            <Button
+              onClick={onBackToHome}
+              variant="ghost"
+              size="lg"
+              className="hebrew-text font-semibold py-4 rounded-xl hover:bg-gray-100/80 transition-all duration-300 transform hover:scale-[1.02] text-gray-600 hover:text-gray-800"
+            >
+              <Home className="h-6 w-6 ml-2" />
+              כל הסקרים
+            </Button>
+          </div>
+      </UnifiedLayoutWrapper>
+
       <SharePopup
         open={showSharePopup}
         onOpenChange={setShowSharePopup}
         poll={poll}
       />
-    </div>
+    </>
   );
 };

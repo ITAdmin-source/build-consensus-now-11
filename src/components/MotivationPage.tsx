@@ -1,9 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { CountdownTimer } from '@/components/CountdownTimer';
 import { SharePopup } from '@/components/SharePopup';
-import { NavigationHeader } from './NavigationHeader';
+import { UnifiedLayoutWrapper } from '@/components/UnifiedLayoutWrapper';
 import { Share2, BarChart3, Home, Users, Clock, TrendingUp, Target, Zap } from 'lucide-react';
 import type { Poll } from '@/types/poll';
 
@@ -27,10 +25,15 @@ export const MotivationPage: React.FC<MotivationPageProps> = ({
     : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50" dir="rtl">
-      <NavigationHeader currentPage="results" poll={poll} />
-      
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <>
+      <UnifiedLayoutWrapper
+        poll={poll}
+        currentState="motivation"
+        containerWidth="narrow" 
+        showTopSection={true} // Show poll progress and timer
+        showBreadcrumb={true}
+        onShareClick={() => setShowSharePopup(true)}
+      >
         <div className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 backdrop-blur-sm border-0 shadow-2xl rounded-3xl overflow-hidden">
           
           {/* Header Section */}
@@ -55,61 +58,12 @@ export const MotivationPage: React.FC<MotivationPageProps> = ({
             </div>
           </div>
 
-          {/* Content Sections */}
-          <div className="space-y-8 p-8 pt-4">
-            {/* Countdown Timer Section */}
-            <div className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-              <div className="flex items-center justify-center gap-3 text-gray-600 mb-4">
-                <div className="bg-gradient-to-r from-orange-400 to-red-500 p-3 rounded-xl">
-                  <Clock className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-lg hebrew-text font-semibold">זמן שנותר לסיום הסקר</span>
-              </div>
-              <CountdownTimer 
-                endTime={poll.round?.end_time || ''} 
-                className="text-2xl font-bold justify-center text-gray-800"
-                showIcon={false}
-              />
-            </div>
-
-            {/* Progress Section */}
-            <div className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-              <div className="flex items-center justify-center gap-3 text-gray-600 mb-6">
-                <div className="bg-gradient-to-r from-green-400 to-blue-500 p-3 rounded-xl">
-                  <TrendingUp className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-lg hebrew-text font-semibold">התקדמות השתתפות כללית</span>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="relative">
-                  <Progress 
-                    value={votingProgress} 
-                    className="h-4 bg-gray-200/70 rounded-full overflow-hidden" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full opacity-20 animate-pulse"></div>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <Target className="h-5 w-5 text-blue-500" />
-                    <span className="text-lg font-bold text-gray-800 hebrew-text">{poll.total_votes} הצבעות</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-purple-500" />
-                    <span className="text-lg font-bold text-gray-800 hebrew-text">{Math.round(votingProgress)}% מהיעד</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Motivation Text */}
-            <div className="text-center">
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/30 rounded-2xl p-6">
-                <p className="font-semibold text-purple-700 hebrew-text text-lg leading-relaxed">
-                  שתף את הסקר עם חברים ובני משפחה וקבל תמונה מלאה יותר של דעת הקהל
-                </p>
-              </div>
+          {/* Motivation Text */}
+          <div className="p-8 pt-4">
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/30 rounded-2xl p-6">
+              <p className="font-semibold text-purple-700 hebrew-text text-lg leading-relaxed text-center">
+                שתף את הסקר עם חברים ובני משפחה וקבל תמונה מלאה יותר של דעת הקהל
+              </p>
             </div>
           </div>
 
@@ -145,13 +99,13 @@ export const MotivationPage: React.FC<MotivationPageProps> = ({
             </Button>
           </div>
         </div>
-      </div>
+      </UnifiedLayoutWrapper>
 
       <SharePopup
         open={showSharePopup}
         onOpenChange={setShowSharePopup}
         poll={poll}
       />
-    </div>
+    </>
   );
 };

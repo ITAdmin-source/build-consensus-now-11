@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { NavigationHeader } from '@/components/NavigationHeader';
+import { UnifiedLayoutWrapper } from '@/components/UnifiedLayoutWrapper';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
-import { GameHeader } from '@/components/GameHeader';
 import { OptimizedVotingInterface } from '@/components/OptimizedVotingInterface';
-import { LiveActivityFeed } from '@/components/LiveActivityFeed';
 import { Poll, Statement, Group } from '@/types/poll';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 
@@ -64,7 +62,7 @@ export const VotingPage: React.FC<VotingPageProps> = ({
     // Tutorial is handled within WelcomeOverlay
   };
   return (
-    <div className="min-h-screen bg-background">
+    <>
       {/* Welcome Overlay for first-time visitors */}
       {showWelcome && (
         <WelcomeOverlay
@@ -76,26 +74,30 @@ export const VotingPage: React.FC<VotingPageProps> = ({
         />
       )}
 
-      <NavigationHeader currentPage="voting" userPoints={userPoints} poll={poll} />
-      
-      <div className="container mx-auto px-4 py-6 max-w-2xl">
-        {/* Simplified Single Column Layout */}
-        <div className="animate-fade-in">
-          <OptimizedVotingInterface
-            poll={poll}
-            statement={currentStatement}
-            userVoteCount={userVoteCount}
-            totalStatements={totalStatements}
-            remainingStatements={unvotedStatements.length}
-            userPoints={userPoints}
-            onVote={onVote}
-            onViewResults={onViewResults}
-            onSubmitStatement={onSubmitStatement}
-            isVoting={isVoting}
-            isDataLoading={isDataLoading}
-          />
-        </div>
-      </div>
-    </div>
+      <UnifiedLayoutWrapper
+        poll={poll}
+        userPoints={userPoints}
+        currentState="voting"
+        containerWidth="narrow"
+        showTopSection={false} // Hide top section for voting to reduce clutter
+        showBreadcrumb={true}
+        userVoteCount={userVoteCount}
+        totalStatements={totalStatements}
+      >
+        <OptimizedVotingInterface
+          poll={poll}
+          statement={currentStatement}
+          userVoteCount={userVoteCount}
+          totalStatements={totalStatements}
+          remainingStatements={unvotedStatements.length}
+          userPoints={userPoints}
+          onVote={onVote}
+          onViewResults={onViewResults}
+          onSubmitStatement={onSubmitStatement}
+          isVoting={isVoting}
+          isDataLoading={isDataLoading}
+        />
+      </UnifiedLayoutWrapper>
+    </>
   );
 };
