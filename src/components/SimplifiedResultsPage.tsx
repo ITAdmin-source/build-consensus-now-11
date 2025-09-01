@@ -65,15 +65,13 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
       
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         {/* Progress Section */}
-        <Card className="mb-6 bg-slate-50/50 border-slate-200">
-          <CardContent className="p-4">
-            <MinimalTopSection 
-              poll={poll}
-              isPollCompleted={isPollCompleted}
-              onShareClick={() => setShowSharePopup(true)}
-            />
-          </CardContent>
-        </Card>
+        <div className="mb-6">
+          <MinimalTopSection 
+            poll={poll}
+            isPollCompleted={isPollCompleted}
+            onShareClick={() => setShowSharePopup(true)}
+          />
+        </div>
         {/* Results Section */}
         <Card className="mb-6">
           <CardHeader className="flex flex-row items-center justify-between">
