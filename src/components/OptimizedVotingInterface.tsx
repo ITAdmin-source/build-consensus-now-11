@@ -91,9 +91,6 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
     }
   }, [poll.allow_user_statements, user, onSubmitStatement, poll, createAuthUrl]);
 
-  // Determine if completion dialog should be shown
-  const shouldShowCompletion = !statement && !isDataLoading && totalStatements > 0 && userVoteCount === totalStatements;
-
   return (
     <div className="space-y-8">
       <PointAnimation show={showPointAnimation} onComplete={handleAnimationComplete} />
@@ -121,9 +118,7 @@ export const OptimizedVotingInterface: React.FC<OptimizedVotingInterfaceProps> =
         totalStatements={totalStatements} 
         remainingStatements={remainingStatements} 
         userPoints={userPoints} 
-        onNavigateToResults={onViewResults} 
-        onNavigateToHome={() => window.location.href = '/'} 
-        shouldShowCompletion={shouldShowCompletion}
+        onEndNow={onViewResults}
       />
 
       {userStatementSection}

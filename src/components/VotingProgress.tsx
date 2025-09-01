@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -7,10 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Poll } from '@/types/poll';
 import { CheckCircle, Activity } from 'lucide-react';
 import { UserPoints } from '@/integrations/supabase/userPoints';
-import { CompletionDialog } from './CompletionDialog';
-import { MotivationDialog } from './MotivationDialog';
-import { EarlyCompletionConfirmDialog } from './EarlyCompletionConfirmDialog';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface VotingProgressProps {
   poll: Poll;
@@ -18,9 +14,7 @@ interface VotingProgressProps {
   totalStatements: number;
   remainingStatements: number;
   userPoints: UserPoints;
-  onNavigateToResults?: () => void;
-  onNavigateToHome?: () => void;
-  shouldShowCompletion?: boolean;
+  onEndNow?: () => void;
 }
 
 export const VotingProgress: React.FC<VotingProgressProps> = ({
@@ -29,48 +23,15 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
   totalStatements,
   remainingStatements,
   userPoints,
-  onNavigateToResults,
-  onNavigateToHome,
-  shouldShowCompletion = false
+  onEndNow
 }) => {
-  const { user } = useAuth();
   const personalProgress = (userVoteCount / totalStatements) * 100;
-  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
-  const [showMotivationDialog, setShowMotivationDialog] = useState(false);
-  const [showEarlyCompletionConfirm, setShowEarlyCompletionConfirm] = useState(false);
-
   const minVotesToEnd = poll.min_statements_voted_to_end || 5;
   const canEndNow = userVoteCount >= minVotesToEnd || remainingStatements === 0;
-  const isFullCompletion = remainingStatements === 0;
-
 
   const handleEndNowClick = () => {
-    if (remainingStatements > 0) {
-      setShowEarlyCompletionConfirm(true);
-    } else {
-      setShowCompletionDialog(true);
-    }
+    onEndNow?.();
   };
-
-  const handleEarlyCompletionConfirm = () => {
-    setShowCompletionDialog(true);
-  };
-
-  const handleNext = () => {
-    setShowMotivationDialog(true);
-  };
-
-  const handleShare = () => {
-    // Placeholder for share functionality
-    console.log('Share functionality to be implemented');
-  };
-
-  // Auto-show completion dialog when triggered from parent
-  React.useEffect(() => {
-    if (shouldShowCompletion) {
-      setShowCompletionDialog(true);
-    }
-  }, [shouldShowCompletion]);
 
   return (
     <div className="space-y-4">
@@ -130,34 +91,6 @@ export const VotingProgress: React.FC<VotingProgressProps> = ({
           </div>
         </CardContent>
       </Card>
-
-      <EarlyCompletionConfirmDialog
-        open={showEarlyCompletionConfirm}
-        onOpenChange={setShowEarlyCompletionConfirm}
-        remainingStatements={remainingStatements}
-        onContinueVoting={() => {}} // Just closes the dialog
-        onEndAnyway={handleEarlyCompletionConfirm}
-      />
-
-      <CompletionDialog
-        open={showCompletionDialog}
-        onOpenChange={setShowCompletionDialog}
-        onNavigateToResults={onNavigateToResults || (() => {})}
-        onNavigateToHome={onNavigateToHome || (() => {})}
-        onNext={handleNext}
-        isFullCompletion={isFullCompletion}
-        isAuthenticated={!!user}
-        poll={poll}
-      />
-
-      <MotivationDialog
-        open={showMotivationDialog}
-        onOpenChange={setShowMotivationDialog}
-        onShare={handleShare}
-        onNavigateToResults={onNavigateToResults || (() => {})}
-        onNavigateToHome={onNavigateToHome || (() => {})}
-        poll={poll}
-      />
 
     </div>
   );
