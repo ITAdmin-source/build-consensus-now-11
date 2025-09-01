@@ -34,12 +34,17 @@ export const MinimalTopSection: React.FC<MinimalTopSectionProps> = ({
             ) : (
               <div className="flex items-center gap-3 flex-1">
                 <div className="flex items-center gap-2 text-sm">
-                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <div className="bg-gradient-to-r from-blue-400 to-purple-500 p-1.5 rounded-lg">
+                    <Users className="h-3 w-3 text-white" />
+                  </div>
                   <span className="font-medium">{progress.currentVotes.toLocaleString()}</span>
                   <span className="text-muted-foreground">מתוך {progress.goalVotes.toLocaleString()}</span>
                 </div>
-                <Progress value={progress.percentage} className="h-2 flex-1 max-w-32" />
-                <span className="text-sm text-muted-foreground">{Math.round(progress.percentage)}%</span>
+                <div className="relative flex-1 max-w-32">
+                  <Progress value={progress.percentage} className="h-4 bg-gray-200/70 rounded-full overflow-hidden" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full opacity-20 animate-pulse"></div>
+                </div>
+                <span className="text-sm text-muted-foreground font-medium">{Math.round(progress.percentage)}%</span>
               </div>
             )}
           </div>
