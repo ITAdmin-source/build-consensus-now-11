@@ -23,25 +23,22 @@ export const MinimalTopSection: React.FC<MinimalTopSectionProps> = ({
   return (
     <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01]">
       <CardContent className="p-6">
-        {/* Countdown Timer Section - only show if poll is active and has time left */}
-        {!isPollCompleted && poll.time_left > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center justify-center gap-3 text-gray-600 mb-4">
-              <div className="bg-gradient-to-r from-orange-400 to-red-500 p-2 rounded-lg">
-                <Clock className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-sm hebrew-text font-semibold">זמן שנותר לסיום הסקר</span>
-            </div>
-            <CountdownTimer 
-              endTime={new Date(Date.now() + poll.time_left).toISOString()} 
-              className="text-lg font-bold justify-center text-gray-800"
-              showIcon={false}
-            />
-          </div>
-        )}
-
-        {/* Progress and Share Section */}
+        {/* Main horizontal section with countdown, progress and share */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Countdown Timer - only show if poll is active and has time left */}
+          {!isPollCompleted && poll.time_left > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="bg-gradient-to-r from-orange-400 to-red-500 p-1.5 rounded-lg">
+                <Clock className="h-3 w-3 text-white" />
+              </div>
+              <CountdownTimer 
+                endTime={new Date(Date.now() + poll.time_left).toISOString()} 
+                className="text-sm font-bold text-gray-800"
+                showIcon={false}
+              />
+            </div>
+          )}
+
           {/* Progress Section */}
           <div className="flex items-center gap-4 flex-1">
             {isPollCompleted ? (
