@@ -259,6 +259,8 @@ const PollPage = () => {
     return (
       <PersonalInsightsPage
         poll={poll}
+        statements={statements}
+        userVotes={userVotes}
         isFullCompletion={isFullCompletion}
         onNavigateToMotivation={handleNavigateToMotivation}
         onNavigateToHome={handleBackToHome}

@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trophy, Home, UserPlus, ArrowRight, Loader2, AlertCircle, ChevronDown, ChevronUp, Sparkles, Brain } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Trophy, Home, UserPlus, ArrowRight, Loader2, AlertCircle, ChevronDown, ChevronUp, Sparkles, Brain, User, CheckCircle2, Target } from 'lucide-react';
 import { Confetti } from './Confetti';
 import { useReturnUrl } from '@/hooks/useReturnUrl';
 import { usePersonalInsights } from '@/hooks/usePersonalInsights';
+import { useVotingProgress } from '@/hooks/useVotingProgress';
 import { useAuth } from '@/contexts/AuthContext';
-import { Poll } from '@/types/poll';
+import { Poll, Statement } from '@/types/poll';
 import { extractTextExcerpt } from '@/utils/textExcerpt';
 import { NavigationHeader } from './NavigationHeader';
 
 interface PersonalInsightsPageProps {
   poll: Poll;
+  statements: Statement[];
+  userVotes: Record<string, string>;
   isFullCompletion: boolean;
   onNavigateToMotivation: () => void;
   onNavigateToHome: () => void;
@@ -18,6 +22,8 @@ interface PersonalInsightsPageProps {
 
 export const PersonalInsightsPage: React.FC<PersonalInsightsPageProps> = ({
   poll,
+  statements,
+  userVotes,
   isFullCompletion,
   onNavigateToMotivation,
   onNavigateToHome
@@ -26,6 +32,7 @@ export const PersonalInsightsPage: React.FC<PersonalInsightsPageProps> = ({
   const { user } = useAuth();
   const { isLoading: insightsLoading, insights, error: insightsError, generateInsights, clearInsights } = usePersonalInsights();
   const [showFullInsights, setShowFullInsights] = useState(false);
+  const votingProgress = useVotingProgress(poll, statements, userVotes);
 
   const handleRegisterClick = () => {
     const authUrl = createAuthUrl('/auth');
@@ -88,6 +95,39 @@ export const PersonalInsightsPage: React.FC<PersonalInsightsPageProps> = ({
                   : 'תודה על השתתפותך הפעילה! הדעה שלך חשובה ותורמת לעיצוב התוצאות הסופיות.'
                 }
               </p>
+            </div>
+          </div>
+
+          {/* Personal Voting Progress Section */}
+          <div className="p-8 pt-4">
+            <div className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+              <div className="flex items-center justify-center gap-3 text-gray-600 mb-6">
+                <div className="bg-gradient-to-r from-blue-400 to-purple-500 p-3 rounded-xl">
+                  <User className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-lg hebrew-text font-semibold">ההתקדמות האישית שלי</span>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="relative">
+                  <Progress 
+                    value={votingProgress.completionPercentage} 
+                    className="h-4 bg-gray-200/70 rounded-full overflow-hidden" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full opacity-20 animate-pulse"></div>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-blue-500" />
+                    <span className="text-lg font-bold text-gray-800 hebrew-text">{votingProgress.votedCount} מתוך {votingProgress.totalCount} הצהרות</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-purple-500" />
+                    <span className="text-lg font-bold text-gray-800 hebrew-text">השלמת {Math.round(votingProgress.completionPercentage)}% מהסקר</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
