@@ -33,9 +33,6 @@ export const MotivationPage: React.FC<MotivationPageProps> = ({
         showTopSection={true} // Show poll progress and timer
         showBreadcrumb={true}
         onShareClick={() => setShowSharePopup(true)}
-        onNavigateToResults={onNavigateToResults}
-        onNavigateToHome={onNavigateToHome}
-        onShare={() => setShowSharePopup(true)}
       >
         <div className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 backdrop-blur-sm border-0 shadow-2xl rounded-3xl overflow-hidden">
           
@@ -70,6 +67,37 @@ export const MotivationPage: React.FC<MotivationPageProps> = ({
             </div>
           </div>
 
+          {/* Action Buttons */}
+          <div className="space-y-4 p-8 pt-4 border-t border-gray-200/50">
+            <Button
+              onClick={() => setShowSharePopup(true)}
+              size="lg"
+              className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white hebrew-text font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] border-0"
+            >
+              <Share2 className="h-6 w-6 ml-2 drop-shadow-sm" />
+              שתף את הסקר
+            </Button>
+
+            <Button
+              onClick={onNavigateToResults}
+              variant="outline"
+              size="lg"
+              className="w-full hebrew-text font-semibold py-4 rounded-xl border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-300 transform hover:scale-[1.02] bg-white/50 backdrop-blur-sm"
+            >
+              <BarChart3 className="h-6 w-6 ml-2 text-purple-600" />
+              צפה בתוצאות הסקר
+            </Button>
+
+            <Button
+              onClick={onNavigateToHome}
+              variant="ghost"
+              size="lg"
+              className="w-full hebrew-text font-semibold py-4 rounded-xl hover:bg-gray-100/80 transition-all duration-300 transform hover:scale-[1.02] text-gray-600 hover:text-gray-800"
+            >
+              <Home className="h-6 w-6 ml-2" />
+              חזור לעמוד הבית
+            </Button>
+          </div>
         </div>
       </UnifiedLayoutWrapper>
 

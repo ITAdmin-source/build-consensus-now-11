@@ -63,10 +63,6 @@ export const PersonalInsightsPage: React.FC<PersonalInsightsPageProps> = ({
         showBreadcrumb={true}
         userVoteCount={Object.keys(userVotes).length}
         totalStatements={statements.length}
-        isAuthenticated={!!user}
-        onNavigateToMotivation={onNavigateToMotivation}
-        onNavigateToHome={onNavigateToHome}
-        onRegister={handleRegisterClick}
       >
         <div className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 backdrop-blur-sm border-0 shadow-2xl rounded-3xl overflow-hidden">
           
@@ -185,6 +181,38 @@ export const PersonalInsightsPage: React.FC<PersonalInsightsPageProps> = ({
             </div>
           </div>
 
+          {/* Action Buttons */}
+          <div className="space-y-4 p-8 pt-4 border-t border-gray-200/50">
+            {!user && (
+              <Button
+                onClick={handleRegisterClick}
+                size="lg"
+                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white hebrew-text font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] border-0"
+              >
+                <UserPlus className="h-6 w-6 ml-2 drop-shadow-sm" />
+                הירשם כדי לשמור את התובנות שלך
+              </Button>
+            )}
+
+            <Button
+              onClick={onNavigateToMotivation}
+              size="lg"
+              className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white hebrew-text font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] border-0"
+            >
+              <ArrowRight className="h-6 w-6 ml-2 drop-shadow-sm" />
+              המשך
+            </Button>
+
+            <Button
+              onClick={onNavigateToHome}
+              variant="outline"
+              size="lg"
+              className="w-full hebrew-text font-semibold py-4 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 transform hover:scale-[1.02] bg-white/50 backdrop-blur-sm"
+            >
+              <Home className="h-6 w-6 ml-2 text-blue-600" />
+              חזור לעמוד הבית
+            </Button>
+          </div>
         </div>
       </UnifiedLayoutWrapper>
     </>

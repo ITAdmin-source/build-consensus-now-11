@@ -2,7 +2,6 @@ import React from 'react';
 import { NavigationHeader } from '@/components/NavigationHeader';
 import { StateNavigationBreadcrumb } from '@/components/StateNavigationBreadcrumb';
 import { MinimalTopSection } from '@/components/MinimalTopSection';
-import { UnifiedNavigationBar } from '@/components/UnifiedNavigationBar';
 import { Poll } from '@/types/poll';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 
@@ -19,19 +18,6 @@ interface UnifiedLayoutWrapperProps {
   totalStatements?: number;
   onShareClick?: () => void;
   className?: string;
-  
-  // Navigation props
-  isAuthenticated?: boolean;
-  canNavigateBack?: boolean;
-  onNavigateToHome?: () => void;
-  onNavigateToInsights?: () => void;
-  onNavigateToMotivation?: () => void;
-  onNavigateToResults?: () => void;
-  onNavigateBack?: () => void;
-  onShare?: () => void;
-  onRegister?: () => void;
-  onEndEarly?: () => void;
-  onShowDetailedResults?: () => void;
 }
 
 export const UnifiedLayoutWrapper: React.FC<UnifiedLayoutWrapperProps> = ({
@@ -46,20 +32,7 @@ export const UnifiedLayoutWrapper: React.FC<UnifiedLayoutWrapperProps> = ({
   userVoteCount = 0,
   totalStatements = 0,
   onShareClick,
-  className = "",
-  
-  // Navigation props
-  isAuthenticated = false,
-  canNavigateBack = false,
-  onNavigateToHome,
-  onNavigateToInsights,
-  onNavigateToMotivation,
-  onNavigateToResults,
-  onNavigateBack,
-  onShare,
-  onRegister,
-  onEndEarly,
-  onShowDetailedResults
+  className = ""
 }) => {
   const getContainerClass = () => {
     switch (containerWidth) {
@@ -110,27 +83,10 @@ export const UnifiedLayoutWrapper: React.FC<UnifiedLayoutWrapperProps> = ({
         )}
         
         {/* Main Content */}
-        <div className="animate-fade-in pb-24">
+        <div className="animate-fade-in">
           {children}
         </div>
       </div>
-      
-      {/* Unified Navigation Bar */}
-      <UnifiedNavigationBar
-        currentState={currentState}
-        isAuthenticated={isAuthenticated}
-        isPollCompleted={isPollCompleted}
-        canNavigateBack={canNavigateBack}
-        onNavigateToHome={onNavigateToHome}
-        onNavigateToInsights={onNavigateToInsights}
-        onNavigateToMotivation={onNavigateToMotivation}
-        onNavigateToResults={onNavigateToResults}
-        onNavigateBack={onNavigateBack}
-        onShare={onShare || onShareClick}
-        onRegister={onRegister}
-        onEndEarly={onEndEarly}
-        onShowDetailedResults={onShowDetailedResults}
-      />
     </div>
   );
 };

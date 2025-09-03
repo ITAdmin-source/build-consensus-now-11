@@ -83,8 +83,6 @@ export const VotingPage: React.FC<VotingPageProps> = ({
         showBreadcrumb={true}
         userVoteCount={userVoteCount}
         totalStatements={totalStatements}
-        onNavigateToHome={onBackToHome}
-        onEndEarly={onViewResults}
       >
         <OptimizedVotingInterface
           poll={poll}

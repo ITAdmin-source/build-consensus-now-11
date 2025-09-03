@@ -68,10 +68,6 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
         showBreadcrumb={true}
         isPollCompleted={isPollCompleted}
         onShareClick={() => setShowSharePopup(true)}
-        onNavigateToHome={onBackToHome}
-        onNavigateToInsights={onNavigateToInsights}
-        onNavigateToMotivation={onNavigateToMotivation}
-        onShowDetailedResults={() => setShowDetailedResults(true)}
       >
           {/* Results Section */}
           <Card className="mb-6 bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01] rounded-2xl">
@@ -102,6 +98,53 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
             </CardContent>
           </Card>
 
+          {/* Navigation Options */}
+          {(onNavigateToInsights || onNavigateToMotivation) && (
+            <Card className="mb-6 bg-white/60 backdrop-blur-sm border border-gray-100/50 rounded-xl">
+              <CardHeader>
+                <h3 className="text-lg font-semibold hebrew-text">עבור לעמודים נוספים</h3>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {onNavigateToInsights && (
+                    <Button
+                      onClick={onNavigateToInsights}
+                      variant="outline"
+                      size="lg"
+                      className="hebrew-text font-semibold py-4 rounded-xl border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-300 transform hover:scale-[1.02] bg-white/50 backdrop-blur-sm"
+                    >
+                      <Brain className="h-6 w-6 ml-2 text-purple-600" />
+                      התובנות שלי
+                    </Button>
+                  )}
+                  {onNavigateToMotivation && (
+                    <Button
+                      onClick={onNavigateToMotivation}
+                      variant="outline"
+                      size="lg"
+                      className="hebrew-text font-semibold py-4 rounded-xl border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all duration-300 transform hover:scale-[1.02] bg-white/50 backdrop-blur-sm"
+                    >
+                      <Share2 className="h-6 w-6 ml-2 text-green-600" />
+                      מניעים למעורבות
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* All Polls Button */}
+          <div className="flex justify-center">
+            <Button
+              onClick={onBackToHome}
+              variant="ghost"
+              size="lg"
+              className="hebrew-text font-semibold py-4 rounded-xl hover:bg-gray-100/80 transition-all duration-300 transform hover:scale-[1.02] text-gray-600 hover:text-gray-800"
+            >
+              <Home className="h-6 w-6 ml-2" />
+              כל הסקרים
+            </Button>
+          </div>
       </UnifiedLayoutWrapper>
 
       <SharePopup
