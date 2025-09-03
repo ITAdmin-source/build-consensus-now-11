@@ -203,15 +203,6 @@ export const PersonalInsightsPage: React.FC<PersonalInsightsPageProps> = ({
               המשך
             </Button>
 
-            <Button
-              onClick={onNavigateToHome}
-              variant="outline"
-              size="lg"
-              className="w-full hebrew-text font-semibold py-4 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 transform hover:scale-[1.02] bg-white/50 backdrop-blur-sm"
-            >
-              <Home className="h-6 w-6 ml-2 text-blue-600" />
-              חזור לעמוד הבית
-            </Button>
           </div>
         </div>
       </UnifiedLayoutWrapper>

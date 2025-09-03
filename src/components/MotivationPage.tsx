@@ -88,15 +88,6 @@ export const MotivationPage: React.FC<MotivationPageProps> = ({
               צפה בתוצאות הסקר
             </Button>
 
-            <Button
-              onClick={onNavigateToHome}
-              variant="ghost"
-              size="lg"
-              className="w-full hebrew-text font-semibold py-4 rounded-xl hover:bg-gray-100/80 transition-all duration-300 transform hover:scale-[1.02] text-gray-600 hover:text-gray-800"
-            >
-              <Home className="h-6 w-6 ml-2" />
-              חזור לעמוד הבית
-            </Button>
           </div>
         </div>
       </UnifiedLayoutWrapper>
