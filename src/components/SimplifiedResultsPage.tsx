@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SharePopup } from '@/components/SharePopup';
-import { SimplifiedStatementsTable } from '@/components/SimplifiedStatementsTable';
+import { StatementsTable } from '@/components/StatementsTable';
 import { DetailedResultsPage } from '@/components/DetailedResultsPage';
 import { UnifiedLayoutWrapper } from '@/components/UnifiedLayoutWrapper';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -93,9 +93,10 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
               </Button>
             </CardHeader>
             <CardContent>
-              <SimplifiedStatementsTable
+              <StatementsTable
                 statements={statements}
-                consensusPoints={consensusPoints}
+                groups={groups}
+                groupStats={groupStats}
               />
             </CardContent>
           </Card>
