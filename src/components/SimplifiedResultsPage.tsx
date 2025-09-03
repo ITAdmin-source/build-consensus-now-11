@@ -93,6 +93,7 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
               </Button>
             </CardHeader>
             <CardContent>
+              {/* Statements table showing poll results */}
               <StatementsTable
                 statements={statements}
                 groups={groups}
