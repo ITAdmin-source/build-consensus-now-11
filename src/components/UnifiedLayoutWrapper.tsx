@@ -61,14 +61,7 @@ export const UnifiedLayoutWrapper: React.FC<UnifiedLayoutWrapperProps> = ({
         {/* Secondary Header with Progress and Breadcrumb */}
         {(showTopSection || showBreadcrumb) && (
           <div className="space-y-4 mb-6">
-            {/* Universal Progress Section */}
-            {showTopSection && (
-              <MinimalTopSection
-                poll={poll}
-                isPollCompleted={isPollCompleted}
-                onShareClick={onShareClick || (() => {})}
-              />
-            )}
+            
             
             {/* State Navigation Breadcrumb */}
             {showBreadcrumb && (
@@ -77,6 +70,15 @@ export const UnifiedLayoutWrapper: React.FC<UnifiedLayoutWrapperProps> = ({
                 isPollCompleted={isPollCompleted}
                 userVoteCount={userVoteCount}
                 totalStatements={totalStatements}
+              />
+            )}
+
+            {/* Universal Progress Section */}
+            {showTopSection && (
+              <MinimalTopSection
+                poll={poll}
+                isPollCompleted={isPollCompleted}
+                onShareClick={onShareClick || (() => {})}
               />
             )}
           </div>
