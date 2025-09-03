@@ -57,28 +57,31 @@ export const UnifiedLayoutWrapper: React.FC<UnifiedLayoutWrapperProps> = ({
         poll={poll} 
       />
       
-      <div className={`container mx-auto px-4 py-6 ${getContainerClass()}`}>
-        {/* Secondary Header with Progress and Breadcrumb */}
-        {(showTopSection || showBreadcrumb) && (
-          <div className="space-y-4 mb-6">
-            {/* Universal Progress Section */}
-            {showTopSection && (
-              <MinimalTopSection
-                poll={poll}
-                isPollCompleted={isPollCompleted}
-                onShareClick={onShareClick || (() => {})}
-              />
-            )}
-            
-            {/* State Navigation Breadcrumb */}
-            {showBreadcrumb && (
+      {/* Stage Navigator - Top Right Below Header */}
+      {showBreadcrumb && (
+        <div className="w-full bg-white/30 backdrop-blur-sm border-b border-white/20">
+          <div className="container mx-auto px-4 py-3 max-w-7xl">
+            <div className="flex justify-end">
               <StateNavigationBreadcrumb
                 currentState={currentState}
                 isPollCompleted={isPollCompleted}
                 userVoteCount={userVoteCount}
                 totalStatements={totalStatements}
               />
-            )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className={`container mx-auto px-4 py-6 ${getContainerClass()}`}>
+        {/* Top Section */}
+        {showTopSection && (
+          <div className="mb-6">
+            <MinimalTopSection
+              poll={poll}
+              isPollCompleted={isPollCompleted}
+              onShareClick={onShareClick || (() => {})}
+            />
           </div>
         )}
         
