@@ -5,7 +5,7 @@ import { DetailedResultsPage } from '@/components/DetailedResultsPage';
 import { UnifiedLayoutWrapper } from '@/components/UnifiedLayoutWrapper';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Eye, Home, Brain, Share2 } from 'lucide-react';
+import { Eye, Home, Brain, Share2, LayoutGrid } from 'lucide-react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 
@@ -41,24 +41,26 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [showDetailedResults, setShowDetailedResults] = useState(false);
 
-  // If detailed results are requested, render the detailed page
+  // If detailed results are requested, render the detailed page with smooth transition
   if (showDetailedResults) {
     return (
-      <DetailedResultsPage
-        poll={poll}
-        statements={statements}
-        consensusPoints={consensusPoints}
-        groups={groups}
-        groupStats={groupStats}
-        userPoints={userPoints}
-        onBackToHome={onBackToHome}
-        onBackToSimplified={() => setShowDetailedResults(false)}
-        isPollCompleted={isPollCompleted}
-      />
+      <div className="animate-fade-in">
+        <DetailedResultsPage
+          poll={poll}
+          statements={statements}
+          consensusPoints={consensusPoints}
+          groups={groups}
+          groupStats={groupStats}
+          userPoints={userPoints}
+          onBackToHome={onBackToHome}
+          onBackToSimplified={() => setShowDetailedResults(false)}
+          isPollCompleted={isPollCompleted}
+        />
+      </div>
     );
   }
   return (
-    <>
+    <div className="animate-fade-in">
       <UnifiedLayoutWrapper
         poll={poll}
         userPoints={userPoints}
@@ -84,10 +86,10 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
                 onClick={() => setShowDetailedResults(true)}
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2 hebrew-text border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300"
+                className="hebrew-text hover:bg-muted/50 transition-colors"
               >
-                <Eye className="h-4 w-4" />
-                צפה בתוצאות מפורטות
+                <LayoutGrid className="h-4 w-4 ml-2" />
+                תצוגה מפורטת
               </Button>
             </CardHeader>
             <CardContent>
@@ -140,6 +142,6 @@ export const SimplifiedResultsPage: React.FC<SimplifiedResultsPageProps> = ({
         onOpenChange={setShowSharePopup}
         poll={poll}
       />
-    </>
+    </div>
   );
 };

@@ -1,11 +1,11 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { NavigationHeader } from '@/components/NavigationHeader';
+import React from 'react';
+import { UnifiedLayoutWrapper } from '@/components/UnifiedLayoutWrapper';
 import { CompletedPollBanner } from '@/components/CompletedPollBanner';
 import { useSmartClustering } from '@/hooks/useSmartClustering';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, LayoutGrid, List } from 'lucide-react';
 import { Poll, Statement, ConsensusPoint, Group, GroupStatementStats } from '@/types/poll';
 import { UserPoints } from '@/integrations/supabase/userPoints';
 import { ResultsStoryLayout } from '@/components/results/ResultsStoryLayout';
@@ -50,51 +50,56 @@ export const DetailedResultsPage: React.FC<DetailedResultsPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <NavigationHeader currentPage="results" userPoints={userPoints} poll={poll} />
-      
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Completed Poll Banner */}
-        {isPollCompleted && (
-          <div className="mb-6">
-            <CompletedPollBanner poll={poll} />
-          </div>
-        )}
+    <UnifiedLayoutWrapper
+      poll={poll}
+      userPoints={userPoints}
+      currentState="results"
+      containerWidth="full"
+      isPollCompleted={isPollCompleted}
+      className="animate-fade-in"
+    >
+      {/* Completed Poll Banner */}
+      {isPollCompleted && (
+        <div className="mb-6">
+          <CompletedPollBanner poll={poll} />
+        </div>
+      )}
 
-        {/* Action Buttons Section */}
-        <Card className="mb-6 bg-slate-50/50 border-slate-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                {onBackToSimplified && (
-                  <Button
-                    onClick={onBackToSimplified}
-                    variant="outline"
-                    size="sm"
-                    className="hebrew-text"
-                  >
-                    <div className="h-4 w-4 ml-2">←</div>
-                    חזור לתצוגה פשוטה
-                  </Button>
-                )}
-                {!isPollCompleted && (
-                  <Button
-                    onClick={handleManualClustering}
-                    disabled={isRunning || isChecking}
-                    variant="outline"
-                    size="sm"
-                    className="hebrew-text"
-                  >
-                    <RefreshCw className={`h-4 w-4 ml-2 ${(isRunning || isChecking) ? 'animate-spin' : ''}`} />
-                    {isRunning ? 'מעבד...' : isChecking ? 'בודק...' : 'רענן קבצה'}
-                  </Button>
-                )}
-              </div>
+      {/* Action Buttons Section */}
+      <Card className="mb-6 bg-card/50 border-border shadow-sm">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              {onBackToSimplified && (
+                <Button
+                  onClick={onBackToSimplified}
+                  variant="outline"
+                  size="sm"
+                  className="hebrew-text hover:bg-muted/50 transition-colors"
+                >
+                  <List className="h-4 w-4 ml-2" />
+                  תצוגה פשוטה
+                </Button>
+              )}
+              {!isPollCompleted && (
+                <Button
+                  onClick={handleManualClustering}
+                  disabled={isRunning || isChecking}
+                  variant="outline"
+                  size="sm"
+                  className="hebrew-text"
+                >
+                  <RefreshCw className={`h-4 w-4 ml-2 ${(isRunning || isChecking) ? 'animate-spin' : ''}`} />
+                  {isRunning ? 'מעבד...' : isChecking ? 'בודק...' : 'רענן קבצה'}
+                </Button>
+              )}
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* New Story Layout */}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* New Story Layout */}
+      <div className="animate-fade-in">
         <ResultsStoryLayout
           poll={poll}
           statements={statements}
@@ -105,6 +110,6 @@ export const DetailedResultsPage: React.FC<DetailedResultsPageProps> = ({
           isPollCompleted={isPollCompleted}
         />
       </div>
-    </div>
+    </UnifiedLayoutWrapper>
   );
 };
