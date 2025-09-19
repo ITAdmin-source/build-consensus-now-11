@@ -1119,6 +1119,27 @@ export type Database = {
           },
         ]
       }
+      polis_kv_store: {
+        Row: {
+          created_at: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       polis_migration_audit: {
         Row: {
           completed_at: string | null
