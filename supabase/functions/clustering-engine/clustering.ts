@@ -92,19 +92,40 @@ export async function performAdvancedClustering(
     })
   );
 
+  // Debug logging for assignment verification
+  console.log('=== CLUSTERING ASSIGNMENT DEBUG ===');
+  participants.forEach((p, i) => {
+    const votes = statementIds.map(sid => p.votes[sid]).join(',');
+    const group = finalAssignments[i];
+    console.log(`Participant ${p.session_id}: votes=[${votes}] -> Group ${group + 1}`);
+  });
+
   // 7) build groups[] exactly as before but using finalAssignments
   const colors = ['#3B82F6','#EF4444','#10B981','#F59E0B','#8B5CF6'];
-  const groups = metaClusters.map((cluster,i) => ({
-    group_id: `group_${i+1}`,
-    participants: participants
+  const groups = metaClusters.map((cluster,i) => {
+    const groupParticipants = participants
       .filter((_, idx) => finalAssignments[idx] === i)
-      .map(p => p.session_id),
-    center: cluster.center,
-    silhouette_score: cluster.silhouette_score,
-    name: `קבוצה ${i+1}`,
-    description: `קבוצת דעות עם ${cluster.participants.length} משתתפים`,
-    color: colors[i % colors.length]
-  }));
+      .map(p => p.session_id);
+    
+    console.log(`Group ${i+1} (${cluster.participants.length} micro-clusters -> ${groupParticipants.length} participants):`);
+    groupParticipants.forEach(sessionId => {
+      const participant = participants.find(p => p.session_id === sessionId);
+      if (participant) {
+        const votes = statementIds.map(sid => participant.votes[sid]).join(',');
+        console.log(`  - ${sessionId}: [${votes}]`);
+      }
+    });
+    
+    return {
+      group_id: `group_${i+1}`,
+      participants: groupParticipants,
+      center: cluster.center,
+      silhouette_score: cluster.silhouette_score,
+      name: `קבוצה ${i+1}`,
+      description: `קבוצת דעות עם ${groupParticipants.length} משתתפים`,
+      color: colors[i % colors.length]
+    };
+  });
  
   // Advanced consensus detection
   const consensusPoints = detectAdvancedConsensus(

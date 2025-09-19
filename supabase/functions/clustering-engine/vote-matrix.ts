@@ -36,6 +36,13 @@ export function buildVoteMatrix(votes: Vote[], statementIds: string[]): Particip
     })
   })
 
+  // Debug logging for vote matrix verification
+  console.log('=== VOTE MATRIX DEBUG ===')
+  participants.forEach((participant, i) => {
+    const votePattern = statementIds.map(sid => participant.votes[sid]).join(',')
+    console.log(`Participant ${participant.session_id}: [${votePattern}]`)
+  })
+
   console.log(`Vote matrix completed with ${participants.length} participants and ${statementIds.length} statements`)
   return participants
 }

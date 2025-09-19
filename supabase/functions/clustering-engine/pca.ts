@@ -23,8 +23,8 @@ export function performPCA(matrix: number[][], sessionIds: string[]) {
     // Calculate covariance matrix
     const covarianceMatrix = centeredMatrix.transpose().mmul(centeredMatrix).div(n - 1);
     
-    // Perform eigenvalue decomposition
-    const eigenDecomposition = covarianceMatrix.eig();
+    // Perform eigenvalue decomposition with proper method
+    const eigenDecomposition = covarianceMatrix.eigenvalueDecomposition();
     const eigenVectors = eigenDecomposition.eigenvectorMatrix;
     const eigenValues = eigenDecomposition.realEigenvalues;
     
@@ -85,16 +85,69 @@ export function performPCALite(matrix: number[][], sessionIds: string[]): Record
     row.map((val, j) => val - means[j])
   )
 
-  // Simple 2D projection using first two principal directions
+  // Calculate covariance matrix manually
+  const cov = Array(m).fill(0).map(() => Array(m).fill(0))
+  for (let i = 0; i < m; i++) {
+    for (let j = 0; j < m; j++) {
+      let sum = 0
+      for (let k = 0; k < n; k++) {
+        sum += centeredMatrix[k][i] * centeredMatrix[k][j]
+      }
+      cov[i][j] = sum / (n - 1)
+    }
+  }
+
+  // Simple eigenvalue approximation for the first two components
+  // Use power iteration method to find dominant eigenvectors
+  const pc1 = Array(m).fill(0).map(() => Math.random() - 0.5)
+  const pc2 = Array(m).fill(0).map(() => Math.random() - 0.5)
+  
+  // Normalize initial vectors
+  const norm1 = Math.sqrt(pc1.reduce((sum, val) => sum + val * val, 0))
+  const norm2 = Math.sqrt(pc2.reduce((sum, val) => sum + val * val, 0))
+  for (let i = 0; i < m; i++) {
+    pc1[i] /= norm1
+    pc2[i] /= norm2
+  }
+
+  // Power iteration for first principal component
+  for (let iter = 0; iter < 10; iter++) {
+    const newPc1 = Array(m).fill(0)
+    for (let i = 0; i < m; i++) {
+      for (let j = 0; j < m; j++) {
+        newPc1[i] += cov[i][j] * pc1[j]
+      }
+    }
+    const norm = Math.sqrt(newPc1.reduce((sum, val) => sum + val * val, 0))
+    if (norm > 0) {
+      for (let i = 0; i < m; i++) {
+        pc1[i] = newPc1[i] / norm
+      }
+    }
+  }
+
+  // Orthogonalize second component
+  const dot = pc2.reduce((sum, val, i) => sum + val * pc1[i], 0)
+  for (let i = 0; i < m; i++) {
+    pc2[i] -= dot * pc1[i]
+  }
+  const norm2Final = Math.sqrt(pc2.reduce((sum, val) => sum + val * val, 0))
+  if (norm2Final > 0) {
+    for (let i = 0; i < m; i++) {
+      pc2[i] /= norm2Final
+    }
+  }
+
+  // Project data onto principal components
   const opinionSpace: Record<string, [number, number]> = {}
   
   centeredMatrix.forEach((row, i) => {
-    // Project onto first two dimensions (simplified)
-    const x = row.reduce((sum, val, j) => sum + val * (j % 2 === 0 ? 1 : -1), 0) / m
-    const y = row.reduce((sum, val, j) => sum + val * (j % 3 === 0 ? 1 : -1), 0) / m
+    const x = row.reduce((sum, val, j) => sum + val * pc1[j], 0)
+    const y = row.reduce((sum, val, j) => sum + val * pc2[j], 0)
     
     opinionSpace[sessionIds[i]] = [x, y]
   })
 
+  console.log(`PCA-lite completed for ${n} participants with improved projection`)
   return opinionSpace
 }
