@@ -48,6 +48,7 @@ export const ResultsStoryLayout: React.FC<ResultsStoryLayoutProps> = ({
           groupStats={groupStats}
           statements={statements}
           userPoints={userPoints}
+          pollId={poll.poll_id}
         />
 
         {/* Section 3: Consensus & Divides */}

@@ -38,16 +38,16 @@ export const fetchGroupsByPollId = async (pollId: string): Promise<Group[]> => {
     return acc;
   }, {} as Record<string, number>);
 
-  // Colors for groups - distinct and accessible
-  const groupColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+  // Fallback colors for groups if none in database
+  const fallbackColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
 
   // Transform to match Group interface with calculated member counts
   const transformedGroups = groupsData.map((group, index): Group => ({
     group_id: group.group_id,
     poll_id: group.poll_id || pollId,
-    name: `קבוצה ${index + 1}`, // More user-friendly names: "Group 1", "Group 2"
-    description: `קבוצת דעות עם ${memberCounts[group.group_id] || 0} משתתפים`,
-    color: groupColors[index % groupColors.length], // Cycle through distinct colors
+    name: group.name || `קבוצה ${index + 1}`, // Use database name or fallback
+    description: group.description || `קבוצת דעות עם ${memberCounts[group.group_id] || 0} משתתפים`,
+    color: group.color || fallbackColors[index % fallbackColors.length], // Use database color or fallback
     member_count: memberCounts[group.group_id] || 0,
     algorithm: group.algorithm || 'k-means',
     created_at: group.created_at || new Date().toISOString(),
@@ -61,6 +61,26 @@ export const fetchGroupsByPollId = async (pollId: string): Promise<Group[]> => {
   }));
 
   return transformedGroups;
+};
+
+export const getCurrentUserGroupId = async (pollId: string, userId?: string, sessionId?: string): Promise<string | null> => {
+  if (!userId && !sessionId) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('polis_user_group_membership')
+    .select('group_id')
+    .eq('poll_id', pollId)
+    .or(`user_id.eq.${userId || 'null'},session_id.eq.${sessionId || 'null'}`)
+    .single();
+
+  if (error) {
+    console.error('Error fetching user group membership:', error);
+    return null;
+  }
+
+  return data?.group_id || null;
 };
 
 export const fetchGroupStatsByPollId = async (pollId: string): Promise<GroupStatementStats[]> => {

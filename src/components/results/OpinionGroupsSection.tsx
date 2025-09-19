@@ -2,35 +2,50 @@
 import React, { useState } from 'react';
 import { Group, GroupStatementStats, Statement } from '@/types/poll';
 import { UserPoints } from '@/integrations/supabase/userPoints';
+import { getCurrentUserGroupId } from '@/integrations/supabase/groups';
 import { ParticipantsChart } from '@/components/ParticipantsChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, Eye, TrendingUp, TrendingDown } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface OpinionGroupsSectionProps {
   groups: Group[];
   groupStats: GroupStatementStats[];
   statements: Statement[];
   userPoints: UserPoints;
+  pollId: string;
 }
 
 export const OpinionGroupsSection: React.FC<OpinionGroupsSectionProps> = ({
   groups,
   groupStats,
   statements,
-  userPoints
+  userPoints,
+  pollId
 }) => {
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [userGroup, setUserGroup] = useState<Group | null>(null);
+  const { user } = useAuth();
 
-  // Find user's group (simplified - in real app would need session/user matching)
+  // Find user's actual group
   React.useEffect(() => {
-    if (groups.length > 0) {
-      // For demo purposes, assign user to first group
-      // In real implementation, would match by session_id or user_id
-      setUserGroup(groups[0]);
-    }
-  }, [groups]);
+    const fetchUserGroup = async () => {
+      if (groups.length === 0) return;
+
+      const sessionId = localStorage.getItem('polis_session_id');
+      const userId = user?.id;
+      
+      const userGroupId = await getCurrentUserGroupId(pollId, userId, sessionId);
+      
+      if (userGroupId) {
+        const foundGroup = groups.find(g => g.group_id === userGroupId);
+        setUserGroup(foundGroup || null);
+      }
+    };
+
+    fetchUserGroup();
+  }, [groups, pollId, user?.id]);
 
   const getGroupTopStatements = (groupId: string, isSupport: boolean = true) => {
     const groupStatsForGroup = groupStats.filter(stat => stat.group_id === groupId);
